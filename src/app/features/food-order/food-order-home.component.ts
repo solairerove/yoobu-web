@@ -16,6 +16,12 @@ interface FoodOrderVm {
   error: string | null;
 }
 
+interface MyBookingsVm {
+  bookings: BookingResponse[];
+  loading: boolean;
+  error: string | null;
+}
+
 @Component({
   selector: 'app-food-order-home',
   imports: [CurrencyPipe, DatePipe, NgFor, NgIf, ReactiveFormsModule],
@@ -23,7 +29,7 @@ interface FoodOrderVm {
     <section class="panel">
       <p class="eyebrow">Food ordering flow</p>
       <h2>{{ config().name }}</h2>
-      <p class="copy">Choose items, review the cart, and place the order directly inside Telegram.</p>
+      <p class="copy">Choose items, review the cart, place the order, and track it here.</p>
 
       <section class="status-card" *ngIf="vm().loading">
         <h3>Loading menu</h3>
@@ -155,6 +161,101 @@ interface FoodOrderVm {
           </aside>
         </div>
       </section>
+
+      <section class="bookings-card" *ngIf="!vm().loading">
+        <div class="bookings-head">
+          <div>
+            <p class="eyebrow">My orders</p>
+            <h3>Recent bookings</h3>
+          </div>
+
+          <button type="button" class="ghost-button" (click)="refreshBookings()" [disabled]="bookingsVm().loading">
+            Refresh
+          </button>
+        </div>
+
+        <section class="status-card" *ngIf="bookingsVm().loading">
+          <h4>Loading bookings</h4>
+          <p>Fetching orders for the current Telegram user.</p>
+        </section>
+
+        <section class="status-card error" *ngIf="bookingsVm().error as error">
+          <h4>Bookings unavailable</h4>
+          <p>{{ error }}</p>
+        </section>
+
+        <section class="status-card" *ngIf="!bookingsVm().loading && !bookingsVm().error && !bookingsVm().bookings.length">
+          <h4>No bookings yet</h4>
+          <p>Your submitted orders will appear here with status updates and cancellation controls.</p>
+        </section>
+
+        <div class="bookings-grid" *ngIf="bookingsVm().bookings.length">
+          <div class="booking-list">
+            <button
+              type="button"
+              class="booking-item"
+              *ngFor="let booking of bookingsVm().bookings"
+              [class.active]="selectedBookingId() === booking.id"
+              (click)="selectBooking(booking.id)"
+            >
+              <div class="booking-item-top">
+                <strong>#{{ booking.id }}</strong>
+                <span class="booking-status" [class.cancelled]="booking.status === 'CANCELLED'">
+                  {{ booking.status }}
+                </span>
+              </div>
+              <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
+              <p>{{ booking.totalPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+            </button>
+          </div>
+
+          <section class="booking-detail" *ngIf="selectedBooking() as booking; else chooseBooking">
+            <div class="booking-detail-head">
+              <div>
+                <p class="eyebrow">Booking #{{ booking.id }}</p>
+                <h4>{{ booking.status }}</h4>
+              </div>
+
+              <button
+                type="button"
+                class="ghost-button"
+                *ngIf="canCancel(booking)"
+                (click)="cancelBooking(booking.id)"
+                [disabled]="cancellingBookingId() === booking.id"
+              >
+                {{ cancellingBookingId() === booking.id ? 'Cancelling...' : 'Cancel order' }}
+              </button>
+            </div>
+
+            <div class="booking-detail-meta">
+              <span>{{ booking.deliveryDate | date: 'mediumDate' }}</span>
+              <span>{{ booking.totalPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
+              <span>{{ booking.createdAt | date: 'short' }}</span>
+            </div>
+
+            <p class="copy" *ngIf="booking.note">{{ booking.note }}</p>
+
+            <div class="review-list">
+              <div class="review-row" *ngFor="let item of booking.items">
+                <div>
+                  <strong>{{ item.serviceName }}</strong>
+                  <p>{{ item.quantity }} × {{ item.unitPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+                </div>
+                <span>{{ item.unitPrice * item.quantity | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
+              </div>
+            </div>
+
+            <p class="form-error" *ngIf="cancelError() as error">{{ error }}</p>
+          </section>
+
+          <ng-template #chooseBooking>
+            <section class="status-card">
+              <h4>Select a booking</h4>
+              <p>Choose an order from the list to inspect items and status.</p>
+            </section>
+          </ng-template>
+        </div>
+      </section>
     </section>
   `,
   styles: `
@@ -191,7 +292,9 @@ interface FoodOrderVm {
 
     .status-card,
     .success-card,
-    .checkout-card {
+    .checkout-card,
+    .bookings-card,
+    .booking-detail {
       padding: 1rem 1.1rem;
       border-radius: 18px;
       background: rgba(255, 255, 255, 0.78);
@@ -276,7 +379,8 @@ interface FoodOrderVm {
 
     .quantity button,
     .primary-button,
-    .ghost-button {
+    .ghost-button,
+    .booking-item {
       cursor: pointer;
       font: inherit;
     }
@@ -293,7 +397,8 @@ interface FoodOrderVm {
 
     .quantity button:disabled,
     .primary-button:disabled,
-    .ghost-button:disabled {
+    .ghost-button:disabled,
+    .booking-item:disabled {
       opacity: 0.45;
       cursor: not-allowed;
     }
@@ -328,7 +433,9 @@ interface FoodOrderVm {
       color: var(--yoobu-primary);
     }
 
-    .checkout-head {
+    .checkout-head,
+    .bookings-head,
+    .booking-detail-head {
       display: flex;
       justify-content: space-between;
       gap: 1rem;
@@ -342,8 +449,16 @@ interface FoodOrderVm {
       margin-top: 1rem;
     }
 
+    .bookings-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
     .checkout-form,
-    .review-card {
+    .review-card,
+    .booking-list {
       display: grid;
       gap: 0.9rem;
     }
@@ -407,6 +522,52 @@ interface FoodOrderVm {
       border-top: 1px solid var(--yoobu-border);
     }
 
+    .booking-item {
+      display: grid;
+      gap: 0.35rem;
+      width: 100%;
+      padding: 0.95rem 1rem;
+      border-radius: 16px;
+      border: 1px solid var(--yoobu-border);
+      background: rgba(255, 255, 255, 0.96);
+      text-align: left;
+      color: inherit;
+    }
+
+    .booking-item.active {
+      border-color: rgba(255, 107, 53, 0.35);
+      background: rgba(255, 248, 242, 0.96);
+    }
+
+    .booking-item-top,
+    .booking-detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .booking-item p,
+    .booking-detail-meta {
+      color: var(--yoobu-muted);
+      font-size: 0.92rem;
+    }
+
+    .booking-status {
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(255, 107, 53, 0.12);
+      color: var(--yoobu-primary);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .booking-status.cancelled {
+      background: rgba(165, 42, 42, 0.12);
+      color: brown;
+    }
+
     .primary-button {
       border: 0;
       border-radius: 999px;
@@ -440,7 +601,8 @@ interface FoodOrderVm {
 
     @media (max-width: 640px) {
       .product-card,
-      .checkout-grid {
+      .checkout-grid,
+      .bookings-grid {
         grid-template-columns: 1fr;
       }
 
@@ -450,6 +612,8 @@ interface FoodOrderVm {
 
       .summary,
       .checkout-head,
+      .bookings-head,
+      .booking-detail-head,
       .review-row {
         flex-direction: column;
         align-items: flex-start;
@@ -477,6 +641,16 @@ export class FoodOrderHomeComponent {
     { initialValue: this.checkoutForm.status }
   );
 
+  protected readonly bookingsReloadKey = signal(0);
+  protected readonly selectedBookingId = signal<number | null>(null);
+  protected readonly selectedBooking = signal<BookingResponse | null>(null);
+  protected readonly checkoutOpen = signal(false);
+  protected readonly submitting = signal(false);
+  protected readonly submitError = signal<string | null>(null);
+  protected readonly submittedBooking = signal<BookingResponse | null>(null);
+  protected readonly cancellingBookingId = signal<number | null>(null);
+  protected readonly cancelError = signal<string | null>(null);
+
   private readonly vmSignal = toSignal(
     toObservable(this.config).pipe(
       distinctUntilChanged((previous, current) => previous.slug === current.slug),
@@ -486,12 +660,17 @@ export class FoodOrderHomeComponent {
         this.submitting.set(false);
         this.submitError.set(null);
         this.submittedBooking.set(null);
+        this.cancellingBookingId.set(null);
+        this.cancelError.set(null);
+        this.selectedBookingId.set(null);
+        this.selectedBooking.set(null);
         this.checkoutForm.reset({
           customerName: '',
           customerPhone: '',
           deliveryDate: this.defaultDeliveryDate(),
           note: ''
         });
+        this.bookingsReloadKey.update((value) => value + 1);
       }),
       switchMap((config) =>
         this.api.getServices(config.slug).pipe(
@@ -526,11 +705,58 @@ export class FoodOrderHomeComponent {
     }
   );
 
+  private readonly bookingsVmSignal = toSignal(
+    toObservable(
+      computed(() => ({
+        slug: this.config().slug,
+        reloadKey: this.bookingsReloadKey()
+      }))
+    ).pipe(
+      distinctUntilChanged(
+        (previous, current) => previous.slug === current.slug && previous.reloadKey === current.reloadKey
+      ),
+      switchMap(({ slug }) =>
+        this.api.getMyBookings(slug).pipe(
+          tap((bookings) => {
+            const nextSelectedId =
+              bookings.some((booking) => booking.id === this.selectedBookingId())
+                ? this.selectedBookingId()
+                : bookings[0]?.id ?? null;
+
+            this.selectedBookingId.set(nextSelectedId);
+            this.selectedBooking.set(bookings.find((booking) => booking.id === nextSelectedId) ?? null);
+          }),
+          map((bookings) => ({
+            bookings,
+            loading: false,
+            error: null
+          })),
+          startWith({
+            bookings: [],
+            loading: true,
+            error: null
+          }),
+          catchError(() =>
+            of({
+              bookings: [],
+              loading: false,
+              error: 'Could not load bookings for this Telegram user.'
+            })
+          )
+        )
+      )
+    ),
+    {
+      initialValue: {
+        bookings: [],
+        loading: true,
+        error: null
+      }
+    }
+  );
+
   protected readonly vm = computed<FoodOrderVm>(() => this.vmSignal());
-  protected readonly checkoutOpen = signal(false);
-  protected readonly submitting = signal(false);
-  protected readonly submitError = signal<string | null>(null);
-  protected readonly submittedBooking = signal<BookingResponse | null>(null);
+  protected readonly bookingsVm = computed<MyBookingsVm>(() => this.bookingsVmSignal());
 
   private readonly mainButtonAction = () => {
     void this.handlePrimaryAction();
@@ -603,6 +829,47 @@ export class FoodOrderHomeComponent {
     });
   }
 
+  protected refreshBookings(): void {
+    this.cancelError.set(null);
+    this.bookingsReloadKey.update((value) => value + 1);
+  }
+
+  protected async selectBooking(bookingId: number): Promise<void> {
+    this.selectedBookingId.set(bookingId);
+    this.cancelError.set(null);
+
+    try {
+      const booking = await firstValueFrom(this.api.getBooking(this.config().slug, bookingId));
+      this.selectedBooking.set(booking);
+    } catch {
+      this.cancelError.set('Could not load booking details.');
+    }
+  }
+
+  protected canCancel(booking: BookingResponse): boolean {
+    return booking.status === 'NEW' || booking.status === 'CONFIRMED';
+  }
+
+  protected async cancelBooking(bookingId: number): Promise<void> {
+    if (this.cancellingBookingId()) {
+      return;
+    }
+
+    this.cancelError.set(null);
+    this.cancellingBookingId.set(bookingId);
+
+    try {
+      const booking = await firstValueFrom(this.api.cancelBooking(this.config().slug, bookingId));
+      this.selectedBooking.set(booking);
+      this.submittedBooking.update((current) => (current?.id === booking.id ? booking : current));
+      this.refreshBookings();
+    } catch {
+      this.cancelError.set('Cancel request failed. The booking may already be done or unavailable.');
+    } finally {
+      this.cancellingBookingId.set(null);
+    }
+  }
+
   protected async submitOrder(): Promise<void> {
     if (this.submitting()) {
       return;
@@ -624,11 +891,11 @@ export class FoodOrderHomeComponent {
     this.submitError.set(null);
 
     try {
-      const booking = await firstValueFrom(
-        this.api.createBooking(this.config().slug, this.toBookingRequest())
-      );
+      const booking = await firstValueFrom(this.api.createBooking(this.config().slug, this.toBookingRequest()));
 
       this.submittedBooking.set(booking);
+      this.selectedBookingId.set(booking.id);
+      this.selectedBooking.set(booking);
       this.store.clearCart();
       this.checkoutOpen.set(false);
       this.checkoutForm.reset({
@@ -637,6 +904,7 @@ export class FoodOrderHomeComponent {
         deliveryDate: this.defaultDeliveryDate(),
         note: ''
       });
+      this.refreshBookings();
     } catch {
       this.checkoutOpen.set(true);
       this.submitError.set('Booking request failed. Check tenant cutoff rules and Telegram auth headers.');

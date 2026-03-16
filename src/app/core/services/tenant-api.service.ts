@@ -21,4 +21,16 @@ export class TenantApiService {
   createBooking(slug: string, request: CreateBookingRequest): Observable<BookingResponse> {
     return this.http.post<BookingResponse>(`${this.baseUrl}/${slug}/bookings`, request);
   }
+
+  getMyBookings(slug: string): Observable<BookingResponse[]> {
+    return this.http.get<BookingResponse[]>(`${this.baseUrl}/${slug}/bookings/my`);
+  }
+
+  getBooking(slug: string, bookingId: number): Observable<BookingResponse> {
+    return this.http.get<BookingResponse>(`${this.baseUrl}/${slug}/bookings/${bookingId}`);
+  }
+
+  cancelBooking(slug: string, bookingId: number): Observable<BookingResponse> {
+    return this.http.post<BookingResponse>(`${this.baseUrl}/${slug}/bookings/${bookingId}/cancel`, {});
+  }
 }
