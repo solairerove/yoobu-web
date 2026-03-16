@@ -11,6 +11,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
+            "outputPath": "dist/yoobu-web",
             "browser": "src/main.ts",
             "index": "src/index.html",
             "polyfills": [
@@ -53,13 +54,16 @@
               "buildTarget": "yoobu-web:build:production"
             },
             "development": {
-              "buildTarget": "yoobu-web:build:development"
+              "buildTarget": "yoobu-web:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }
-

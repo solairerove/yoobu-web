@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { ServiceItem } from '../models/service.model';
 import { TenantConfig } from '../models/tenant-config.model';
 
 @Injectable({ providedIn: 'root' })
@@ -10,5 +11,8 @@ export class TenantApiService {
   getConfig(slug: string): Observable<TenantConfig> {
     return this.http.get<TenantConfig>(`/t/${slug}/config`);
   }
-}
 
+  getServices(slug: string): Observable<ServiceItem[]> {
+    return this.http.get<ServiceItem[]>(`/t/${slug}/services`);
+  }
+}

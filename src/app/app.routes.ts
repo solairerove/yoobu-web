@@ -4,7 +4,7 @@ export const appRoutes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 't/demo'
+    redirectTo: 't/smetankovich'
   },
   {
     path: 't/:slug',
@@ -13,7 +13,6 @@ export const appRoutes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 't/demo'
+    redirectTo: 't/smetankovich'
   }
 ];
-
