@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { BookingResponse, CreateBookingRequest } from '../models/booking.model';
 import { ServiceItem } from '../models/service.model';
 import { TenantConfig } from '../models/tenant-config.model';
 
@@ -15,5 +16,9 @@ export class TenantApiService {
 
   getServices(slug: string): Observable<ServiceItem[]> {
     return this.http.get<ServiceItem[]>(`${this.baseUrl}/${slug}/services`);
+  }
+
+  createBooking(slug: string, request: CreateBookingRequest): Observable<BookingResponse> {
+    return this.http.post<BookingResponse>(`${this.baseUrl}/${slug}/bookings`, request);
   }
 }

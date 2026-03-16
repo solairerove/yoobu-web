@@ -5,9 +5,20 @@ import { TelegramService } from '../telegram/telegram.service';
 export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) => {
   const telegram = inject(TelegramService);
   const initData = telegram.getInitData();
+  const devTelegramUserId = telegram.getDevTelegramUserId();
 
   if (!initData) {
-    return next(request);
+    if (!devTelegramUserId) {
+      return next(request);
+    }
+
+    return next(
+      request.clone({
+        setHeaders: {
+          'X-Telegram-User-Id': devTelegramUserId
+        }
+      })
+    );
   }
 
   return next(
@@ -18,4 +29,3 @@ export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) =>
     })
   );
 };
-
