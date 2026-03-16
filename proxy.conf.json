@@ -1,17 +1,26 @@
 {
-  "/t": {
+  "/api/t": {
     "target": "http://localhost:8080",
     "secure": false,
-    "changeOrigin": true
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/t": "/t"
+    }
   },
-  "/admin": {
+  "/api/admin": {
     "target": "http://localhost:8080",
     "secure": false,
-    "changeOrigin": true
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/admin": "/admin"
+    }
   },
-  "/superadmin": {
+  "/api/superadmin": {
     "target": "http://localhost:8080",
     "secure": false,
-    "changeOrigin": true
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/superadmin": "/superadmin"
+    }
   }
 }
