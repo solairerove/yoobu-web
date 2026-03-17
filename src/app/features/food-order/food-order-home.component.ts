@@ -31,10 +31,19 @@ interface CustomerDetailsDraft {
   selector: 'app-food-order-home',
   imports: [CurrencyPipe, DatePipe, NgFor, NgIf, ReactiveFormsModule],
   template: `
-    <section class="panel">
-      <p class="eyebrow">Food ordering flow</p>
-      <h2>{{ config().name }}</h2>
-      <p class="copy">Choose items, review the cart, place the order, and track it here.</p>
+    <section class="panel" [class.has-cart]="store.selectedCount() > 0 && !submittedBooking()">
+      <header class="panel-header">
+        <div>
+          <p class="eyebrow">Menu</p>
+          <h2>Order in a few taps</h2>
+        </div>
+        <div class="header-stat" *ngIf="vm().services.length && !vm().loading && !vm().error">
+          <strong>{{ vm().services.length }}</strong>
+          <span>items</span>
+        </div>
+      </header>
+
+      <p class="copy">Pick products, confirm delivery details, and follow booking status here.</p>
 
       <section class="status-card" *ngIf="vm().loading">
         <h3>Loading menu</h3>
@@ -71,41 +80,45 @@ interface CustomerDetailsDraft {
       <div class="catalog" *ngIf="vm().services.length && !submittedBooking()">
         <article class="product-card" *ngFor="let service of vm().services; trackBy: trackByServiceId">
           <div class="product-copy">
-            <div class="product-head">
+            <div class="product-meta">
               <h3>{{ service.name }}</h3>
-              <p class="price">{{ service.price | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+              <p class="unit">{{ service.unit || defaultUnit }}</p>
             </div>
 
             <p class="description" *ngIf="service.description">{{ service.description }}</p>
-            <p class="unit">{{ service.unit || defaultUnit }}</p>
           </div>
 
-          <div class="quantity">
-            <button type="button" (click)="decrease(service.id)" [disabled]="store.quantityFor(service.id) === 0">
-              -
-            </button>
-            <span>{{ store.quantityFor(service.id) }}</span>
-            <button type="button" (click)="increase(service.id)">+</button>
+          <div class="product-side">
+            <p class="price">{{ service.price | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+            <div class="quantity">
+              <button type="button" (click)="decrease(service.id)" [disabled]="store.quantityFor(service.id) === 0">
+                -
+              </button>
+              <span>{{ store.quantityFor(service.id) }}</span>
+              <button type="button" (click)="increase(service.id)">+</button>
+            </div>
           </div>
         </article>
       </div>
 
-      <section class="summary" *ngIf="store.selectedCount() > 0 && !submittedBooking()">
-        <div>
+      <button
+        type="button"
+        class="cart-bar"
+        *ngIf="store.selectedCount() > 0 && !submittedBooking()"
+        (click)="openCheckout()"
+      >
+        <div class="cart-copy">
           <p class="summary-label">Cart</p>
-          <strong>{{ store.selectedCount() }} items selected</strong>
+          <strong>
+            {{ checkoutOpen() ? 'Checkout is open' : store.selectedCount() + ' item' + (store.selectedCount() > 1 ? 's' : '') }}
+          </strong>
           <p class="summary-total">{{ store.selectedTotal() | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
         </div>
 
-        <button
-          type="button"
-          class="primary-button"
-          (click)="openCheckout()"
-          *ngIf="showLocalCheckoutButtons && !checkoutOpen()"
-        >
-          Checkout
-        </button>
-      </section>
+        <span class="cart-action">
+          {{ checkoutOpen() ? (showLocalCheckoutButtons ? 'Review below' : 'Use Telegram button') : 'Open checkout' }}
+        </span>
+      </button>
 
       <section class="checkout-card" *ngIf="checkoutOpen() && !submittedBooking()">
         <div class="checkout-head">
@@ -161,7 +174,10 @@ interface CustomerDetailsDraft {
           </form>
 
           <aside class="review-card">
-            <h4>Order review</h4>
+            <div class="review-head">
+              <h4>Order review</h4>
+              <span>{{ store.selectedCount() }} items</span>
+            </div>
 
             <div class="review-list">
               <div class="review-row" *ngFor="let entry of store.selectedItems()">
@@ -339,33 +355,75 @@ interface CustomerDetailsDraft {
   styles: `
     .panel {
       display: grid;
-      gap: 1rem;
-      padding: 1.5rem;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.92);
+      gap: 0.85rem;
+      padding: 1rem;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.94);
       border: 1px solid var(--yoobu-border);
       box-shadow: var(--yoobu-shadow);
+    }
+
+    .panel.has-cart {
+      padding-bottom: 6.5rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .header-stat {
+      min-width: 4.75rem;
+      padding: 0.55rem 0.7rem;
+      border-radius: 16px;
+      background: rgba(255, 107, 53, 0.08);
+      text-align: center;
+    }
+
+    .header-stat strong,
+    .header-stat span {
+      display: block;
+    }
+
+    .header-stat strong {
+      font-size: 1.05rem;
+    }
+
+    .header-stat span {
+      color: var(--yoobu-muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
     .eyebrow {
       margin: 0;
       text-transform: uppercase;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.14em;
       color: var(--yoobu-primary);
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
     }
 
     h2,
     h3,
     h4,
+    h5,
     p {
       margin: 0;
     }
 
+    h2 {
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
+      line-height: 1.15;
+    }
+
     .copy {
       color: var(--yoobu-muted);
-      line-height: 1.6;
+      line-height: 1.45;
+      font-size: 0.95rem;
     }
 
     .status-card,
@@ -373,9 +431,9 @@ interface CustomerDetailsDraft {
     .checkout-card,
     .bookings-card,
     .booking-detail {
-      padding: 1rem 1.1rem;
+      padding: 0.95rem 1rem;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.78);
+      background: rgba(255, 255, 255, 0.82);
       border: 1px solid var(--yoobu-border);
     }
 
@@ -391,7 +449,6 @@ interface CustomerDetailsDraft {
 
     .status-card p,
     .description,
-    .unit,
     .success-card p {
       margin-top: 0.45rem;
       color: var(--yoobu-muted);
@@ -409,47 +466,64 @@ interface CustomerDetailsDraft {
 
     .catalog {
       display: grid;
-      gap: 0.75rem;
+      gap: 0.6rem;
     }
 
     .product-card {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 1rem;
-      padding: 1rem;
-      border-radius: 18px;
-      background: var(--yoobu-surface);
+      gap: 0.9rem;
+      padding: 0.9rem;
+      border-radius: 16px;
+      background: rgba(255, 250, 246, 0.88);
       border: 1px solid rgba(36, 22, 15, 0.08);
+      align-items: center;
     }
 
     .product-copy {
       min-width: 0;
+      display: grid;
+      gap: 0.28rem;
     }
 
-    .product-head {
+    .product-meta {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 0.75rem;
+      gap: 0.55rem;
       align-items: baseline;
+    }
+
+    .product-meta h3 {
+      font-size: 1rem;
+      line-height: 1.25;
+    }
+
+    .product-side {
+      display: grid;
+      justify-items: end;
+      gap: 0.5rem;
     }
 
     .price {
       color: var(--yoobu-primary);
       font-weight: 700;
       white-space: nowrap;
+      font-size: 0.98rem;
     }
 
     .unit {
-      font-size: 0.92rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      background: rgba(36, 22, 15, 0.05);
+      color: var(--yoobu-muted);
+      font-size: 0.82rem;
     }
 
     .quantity {
       display: inline-flex;
       align-items: center;
-      align-self: center;
-      gap: 0.75rem;
-      padding: 0.4rem;
+      gap: 0.5rem;
+      padding: 0.25rem;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.92);
       border: 1px solid var(--yoobu-border);
@@ -458,19 +532,20 @@ interface CustomerDetailsDraft {
     .quantity button,
     .primary-button,
     .ghost-button,
-    .booking-item {
+    .booking-item,
+    .cart-bar {
       cursor: pointer;
       font: inherit;
     }
 
     .quantity button {
-      width: 2.25rem;
-      height: 2.25rem;
+      width: 2rem;
+      height: 2rem;
       border: 0;
       border-radius: 999px;
       background: var(--yoobu-primary);
       color: white;
-      font-size: 1.15rem;
+      font-size: 1rem;
     }
 
     .quantity button:disabled,
@@ -482,33 +557,58 @@ interface CustomerDetailsDraft {
     }
 
     .quantity span {
-      min-width: 1.5rem;
+      min-width: 1.25rem;
       text-align: center;
       font-weight: 700;
+      font-size: 0.95rem;
     }
 
-    .summary {
+    .cart-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 1rem;
-      padding: 1rem 1.1rem;
+      width: min(688px, calc(100% - 2rem));
+      position: fixed;
+      left: 50%;
+      bottom: max(0.85rem, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      z-index: 5;
+      padding: 0.9rem 1rem;
+      border: 1px solid rgba(255, 107, 53, 0.24);
       border-radius: 18px;
-      background: linear-gradient(135deg, rgba(255, 107, 53, 0.12), rgba(255, 255, 255, 0.92));
-      border: 1px solid rgba(255, 107, 53, 0.2);
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.96), rgba(255, 131, 84, 0.96));
+      color: white;
+      box-shadow: 0 18px 40px rgba(255, 107, 53, 0.24);
+      text-align: left;
     }
 
     .summary-label {
-      color: var(--yoobu-muted);
-      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
+    }
+
+    .cart-copy {
+      display: grid;
+      gap: 0.12rem;
     }
 
     .summary-total {
       margin-top: 0.2rem;
       font-weight: 700;
-      color: var(--yoobu-primary);
+      color: white;
+    }
+
+    .cart-action {
+      flex-shrink: 0;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.18);
+      color: white;
+      font-size: 0.82rem;
+      font-weight: 700;
     }
 
     .checkout-head,
@@ -570,8 +670,20 @@ interface CustomerDetailsDraft {
       align-content: start;
       padding: 1rem;
       border-radius: 18px;
-      background: var(--yoobu-surface);
+      background: rgba(255, 250, 246, 0.88);
       border: 1px solid rgba(36, 22, 15, 0.08);
+    }
+
+    .review-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: baseline;
+    }
+
+    .review-head span {
+      color: var(--yoobu-muted);
+      font-size: 0.85rem;
     }
 
     .review-list {
@@ -744,7 +856,7 @@ interface CustomerDetailsDraft {
       gap: 0.9rem;
       padding: 1rem;
       border-radius: 18px;
-      background: var(--yoobu-surface);
+      background: rgba(255, 250, 246, 0.88);
       border: 1px solid rgba(36, 22, 15, 0.08);
     }
 
@@ -806,20 +918,37 @@ interface CustomerDetailsDraft {
         grid-template-columns: 1fr;
       }
 
-      .quantity {
-        justify-self: start;
+      .product-side {
+        width: 100%;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
       }
 
-      .summary,
+      .quantity {
+        justify-self: end;
+      }
+
+      .cart-bar {
+        width: calc(100% - 1.5rem);
+        bottom: max(0.75rem, env(safe-area-inset-bottom));
+      }
+
+      .cart-bar,
       .checkout-head,
       .bookings-head,
       .booking-detail-head,
       .review-row,
+      .review-head,
       .booking-status-line,
       .receipt-head,
       .receipt-row {
         flex-direction: column;
         align-items: flex-start;
+      }
+
+      .cart-action {
+        width: 100%;
+        text-align: center;
       }
     }
   `

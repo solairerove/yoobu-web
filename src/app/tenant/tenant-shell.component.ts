@@ -20,7 +20,11 @@ interface TenantVm {
     <ng-container *ngIf="vm$ | async as vm">
       <main class="shell" [style.--yoobu-primary]="vm.config?.primaryColor || '#ff6b35'">
         <header class="hero" *ngIf="vm.config; else loadingOrError">
-          <p class="kicker">Telegram Mini App</p>
+          <div class="hero-top">
+            <p class="kicker">Telegram Mini App</p>
+            <span class="hero-badge">{{ vm.config.type === 'FOOD_ORDER' ? 'Ordering' : vm.config.type }}</span>
+          </div>
+
           <h1>{{ vm.config.name }}</h1>
           <p class="welcome">{{ vm.config.welcomeMessage || defaultWelcome }}</p>
         </header>
@@ -48,29 +52,50 @@ interface TenantVm {
   styles: `
     .shell {
       min-height: 100vh;
-      padding: 1.25rem;
+      padding: 0.9rem 0.9rem 1.25rem;
       display: grid;
-      gap: 1rem;
-      max-width: 760px;
+      gap: 0.85rem;
+      max-width: 720px;
       margin: 0 auto;
     }
 
     .hero,
     .status-card {
-      padding: 1.5rem;
-      border-radius: 28px;
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 242, 0.92));
+      padding: 1rem 1rem 1.1rem;
+      border-radius: 22px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 246, 0.94));
       border: 1px solid var(--yoobu-border);
       box-shadow: var(--yoobu-shadow);
     }
 
+    .hero {
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
     .kicker {
-      margin: 0 0 0.5rem;
+      margin: 0;
       color: var(--yoobu-primary);
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.16em;
-      font-size: 0.8rem;
+      letter-spacing: 0.14em;
+      font-size: 0.72rem;
+    }
+
+    .hero-badge {
+      padding: 0.28rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(255, 107, 53, 0.1);
+      color: var(--yoobu-primary);
+      font-size: 0.78rem;
+      font-weight: 700;
     }
 
     h1,
@@ -78,11 +103,16 @@ interface TenantVm {
       margin: 0;
     }
 
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      line-height: 1.08;
+    }
+
     .welcome,
     .status-card p {
-      margin-top: 0.75rem;
       color: var(--yoobu-muted);
-      line-height: 1.6;
+      line-height: 1.45;
+      font-size: 0.95rem;
     }
   `
 })
