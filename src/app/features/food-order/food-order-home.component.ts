@@ -134,10 +134,16 @@ interface CustomerDetailsDraft {
           *ngFor="let service of vm().services; trackBy: trackByServiceId"
           [class.selected]="store.quantityFor(service.id) > 0"
         >
+          <div class="product-accent"></div>
+
           <div class="product-copy">
+            <div class="product-topline">
+              <span class="product-index">{{ service.id }}</span>
+              <p class="unit">{{ service.unit || defaultUnit }}</p>
+            </div>
+
             <div class="product-meta">
               <h3>{{ service.name }}</h3>
-              <p class="unit">{{ service.unit || defaultUnit }}</p>
             </div>
 
             <p class="description" *ngIf="service.description">{{ service.description }}</p>
@@ -147,7 +153,10 @@ interface CustomerDetailsDraft {
           </div>
 
           <div class="product-side">
-            <p class="price">{{ service.price | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+            <div class="price-block">
+              <p class="price-label">Price</p>
+              <p class="price">{{ service.price | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+            </div>
             <div class="quantity">
               <button type="button" (click)="decrease(service.id)" [disabled]="store.quantityFor(service.id) === 0">
                 -
@@ -426,6 +435,8 @@ interface CustomerDetailsDraft {
       background: rgba(255, 250, 246, 0.88);
       border: 1px solid rgba(36, 22, 15, 0.08);
       align-items: center;
+      position: relative;
+      overflow: hidden;
       transition:
         transform 180ms ease,
         border-color 180ms ease,
@@ -439,35 +450,82 @@ interface CustomerDetailsDraft {
       box-shadow: 0 10px 24px rgba(255, 107, 53, 0.08);
     }
 
+    .product-accent {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0.3rem;
+      background: linear-gradient(180deg, rgba(255, 107, 53, 0.85), rgba(255, 160, 122, 0.45));
+      opacity: 0.55;
+    }
+
+    .product-card.selected .product-accent {
+      opacity: 1;
+    }
+
     .product-copy {
       min-width: 0;
       display: grid;
-      gap: 0.28rem;
+      gap: 0.34rem;
     }
 
-    .product-meta {
+    .product-topline {
       display: flex;
       flex-wrap: wrap;
       gap: 0.55rem;
       align-items: baseline;
     }
 
+    .product-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.9rem;
+      height: 1.9rem;
+      padding: 0 0.45rem;
+      border-radius: 999px;
+      background: rgba(36, 22, 15, 0.05);
+      color: var(--yoobu-muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .product-meta {
+      display: grid;
+      gap: 0.18rem;
+    }
+
     .product-meta h3 {
-      font-size: 1rem;
-      line-height: 1.25;
+      font-size: 1.04rem;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
     }
 
     .product-side {
       display: grid;
       justify-items: end;
-      gap: 0.5rem;
+      gap: 0.6rem;
+    }
+
+    .price-block {
+      display: grid;
+      gap: 0.08rem;
+      justify-items: end;
+    }
+
+    .price-label {
+      color: var(--yoobu-muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
     }
 
     .price {
       color: var(--yoobu-primary);
-      font-weight: 700;
+      font-weight: 800;
       white-space: nowrap;
-      font-size: 0.98rem;
+      font-size: 1.02rem;
     }
 
     .unit {
@@ -593,6 +651,10 @@ interface CustomerDetailsDraft {
       .catalog-meta {
         align-items: flex-start;
         justify-content: flex-start;
+      }
+
+      .catalog-note {
+        align-items: flex-start;
       }
 
       .product-side {
