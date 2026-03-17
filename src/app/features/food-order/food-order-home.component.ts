@@ -97,7 +97,12 @@ interface CustomerDetailsDraft {
           <p class="summary-total">{{ store.selectedTotal() | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
         </div>
 
-        <button type="button" class="primary-button" (click)="openCheckout()" *ngIf="!checkoutOpen()">
+        <button
+          type="button"
+          class="primary-button"
+          (click)="openCheckout()"
+          *ngIf="showLocalCheckoutButtons && !checkoutOpen()"
+        >
           Checkout
         </button>
       </section>
@@ -138,10 +143,19 @@ interface CustomerDetailsDraft {
 
             <p class="form-error" *ngIf="submitError() as error">{{ error }}</p>
             <p class="form-hint" *ngIf="!submitError()">
-              Telegram MainButton will submit this order. The local page button does the same action.
+              {{
+                showLocalCheckoutButtons
+                  ? 'Telegram MainButton will submit this order. The local page button does the same action.'
+                  : 'Use the Telegram MainButton to submit this order.'
+              }}
             </p>
 
-            <button type="submit" class="primary-button" [disabled]="submitting()">
+            <button
+              type="submit"
+              class="primary-button"
+              [disabled]="submitting()"
+              *ngIf="showLocalCheckoutButtons"
+            >
               {{ submitting() ? 'Submitting...' : 'Place order' }}
             </button>
           </form>
@@ -818,6 +832,7 @@ export class FoodOrderHomeComponent {
   readonly config = input.required<TenantConfig>();
   readonly store = inject(FoodOrderStore);
   protected readonly defaultUnit = 'item';
+  protected readonly showLocalCheckoutButtons = this.telegram.isLocalhost();
 
   protected readonly checkoutForm = this.fb.nonNullable.group({
     customerName: ['', [Validators.required]],

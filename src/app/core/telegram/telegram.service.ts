@@ -69,16 +69,7 @@ export class TelegramService {
 
   init(): void {
     const win = this.document.defaultView as TelegramWindow | null;
-    const webApp = win?.Telegram?.WebApp ?? null;
-    const initData = webApp?.initData?.trim() ?? '';
-
-    console.info('[telegram] init', {
-      hasWebApp: !!webApp,
-      hasInitData: initData.length > 0,
-      initDataLength: initData.length
-    });
-
-    this.webAppSignal.set(webApp);
+    this.webAppSignal.set(win?.Telegram?.WebApp ?? null);
   }
 
   getInitData(): string | null {
@@ -86,12 +77,16 @@ export class TelegramService {
   }
 
   getDevTelegramUserId(): string | null {
-    const hostname = this.document.defaultView?.location.hostname ?? '';
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+    if (!this.isLocalhost()) {
       return null;
     }
 
     return '101';
+  }
+
+  isLocalhost(): boolean {
+    const hostname = this.document.defaultView?.location.hostname ?? '';
+    return hostname === 'localhost' || hostname === '127.0.0.1';
   }
 
   setMainButton(text: string | null, enabled = true): void {

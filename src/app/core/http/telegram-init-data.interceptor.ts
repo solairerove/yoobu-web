@@ -9,16 +9,8 @@ export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) =>
 
   if (!initData) {
     if (!devTelegramUserId) {
-      console.info('[telegram-auth] no auth header attached', {
-        url: request.url
-      });
       return next(request);
     }
-
-    console.info('[telegram-auth] attaching dev user header', {
-      url: request.url,
-      userId: devTelegramUserId
-    });
 
     return next(
       request.clone({
@@ -28,11 +20,6 @@ export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) =>
       })
     );
   }
-
-  console.info('[telegram-auth] attaching initData header', {
-    url: request.url,
-    initDataLength: initData.length
-  });
 
   return next(
     request.clone({

@@ -26,6 +26,7 @@ npm start
 ```
 
 The Angular dev server proxies `/api/*` to the backend defined in `proxy.conf.json`.
+On localhost, the checkout and submit page buttons remain visible for manual testing. Outside localhost, the flow uses the Telegram `MainButton`.
 
 ## Railway deployment
 
@@ -55,7 +56,7 @@ This repo is prepared for Railway with a Dockerfile-based deploy.
 1. Open `https://<your-frontend-domain>/t/<tenant-slug>` in a normal browser.
 2. Confirm the tenant config loads and page refresh on `/t/<tenant-slug>` does not 404.
 3. Confirm requests to `/api/t/...` succeed through the frontend domain.
-4. Open the same Railway URL inside your Telegram Mini App and verify the backend receives `X-Telegram-Init-Data`.
+4. Open the same Railway URL inside your Telegram Mini App and verify protected booking requests work with Telegram auth.
 
 ### Telegram setup you still need to do manually
 
