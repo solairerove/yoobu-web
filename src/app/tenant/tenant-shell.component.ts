@@ -25,8 +25,19 @@ interface TenantVm {
             <span class="hero-badge">{{ vm.config.type === 'FOOD_ORDER' ? 'Ordering' : vm.config.type }}</span>
           </div>
 
-          <h1>{{ vm.config.name }}</h1>
-          <p class="welcome">{{ vm.config.welcomeMessage || defaultWelcome }}</p>
+          <div class="hero-content">
+            <div>
+              <h1>{{ vm.config.name }}</h1>
+              <p class="welcome">{{ vm.config.welcomeMessage || defaultWelcome }}</p>
+            </div>
+
+            <div class="hero-aside">
+              <div class="hero-chip">
+                <strong>{{ vm.config.slug }}</strong>
+                <span>tenant</span>
+              </div>
+            </div>
+          </div>
         </header>
 
         <ng-template #loadingOrError>
@@ -52,7 +63,7 @@ interface TenantVm {
   styles: `
     .shell {
       min-height: 100vh;
-      padding: 0.9rem 0.9rem 1.25rem;
+      padding: 0.9rem 0.9rem 1.5rem;
       display: grid;
       gap: 0.85rem;
       max-width: 720px;
@@ -70,7 +81,24 @@ interface TenantVm {
 
     .hero {
       display: grid;
-      gap: 0.45rem;
+      gap: 0.8rem;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--yoobu-primary) 18%, transparent), transparent 34%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 249, 244, 0.96));
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: auto -3rem -3rem auto;
+      width: 10rem;
+      height: 10rem;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--yoobu-primary) 10%, transparent);
+      filter: blur(2px);
+      pointer-events: none;
     }
 
     .hero-top {
@@ -90,12 +118,55 @@ interface TenantVm {
     }
 
     .hero-badge {
-      padding: 0.28rem 0.6rem;
+      padding: 0.32rem 0.68rem;
       border-radius: 999px;
-      background: rgba(255, 107, 53, 0.1);
+      background: color-mix(in srgb, var(--yoobu-primary) 12%, white);
       color: var(--yoobu-primary);
       font-size: 0.78rem;
       font-weight: 700;
+    }
+
+    .hero-content {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: end;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-aside {
+      display: flex;
+      align-items: center;
+    }
+
+    .hero-chip {
+      min-width: 6rem;
+      padding: 0.7rem 0.85rem;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(36, 22, 15, 0.08);
+      box-shadow: var(--yoobu-shadow-soft);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-chip strong,
+    .hero-chip span {
+      display: block;
+    }
+
+    .hero-chip strong {
+      font-size: 0.96rem;
+      line-height: 1.1;
+      word-break: break-word;
+    }
+
+    .hero-chip span {
+      margin-top: 0.18rem;
+      color: var(--yoobu-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
     h1,
@@ -113,6 +184,23 @@ interface TenantVm {
       color: var(--yoobu-muted);
       line-height: 1.45;
       font-size: 0.95rem;
+    }
+
+    .welcome {
+      margin-top: 0.45rem;
+      max-width: 38rem;
+    }
+
+    @media (max-width: 640px) {
+      .hero-content {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hero-aside,
+      .hero-chip {
+        width: 100%;
+      }
     }
   `
 })
