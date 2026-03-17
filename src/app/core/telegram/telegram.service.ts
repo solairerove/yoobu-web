@@ -119,7 +119,15 @@ export class TelegramService {
 
     if (webApp?.showAlert) {
       return new Promise<void>((resolve) => {
-        webApp.showAlert?.(message, resolve);
+        try {
+          webApp.showAlert?.(message, resolve);
+          return;
+        } catch {
+          // Some Telegram runtimes expose the method but reject it at call time.
+        }
+
+        this.document.defaultView?.alert(message);
+        resolve();
       });
     }
 
@@ -132,7 +140,14 @@ export class TelegramService {
 
     if (webApp?.showConfirm) {
       return new Promise<boolean>((resolve) => {
-        webApp.showConfirm?.(message, resolve);
+        try {
+          webApp.showConfirm?.(message, resolve);
+          return;
+        } catch {
+          // Fall back when the runtime is too old for Telegram popup support.
+        }
+
+        resolve(this.document.defaultView?.confirm(message) ?? false);
       });
     }
 

@@ -120,7 +120,7 @@ interface CustomerDetailsDraft {
         </span>
       </button>
 
-      <section class="checkout-card" *ngIf="checkoutOpen() && !submittedBooking()">
+      <section class="checkout-card" *ngIf="checkoutOpen() && !submittedBooking() && showLocalCheckoutButtons">
         <div class="checkout-head">
           <div>
             <p class="eyebrow">Checkout</p>
@@ -156,18 +156,13 @@ interface CustomerDetailsDraft {
 
             <p class="form-error" *ngIf="submitError() as error">{{ error }}</p>
             <p class="form-hint" *ngIf="!submitError()">
-              {{
-                showLocalCheckoutButtons
-                  ? 'Telegram MainButton will submit this order. The local page button does the same action.'
-                  : 'Use the Telegram MainButton to submit this order.'
-              }}
+              Telegram MainButton will submit this order. The local page button does the same action.
             </p>
 
             <button
               type="submit"
               class="primary-button"
               [disabled]="submitting()"
-              *ngIf="showLocalCheckoutButtons"
             >
               {{ submitting() ? 'Submitting...' : 'Place order' }}
             </button>
@@ -196,6 +191,83 @@ interface CustomerDetailsDraft {
           </aside>
         </div>
       </section>
+
+      <div class="checkout-overlay" *ngIf="checkoutOpen() && !submittedBooking() && !showLocalCheckoutButtons">
+        <button type="button" class="checkout-scrim" aria-label="Close checkout" (click)="closeCheckout()"></button>
+
+        <section class="checkout-card checkout-sheet">
+          <div class="sheet-handle" aria-hidden="true"></div>
+
+          <div class="checkout-head">
+            <div>
+              <p class="eyebrow">Checkout</p>
+              <h3>Customer details</h3>
+            </div>
+
+            <button type="button" class="ghost-button" (click)="closeCheckout()" [disabled]="submitting()">
+              Back to menu
+            </button>
+          </div>
+
+          <div class="checkout-grid">
+            <form class="checkout-form" [formGroup]="checkoutForm" (ngSubmit)="submitOrder()">
+              <label>
+                <span>Name</span>
+                <input type="text" formControlName="customerName" placeholder="Alexey" />
+              </label>
+
+              <label>
+                <span>Phone</span>
+                <input type="tel" formControlName="customerPhone" placeholder="+84..." />
+              </label>
+
+              <label>
+                <span>Delivery date</span>
+                <input type="date" formControlName="deliveryDate" />
+              </label>
+
+              <label>
+                <span>Note</span>
+                <textarea rows="4" formControlName="note" placeholder="No onion, gate code, delivery note"></textarea>
+              </label>
+
+              <p class="form-error" *ngIf="submitError() as error">{{ error }}</p>
+              <p class="form-hint" *ngIf="!submitError()">Use the Telegram MainButton to submit this order.</p>
+
+              <button
+                type="submit"
+                class="primary-button"
+                [disabled]="submitting()"
+                *ngIf="showLocalCheckoutButtons"
+              >
+                {{ submitting() ? 'Submitting...' : 'Place order' }}
+              </button>
+            </form>
+
+            <aside class="review-card">
+              <div class="review-head">
+                <h4>Order review</h4>
+                <span>{{ store.selectedCount() }} items</span>
+              </div>
+
+              <div class="review-list">
+                <div class="review-row" *ngFor="let entry of store.selectedItems()">
+                  <div>
+                    <strong>{{ entry.service.name }}</strong>
+                    <p>{{ entry.quantity }} × {{ entry.service.price | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+                  </div>
+                  <span>{{ entry.service.price * entry.quantity | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
+                </div>
+              </div>
+
+              <div class="review-total">
+                <span>Total</span>
+                <strong>{{ store.selectedTotal() | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</strong>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </div>
 
       <section class="bookings-card" *ngIf="!vm().loading">
         <div class="bookings-head">
@@ -611,6 +683,44 @@ interface CustomerDetailsDraft {
       font-weight: 700;
     }
 
+    .checkout-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 8;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .checkout-scrim {
+      position: absolute;
+      inset: 0;
+      border: 0;
+      background: rgba(36, 22, 15, 0.32);
+      pointer-events: auto;
+    }
+
+    .checkout-sheet {
+      width: min(720px, calc(100% - 1rem));
+      max-height: min(85vh, 920px);
+      margin: 0 0 max(0.5rem, env(safe-area-inset-bottom));
+      border-radius: 24px 24px 0 0;
+      box-shadow: 0 -10px 40px rgba(36, 22, 15, 0.18);
+      overflow: auto;
+      pointer-events: auto;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 246, 0.96));
+    }
+
+    .sheet-handle {
+      width: 3rem;
+      height: 0.32rem;
+      margin: 0 auto 0.8rem;
+      border-radius: 999px;
+      background: rgba(36, 22, 15, 0.14);
+    }
+
     .checkout-head,
     .bookings-head,
     .booking-detail-head {
@@ -931,6 +1041,13 @@ interface CustomerDetailsDraft {
       .cart-bar {
         width: calc(100% - 1.5rem);
         bottom: max(0.75rem, env(safe-area-inset-bottom));
+      }
+
+      .checkout-sheet {
+        width: calc(100% - 0.4rem);
+        max-height: 88vh;
+        margin-bottom: 0;
+        border-radius: 24px 24px 0 0;
       }
 
       .cart-bar,
