@@ -69,7 +69,16 @@ export class TelegramService {
 
   init(): void {
     const win = this.document.defaultView as TelegramWindow | null;
-    this.webAppSignal.set(win?.Telegram?.WebApp ?? null);
+    const webApp = win?.Telegram?.WebApp ?? null;
+    const initData = webApp?.initData?.trim() ?? '';
+
+    console.info('[telegram] init', {
+      hasWebApp: !!webApp,
+      hasInitData: initData.length > 0,
+      initDataLength: initData.length
+    });
+
+    this.webAppSignal.set(webApp);
   }
 
   getInitData(): string | null {
