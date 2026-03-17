@@ -110,8 +110,30 @@ interface CustomerDetailsDraft {
         </section>
       </ng-container>
 
-      <div class="catalog" *ngIf="activeView() === 'menu' && vm().services.length && !submittedBooking()">
-        <article class="product-card" *ngFor="let service of vm().services; trackBy: trackByServiceId">
+      <section class="catalog-shell" *ngIf="activeView() === 'menu' && vm().services.length && !submittedBooking()">
+        <div class="catalog-head">
+          <div>
+            <p class="eyebrow">Available now</p>
+            <h3>Choose your items</h3>
+          </div>
+
+          <div class="catalog-meta">
+            <span class="catalog-pill">{{ vm().services.length }} choices</span>
+            <span class="catalog-pill" *ngIf="store.selectedCount() > 0">{{ store.selectedCount() }} in cart</span>
+          </div>
+        </div>
+
+        <div class="catalog-note">
+          <span class="catalog-dot"></span>
+          <p>Tap plus to add items, then review everything in the cart bar.</p>
+        </div>
+
+        <div class="catalog">
+        <article
+          class="product-card"
+          *ngFor="let service of vm().services; trackBy: trackByServiceId"
+          [class.selected]="store.quantityFor(service.id) > 0"
+        >
           <div class="product-copy">
             <div class="product-meta">
               <h3>{{ service.name }}</h3>
@@ -119,6 +141,9 @@ interface CustomerDetailsDraft {
             </div>
 
             <p class="description" *ngIf="service.description">{{ service.description }}</p>
+            <p class="selection-copy" *ngIf="store.quantityFor(service.id) > 0">
+              {{ store.quantityFor(service.id) }} selected
+            </p>
           </div>
 
           <div class="product-side">
@@ -132,7 +157,8 @@ interface CustomerDetailsDraft {
             </div>
           </div>
         </article>
-      </div>
+        </div>
+      </section>
 
       <button
         type="button"
@@ -327,6 +353,65 @@ interface CustomerDetailsDraft {
       margin-top: 1rem;
     }
 
+    .catalog-shell {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .catalog-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .catalog-head h3 {
+      margin-top: 0.2rem;
+      font-size: 1.02rem;
+    }
+
+    .catalog-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      justify-content: flex-end;
+    }
+
+    .catalog-pill {
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(36, 22, 15, 0.05);
+      color: var(--yoobu-muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .catalog-note {
+      display: flex;
+      gap: 0.55rem;
+      align-items: center;
+      padding: 0.8rem 0.9rem;
+      border-radius: 16px;
+      background: rgba(255, 248, 242, 0.9);
+      border: 1px solid rgba(255, 107, 53, 0.12);
+    }
+
+    .catalog-dot {
+      width: 0.6rem;
+      height: 0.6rem;
+      border-radius: 999px;
+      background: var(--yoobu-primary);
+      flex-shrink: 0;
+      box-shadow: 0 0 0 6px rgba(255, 107, 53, 0.12);
+    }
+
+    .catalog-note p {
+      color: var(--yoobu-muted);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
     .catalog {
       display: grid;
       gap: 0.6rem;
@@ -341,6 +426,17 @@ interface CustomerDetailsDraft {
       background: rgba(255, 250, 246, 0.88);
       border: 1px solid rgba(36, 22, 15, 0.08);
       align-items: center;
+      transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        background 180ms ease,
+        box-shadow 180ms ease;
+    }
+
+    .product-card.selected {
+      border-color: rgba(255, 107, 53, 0.28);
+      background: linear-gradient(135deg, rgba(255, 246, 240, 0.98), rgba(255, 252, 249, 0.92));
+      box-shadow: 0 10px 24px rgba(255, 107, 53, 0.08);
     }
 
     .product-copy {
@@ -380,6 +476,12 @@ interface CustomerDetailsDraft {
       background: rgba(36, 22, 15, 0.05);
       color: var(--yoobu-muted);
       font-size: 0.82rem;
+    }
+
+    .selection-copy {
+      color: var(--yoobu-primary);
+      font-size: 0.84rem;
+      font-weight: 700;
     }
 
     .quantity {
@@ -485,6 +587,12 @@ interface CustomerDetailsDraft {
 
       .view-switch {
         width: 100%;
+      }
+
+      .catalog-head,
+      .catalog-meta {
+        align-items: flex-start;
+        justify-content: flex-start;
       }
 
       .product-side {
