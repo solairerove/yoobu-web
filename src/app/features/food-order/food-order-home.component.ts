@@ -659,6 +659,7 @@ export class FoodOrderHomeComponent {
     customerName: '',
     customerPhone: ''
   });
+  private readonly customerDetailsHydrated = signal(false);
 
   private readonly vmSignal = toSignal(
     toObservable(this.config).pipe(
@@ -673,6 +674,7 @@ export class FoodOrderHomeComponent {
         this.cancelError.set(null);
         this.selectedBookingId.set(null);
         this.selectedBooking.set(null);
+        this.customerDetailsHydrated.set(false);
         this.resetCheckoutForm();
         this.bookingsReloadKey.update((value) => value + 1);
       }),
@@ -726,9 +728,11 @@ export class FoodOrderHomeComponent {
               bookings.some((booking) => booking.id === this.selectedBookingId())
                 ? this.selectedBookingId()
                 : bookings[0]?.id ?? null;
+            const latestBooking = this.findLatestBooking(bookings);
 
             this.selectedBookingId.set(nextSelectedId);
             this.selectedBooking.set(bookings.find((booking) => booking.id === nextSelectedId) ?? null);
+            this.hydrateCustomerDetails(latestBooking);
           }),
           map((bookings) => ({
             bookings,
@@ -955,6 +959,35 @@ export class FoodOrderHomeComponent {
       deliveryDate: this.defaultDeliveryDate(),
       note: ''
     });
+  }
+
+  private hydrateCustomerDetails(booking: BookingResponse | null): void {
+    if (this.customerDetailsHydrated()) {
+      return;
+    }
+
+    this.customerDetailsHydrated.set(true);
+
+    if (!booking) {
+      return;
+    }
+
+    this.customerDetailsDraft.set({
+      customerName: booking.customerName.trim(),
+      customerPhone: booking.customerPhone.trim()
+    });
+
+    this.resetCheckoutForm();
+  }
+
+  private findLatestBooking(bookings: BookingResponse[]): BookingResponse | null {
+    if (bookings.length === 0) {
+      return null;
+    }
+
+    return bookings.reduce((latest, booking) =>
+      new Date(booking.createdAt).getTime() > new Date(latest.createdAt).getTime() ? booking : latest
+    );
   }
 
   private defaultDeliveryDate(): string {

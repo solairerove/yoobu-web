@@ -22,6 +22,7 @@ export interface BookingResponse {
   type: 'ORDER' | 'APPOINTMENT' | 'REQUEST';
   status: 'NEW' | 'CONFIRMED' | 'DONE' | 'CANCELLED';
   customerName: string;
+  customerPhone: string;
   totalPrice: number;
   deliveryDate: string;
   note: string | null;
