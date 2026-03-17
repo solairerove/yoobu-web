@@ -22,6 +22,11 @@ interface MyBookingsVm {
   error: string | null;
 }
 
+interface CustomerDetailsDraft {
+  customerName: string;
+  customerPhone: string;
+}
+
 @Component({
   selector: 'app-food-order-home',
   imports: [CurrencyPipe, DatePipe, NgFor, NgIf, ReactiveFormsModule],
@@ -650,6 +655,10 @@ export class FoodOrderHomeComponent {
   protected readonly submittedBooking = signal<BookingResponse | null>(null);
   protected readonly cancellingBookingId = signal<number | null>(null);
   protected readonly cancelError = signal<string | null>(null);
+  private readonly customerDetailsDraft = signal<CustomerDetailsDraft>({
+    customerName: '',
+    customerPhone: ''
+  });
 
   private readonly vmSignal = toSignal(
     toObservable(this.config).pipe(
@@ -664,12 +673,7 @@ export class FoodOrderHomeComponent {
         this.cancelError.set(null);
         this.selectedBookingId.set(null);
         this.selectedBooking.set(null);
-        this.checkoutForm.reset({
-          customerName: '',
-          customerPhone: '',
-          deliveryDate: this.defaultDeliveryDate(),
-          note: ''
-        });
+        this.resetCheckoutForm();
         this.bookingsReloadKey.update((value) => value + 1);
       }),
       switchMap((config) =>
@@ -889,6 +893,7 @@ export class FoodOrderHomeComponent {
 
     this.submitting.set(true);
     this.submitError.set(null);
+    this.rememberCustomerDetails();
 
     try {
       const booking = await firstValueFrom(this.api.createBooking(this.config().slug, this.toBookingRequest()));
@@ -898,12 +903,7 @@ export class FoodOrderHomeComponent {
       this.selectedBooking.set(booking);
       this.store.clearCart();
       this.checkoutOpen.set(false);
-      this.checkoutForm.reset({
-        customerName: '',
-        customerPhone: '',
-        deliveryDate: this.defaultDeliveryDate(),
-        note: ''
-      });
+      this.resetCheckoutForm();
       this.refreshBookings();
     } catch {
       this.checkoutOpen.set(true);
@@ -935,6 +935,26 @@ export class FoodOrderHomeComponent {
         quantity: entry.quantity
       }))
     };
+  }
+
+  private rememberCustomerDetails(): void {
+    const { customerName, customerPhone } = this.checkoutForm.getRawValue();
+
+    this.customerDetailsDraft.set({
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim()
+    });
+  }
+
+  private resetCheckoutForm(): void {
+    const customerDetails = this.customerDetailsDraft();
+
+    this.checkoutForm.reset({
+      customerName: customerDetails.customerName,
+      customerPhone: customerDetails.customerPhone,
+      deliveryDate: this.defaultDeliveryDate(),
+      note: ''
+    });
   }
 
   private defaultDeliveryDate(): string {
