@@ -5,6 +5,8 @@ interface TelegramWebApp {
   initData?: string;
   ready(): void;
   expand(): void;
+  showAlert?(message: string, callback?: () => void): void;
+  showConfirm?(message: string, callback?: (confirmed: boolean) => void): void;
   MainButton?: {
     setText(text: string): void;
     show(): void;
@@ -106,5 +108,30 @@ export class TelegramService {
 
   onMainButtonClick(handler: (() => void) | null): void {
     this.mainButtonHandler.set(handler);
+  }
+
+  alert(message: string): Promise<void> {
+    const webApp = this.webAppSignal();
+
+    if (webApp?.showAlert) {
+      return new Promise<void>((resolve) => {
+        webApp.showAlert?.(message, resolve);
+      });
+    }
+
+    this.document.defaultView?.alert(message);
+    return Promise.resolve();
+  }
+
+  confirm(message: string): Promise<boolean> {
+    const webApp = this.webAppSignal();
+
+    if (webApp?.showConfirm) {
+      return new Promise<boolean>((resolve) => {
+        webApp.showConfirm?.(message, resolve);
+      });
+    }
+
+    return Promise.resolve(this.document.defaultView?.confirm(message) ?? false);
   }
 }

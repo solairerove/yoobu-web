@@ -863,6 +863,14 @@ export class FoodOrderHomeComponent {
       return;
     }
 
+    const confirmed = await this.telegram.confirm(
+      'Cancel this order? This can only be done while the booking is still active.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     this.cancelError.set(null);
     this.cancellingBookingId.set(bookingId);
 
@@ -873,6 +881,7 @@ export class FoodOrderHomeComponent {
       this.refreshBookings();
     } catch {
       this.cancelError.set('Cancel request failed. The booking may already be done or unavailable.');
+      await this.telegram.alert('Could not cancel this order. It may already be processed or unavailable.');
     } finally {
       this.cancellingBookingId.set(null);
     }
@@ -892,6 +901,15 @@ export class FoodOrderHomeComponent {
       this.checkoutOpen.set(true);
       this.checkoutForm.markAllAsTouched();
       this.submitError.set('Fill in name, phone, and delivery date before placing the order.');
+      await this.telegram.alert('Fill in name, phone, and delivery date before placing the order.');
+      return;
+    }
+
+    const confirmed = await this.telegram.confirm(
+      `Submit this order for ${this.formatCurrency(this.store.selectedTotal())}?`
+    );
+
+    if (!confirmed) {
       return;
     }
 
@@ -912,6 +930,7 @@ export class FoodOrderHomeComponent {
     } catch {
       this.checkoutOpen.set(true);
       this.submitError.set('Booking request failed. Check tenant cutoff rules and Telegram auth headers.');
+      await this.telegram.alert('Booking request failed. Check tenant cutoff rules and Telegram auth headers.');
     } finally {
       this.submitting.set(false);
     }
