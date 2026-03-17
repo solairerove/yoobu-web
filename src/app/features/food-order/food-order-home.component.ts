@@ -205,8 +205,14 @@ interface CustomerDetailsDraft {
             >
               <div class="booking-item-top">
                 <strong>#{{ booking.id }}</strong>
-                <span class="booking-status" [class.cancelled]="booking.status === 'CANCELLED'">
-                  {{ booking.status }}
+                <span
+                  class="booking-status"
+                  [class.status-new]="booking.status === 'NEW'"
+                  [class.status-confirmed]="booking.status === 'CONFIRMED'"
+                  [class.status-done]="booking.status === 'DONE'"
+                  [class.status-cancelled]="booking.status === 'CANCELLED'"
+                >
+                  {{ bookingStatusLabel(booking.status) }}
                 </span>
               </div>
               <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
@@ -216,9 +222,21 @@ interface CustomerDetailsDraft {
 
           <section class="booking-detail" *ngIf="selectedBooking() as booking; else chooseBooking">
             <div class="booking-detail-head">
-              <div>
+              <div class="booking-summary">
                 <p class="eyebrow">Booking #{{ booking.id }}</p>
-                <h4>{{ booking.status }}</h4>
+                <div class="booking-status-line">
+                  <h4>{{ bookingStatusTitle(booking.status) }}</h4>
+                  <span
+                    class="booking-status large"
+                    [class.status-new]="booking.status === 'NEW'"
+                    [class.status-confirmed]="booking.status === 'CONFIRMED'"
+                    [class.status-done]="booking.status === 'DONE'"
+                    [class.status-cancelled]="booking.status === 'CANCELLED'"
+                  >
+                    {{ bookingStatusLabel(booking.status) }}
+                  </span>
+                </div>
+                <p class="copy">{{ bookingStatusDescription(booking.status) }}</p>
               </div>
 
               <button
@@ -232,21 +250,62 @@ interface CustomerDetailsDraft {
               </button>
             </div>
 
-            <div class="booking-detail-meta">
-              <span>{{ booking.deliveryDate | date: 'mediumDate' }}</span>
-              <span>{{ booking.totalPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
-              <span>{{ booking.createdAt | date: 'short' }}</span>
+            <div class="booking-timeline" aria-label="Booking progress">
+              <div
+                class="timeline-step"
+                *ngFor="let step of bookingTimeline(booking.status)"
+                [class.complete]="step.state === 'complete'"
+                [class.current]="step.state === 'current'"
+                [class.cancelled]="step.state === 'cancelled'"
+              >
+                <span class="timeline-dot"></span>
+                <div>
+                  <strong>{{ step.label }}</strong>
+                  <p>{{ step.description }}</p>
+                </div>
+              </div>
             </div>
 
-            <p class="copy" *ngIf="booking.note">{{ booking.note }}</p>
+            <div class="receipt-card">
+              <div class="receipt-head">
+                <h5>Receipt</h5>
+                <span>{{ booking.createdAt | date: 'short' }}</span>
+              </div>
 
-            <div class="review-list">
-              <div class="review-row" *ngFor="let item of booking.items">
-                <div>
-                  <strong>{{ item.serviceName }}</strong>
-                  <p>{{ item.quantity }} × {{ item.unitPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+              <div class="receipt-meta">
+                <div class="receipt-row">
+                  <span>Delivery date</span>
+                  <strong>{{ booking.deliveryDate | date: 'mediumDate' }}</strong>
                 </div>
-                <span>{{ item.unitPrice * item.quantity | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
+                <div class="receipt-row">
+                  <span>Customer</span>
+                  <strong>{{ booking.customerName }}</strong>
+                </div>
+                <div class="receipt-row">
+                  <span>Phone</span>
+                  <strong>{{ booking.customerPhone }}</strong>
+                </div>
+                <div class="receipt-row">
+                  <span>Items</span>
+                  <strong>{{ booking.items.length }}</strong>
+                </div>
+              </div>
+
+              <p class="receipt-note" *ngIf="booking.note">{{ booking.note }}</p>
+
+              <div class="review-list">
+                <div class="review-row" *ngFor="let item of booking.items">
+                  <div>
+                    <strong>{{ item.serviceName }}</strong>
+                    <p>{{ item.quantity }} × {{ item.unitPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+                  </div>
+                  <span>{{ item.unitPrice * item.quantity | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
+                </div>
+              </div>
+
+              <div class="review-total">
+                <span>Total</span>
+                <strong>{{ booking.totalPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</strong>
               </div>
             </div>
 
@@ -544,8 +603,7 @@ interface CustomerDetailsDraft {
       background: rgba(255, 248, 242, 0.96);
     }
 
-    .booking-item-top,
-    .booking-detail-meta {
+    .booking-item-top {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
@@ -553,8 +611,7 @@ interface CustomerDetailsDraft {
       align-items: center;
     }
 
-    .booking-item p,
-    .booking-detail-meta {
+    .booking-item p {
       color: var(--yoobu-muted);
       font-size: 0.92rem;
     }
@@ -568,9 +625,133 @@ interface CustomerDetailsDraft {
       font-weight: 700;
     }
 
-    .booking-status.cancelled {
+    .booking-status.large {
+      padding: 0.35rem 0.8rem;
+      font-size: 0.88rem;
+    }
+
+    .booking-status.status-new {
+      background: rgba(255, 107, 53, 0.12);
+      color: var(--yoobu-primary);
+    }
+
+    .booking-status.status-confirmed {
+      background: rgba(181, 131, 0, 0.14);
+      color: #9a6800;
+    }
+
+    .booking-status.status-done {
+      background: rgba(46, 125, 50, 0.14);
+      color: #2e7d32;
+    }
+
+    .booking-status.status-cancelled {
       background: rgba(165, 42, 42, 0.12);
       color: brown;
+    }
+
+    .booking-detail {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .booking-summary {
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .booking-status-line,
+    .receipt-head,
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .booking-timeline,
+    .receipt-meta {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .timeline-step {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 0.75rem;
+      align-items: start;
+      color: var(--yoobu-muted);
+    }
+
+    .timeline-dot {
+      width: 0.8rem;
+      height: 0.8rem;
+      margin-top: 0.3rem;
+      border-radius: 999px;
+      border: 2px solid rgba(36, 22, 15, 0.14);
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 0 6px rgba(36, 22, 15, 0.04);
+    }
+
+    .timeline-step strong {
+      display: block;
+      color: var(--yoobu-ink);
+    }
+
+    .timeline-step p {
+      margin-top: 0.2rem;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .timeline-step.complete .timeline-dot,
+    .timeline-step.current .timeline-dot {
+      border-color: var(--yoobu-primary);
+      background: var(--yoobu-primary);
+      box-shadow: 0 0 0 6px rgba(255, 107, 53, 0.12);
+    }
+
+    .timeline-step.current strong {
+      color: var(--yoobu-primary);
+    }
+
+    .timeline-step.cancelled .timeline-dot {
+      border-color: brown;
+      background: brown;
+      box-shadow: 0 0 0 6px rgba(165, 42, 42, 0.12);
+    }
+
+    .timeline-step.cancelled strong {
+      color: brown;
+    }
+
+    .receipt-card {
+      display: grid;
+      gap: 0.9rem;
+      padding: 1rem;
+      border-radius: 18px;
+      background: var(--yoobu-surface);
+      border: 1px solid rgba(36, 22, 15, 0.08);
+    }
+
+    .receipt-head span,
+    .receipt-row span {
+      color: var(--yoobu-muted);
+      font-size: 0.92rem;
+    }
+
+    .receipt-row {
+      align-items: baseline;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid rgba(36, 22, 15, 0.08);
+    }
+
+    .receipt-note {
+      padding: 0.85rem 0.95rem;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--yoobu-muted);
+      line-height: 1.5;
     }
 
     .primary-button {
@@ -619,7 +800,10 @@ interface CustomerDetailsDraft {
       .checkout-head,
       .bookings-head,
       .booking-detail-head,
-      .review-row {
+      .review-row,
+      .booking-status-line,
+      .receipt-head,
+      .receipt-row {
         flex-direction: column;
         align-items: flex-start;
       }
@@ -856,6 +1040,90 @@ export class FoodOrderHomeComponent {
 
   protected canCancel(booking: BookingResponse): boolean {
     return booking.status === 'NEW' || booking.status === 'CONFIRMED';
+  }
+
+  protected bookingStatusLabel(status: BookingResponse['status']): string {
+    switch (status) {
+      case 'NEW':
+        return 'New';
+      case 'CONFIRMED':
+        return 'Confirmed';
+      case 'DONE':
+        return 'Delivered';
+      case 'CANCELLED':
+        return 'Cancelled';
+    }
+  }
+
+  protected bookingStatusTitle(status: BookingResponse['status']): string {
+    switch (status) {
+      case 'NEW':
+        return 'Waiting for confirmation';
+      case 'CONFIRMED':
+        return 'Order confirmed';
+      case 'DONE':
+        return 'Order completed';
+      case 'CANCELLED':
+        return 'Order cancelled';
+    }
+  }
+
+  protected bookingStatusDescription(status: BookingResponse['status']): string {
+    switch (status) {
+      case 'NEW':
+        return 'Your order has been received and is waiting for the kitchen or staff to confirm it.';
+      case 'CONFIRMED':
+        return 'The order is accepted and being prepared for the scheduled delivery date.';
+      case 'DONE':
+        return 'This order is finished. Keep this receipt view for reference if you need to check the details.';
+      case 'CANCELLED':
+        return 'This order is no longer active. If you still need it, create a new order from the menu.';
+    }
+  }
+
+  protected bookingTimeline(status: BookingResponse['status']): Array<{
+    label: string;
+    description: string;
+    state: 'pending' | 'complete' | 'current' | 'cancelled';
+  }> {
+    if (status === 'CANCELLED') {
+      return [
+        {
+          label: 'Order placed',
+          description: 'We captured your item list and customer details.',
+          state: 'complete'
+        },
+        {
+          label: 'Cancelled',
+          description: 'The order was stopped before completion.',
+          state: 'cancelled'
+        }
+      ];
+    }
+
+    const steps: Array<{
+      label: string;
+      description: string;
+      state: 'pending' | 'complete' | 'current';
+    }> = [
+      {
+        label: 'Order placed',
+        description: 'Your request is in the system.',
+        state: status === 'NEW' ? 'current' : 'complete'
+      },
+      {
+        label: 'Confirmed',
+        description: 'Staff reviewed and accepted the order.',
+        state: status === 'CONFIRMED' ? 'current' : status === 'DONE' ? 'complete' : 'pending'
+      },
+      {
+        label: 'Delivered',
+        description: 'The order has been completed.',
+        state: status === 'DONE' ? 'current' : 'pending'
+      }
+    ];
+
+    return steps;
   }
 
   protected async cancelBooking(bookingId: number): Promise<void> {
