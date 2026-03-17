@@ -45,6 +45,25 @@ interface CustomerDetailsDraft {
 
       <p class="copy">Pick products, confirm delivery details, and follow booking status here.</p>
 
+      <nav class="view-switch" aria-label="Order sections">
+        <button
+          type="button"
+          class="view-switch-button"
+          [class.active]="activeView() === 'menu'"
+          (click)="setActiveView('menu')"
+        >
+          Menu
+        </button>
+        <button
+          type="button"
+          class="view-switch-button"
+          [class.active]="activeView() === 'orders'"
+          (click)="setActiveView('orders')"
+        >
+          My orders
+        </button>
+      </nav>
+
       <section class="status-card" *ngIf="vm().loading">
         <h3>Loading menu</h3>
         <p>Fetching active items for {{ config().slug }}.</p>
@@ -60,24 +79,29 @@ interface CustomerDetailsDraft {
         <p>Add active services in the admin panel and they will appear here.</p>
       </section>
 
-      <section class="success-card" *ngIf="submittedBooking() as booking">
-        <p class="eyebrow">Order sent</p>
-        <h3>Booking #{{ booking.id }}</h3>
-        <p class="copy">
-          {{ booking.customerName }}, your order for {{ booking.deliveryDate | date: 'mediumDate' }} is now
-          in status <strong>{{ booking.status }}</strong>.
-        </p>
+      <ng-container *ngIf="activeView() === 'menu'">
+        <section class="success-card" *ngIf="submittedBooking() as booking">
+          <p class="eyebrow">Order sent</p>
+          <h3>Booking #{{ booking.id }}</h3>
+          <p class="copy">
+            {{ booking.customerName }}, your order for {{ booking.deliveryDate | date: 'mediumDate' }} is now
+            in status <strong>{{ booking.status }}</strong>.
+          </p>
 
-        <div class="success-meta">
-          <span>{{ booking.totalPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
-          <span>{{ booking.items.length }} products</span>
-          <span>{{ booking.createdAt | date: 'short' }}</span>
-        </div>
+          <div class="success-meta">
+            <span>{{ booking.totalPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
+            <span>{{ booking.items.length }} products</span>
+            <span>{{ booking.createdAt | date: 'short' }}</span>
+          </div>
 
-        <button type="button" class="ghost-button" (click)="startNewOrder()">Create another order</button>
-      </section>
+          <div class="success-actions">
+            <button type="button" class="ghost-button" (click)="startNewOrder()">Create another order</button>
+            <button type="button" class="ghost-button" (click)="setActiveView('orders')">View my orders</button>
+          </div>
+        </section>
+      </ng-container>
 
-      <div class="catalog" *ngIf="vm().services.length && !submittedBooking()">
+      <div class="catalog" *ngIf="activeView() === 'menu' && vm().services.length && !submittedBooking()">
         <article class="product-card" *ngFor="let service of vm().services; trackBy: trackByServiceId">
           <div class="product-copy">
             <div class="product-meta">
@@ -104,7 +128,7 @@ interface CustomerDetailsDraft {
       <button
         type="button"
         class="cart-bar"
-        *ngIf="store.selectedCount() > 0 && !submittedBooking()"
+        *ngIf="activeView() === 'menu' && store.selectedCount() > 0 && !submittedBooking()"
         (click)="openCheckout()"
       >
         <div class="cart-copy">
@@ -120,7 +144,10 @@ interface CustomerDetailsDraft {
         </span>
       </button>
 
-      <section class="checkout-card" *ngIf="checkoutOpen() && !submittedBooking() && showLocalCheckoutButtons">
+      <section
+        class="checkout-card"
+        *ngIf="activeView() === 'menu' && checkoutOpen() && !submittedBooking() && showLocalCheckoutButtons"
+      >
         <div class="checkout-head">
           <div>
             <p class="eyebrow">Checkout</p>
@@ -192,7 +219,10 @@ interface CustomerDetailsDraft {
         </div>
       </section>
 
-      <div class="checkout-overlay" *ngIf="checkoutOpen() && !submittedBooking() && !showLocalCheckoutButtons">
+      <div
+        class="checkout-overlay"
+        *ngIf="activeView() === 'menu' && checkoutOpen() && !submittedBooking() && !showLocalCheckoutButtons"
+      >
         <button type="button" class="checkout-scrim" aria-label="Close checkout" (click)="closeCheckout()"></button>
 
         <section class="checkout-card checkout-sheet">
@@ -269,7 +299,7 @@ interface CustomerDetailsDraft {
         </section>
       </div>
 
-      <section class="bookings-card" *ngIf="!vm().loading">
+      <section class="bookings-card" *ngIf="activeView() === 'orders' && !vm().loading">
         <div class="bookings-head">
           <div>
             <p class="eyebrow">My orders</p>
@@ -498,6 +528,33 @@ interface CustomerDetailsDraft {
       font-size: 0.95rem;
     }
 
+    .view-switch {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.3rem;
+      padding: 0.25rem;
+      border-radius: 16px;
+      background: rgba(36, 22, 15, 0.05);
+      width: fit-content;
+    }
+
+    .view-switch-button {
+      border: 0;
+      border-radius: 12px;
+      padding: 0.7rem 1rem;
+      background: transparent;
+      color: var(--yoobu-muted);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .view-switch-button.active {
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--yoobu-ink);
+      box-shadow: 0 2px 10px rgba(36, 22, 15, 0.08);
+    }
+
     .status-card,
     .success-card,
     .checkout-card,
@@ -534,6 +591,13 @@ interface CustomerDetailsDraft {
       margin-top: 0.9rem;
       color: var(--yoobu-muted);
       font-size: 0.92rem;
+    }
+
+    .success-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 1rem;
     }
 
     .catalog {
@@ -1028,6 +1092,10 @@ interface CustomerDetailsDraft {
         grid-template-columns: 1fr;
       }
 
+      .view-switch {
+        width: 100%;
+      }
+
       .product-side {
         width: 100%;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -1094,6 +1162,7 @@ export class FoodOrderHomeComponent {
   protected readonly bookingsReloadKey = signal(0);
   protected readonly selectedBookingId = signal<number | null>(null);
   protected readonly selectedBooking = signal<BookingResponse | null>(null);
+  protected readonly activeView = signal<'menu' | 'orders'>('menu');
   protected readonly checkoutOpen = signal(false);
   protected readonly submitting = signal(false);
   protected readonly submitError = signal<string | null>(null);
@@ -1119,6 +1188,7 @@ export class FoodOrderHomeComponent {
         this.cancelError.set(null);
         this.selectedBookingId.set(null);
         this.selectedBooking.set(null);
+        this.activeView.set('menu');
         this.customerDetailsHydrated.set(false);
         this.resetCheckoutForm();
         this.bookingsReloadKey.update((value) => value + 1);
@@ -1272,6 +1342,7 @@ export class FoodOrderHomeComponent {
   }
 
   protected startNewOrder(): void {
+    this.activeView.set('menu');
     this.submittedBooking.set(null);
     this.submitError.set(null);
     this.checkoutOpen.set(false);
@@ -1288,6 +1359,7 @@ export class FoodOrderHomeComponent {
   }
 
   protected async selectBooking(bookingId: number): Promise<void> {
+    this.activeView.set('orders');
     this.selectedBookingId.set(bookingId);
     this.cancelError.set(null);
 
@@ -1472,6 +1544,10 @@ export class FoodOrderHomeComponent {
     }
 
     await this.submitOrder();
+  }
+
+  protected setActiveView(view: 'menu' | 'orders'): void {
+    this.activeView.set(view);
   }
 
   private toBookingRequest(): CreateBookingRequest {
