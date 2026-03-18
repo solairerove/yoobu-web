@@ -780,6 +780,7 @@ export class FoodOrderHomeComponent {
   protected readonly submittedBooking = signal<BookingResponse | null>(null);
   protected readonly cancellingBookingId = signal<number | null>(null);
   protected readonly cancelError = signal<string | null>(null);
+  private readonly selectedBookingRequestVersion = signal(0);
   private readonly customerDetailsDraft = signal<CustomerDetailsDraft>({
     customerName: '',
     customerPhone: ''
@@ -797,6 +798,7 @@ export class FoodOrderHomeComponent {
         this.submittedBooking.set(null);
         this.cancellingBookingId.set(null);
         this.cancelError.set(null);
+        this.selectedBookingRequestVersion.set(0);
         this.selectedBookingId.set(null);
         this.selectedBooking.set(null);
         this.activeView.set('menu');
@@ -973,11 +975,22 @@ export class FoodOrderHomeComponent {
     this.activeView.set('orders');
     this.selectedBookingId.set(bookingId);
     this.cancelError.set(null);
+    const requestVersion = this.selectedBookingRequestVersion() + 1;
+    this.selectedBookingRequestVersion.set(requestVersion);
 
     try {
       const booking = await firstValueFrom(this.api.getBooking(this.config().slug, bookingId));
+
+      if (this.selectedBookingRequestVersion() !== requestVersion || this.selectedBookingId() !== bookingId) {
+        return;
+      }
+
       this.selectedBooking.set(booking);
     } catch {
+      if (this.selectedBookingRequestVersion() !== requestVersion || this.selectedBookingId() !== bookingId) {
+        return;
+      }
+
       this.cancelError.set('Could not load the order details.');
     }
   }
