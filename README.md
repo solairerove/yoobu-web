@@ -22,6 +22,7 @@ Initial Angular shell for the Telegram Mini App frontend.
 
 ```bash
 npm install
+npm test
 npm start
 ```
 

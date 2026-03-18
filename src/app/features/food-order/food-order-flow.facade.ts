@@ -57,50 +57,18 @@ export class FoodOrderFlowFacade {
   readonly cancellingBookingId = signal<number | null>(null);
   readonly cancelError = signal<string | null>(null);
   private readonly selectedBookingRequestVersion = signal(0);
+  private readonly servicesRequestVersion = signal(0);
   private readonly customerDetailsDraft = signal<CustomerDetailsDraft>({
     customerName: '',
     customerPhone: ''
   });
   private readonly customerDetailsHydrated = signal(false);
   private readonly configSignal = signal<TenantConfig | null>(null);
-
-  private readonly vmSignal = toSignal(
-    toObservable(this.configSignal).pipe(
-      filter((config): config is TenantConfig => config !== null),
-      distinctUntilChanged((previous, current) => previous.slug === current.slug),
-      tap((config) => this.resetForTenant(config.slug)),
-      switchMap((config) =>
-        this.api.getServices(config.slug).pipe(
-          tap((services) => this.store.setServices(services)),
-          map((services) => ({
-            services,
-            loading: false,
-            error: null
-          })),
-          startWith({
-            services: [],
-            loading: true,
-            error: null
-          }),
-          catchError(() => {
-            this.store.setServices([]);
-            return of({
-              services: [],
-              loading: false,
-              error: 'Check the backend service or tenant data and try again.'
-            });
-          })
-        )
-      )
-    ),
-    {
-      initialValue: {
-        services: [],
-        loading: true,
-        error: null
-      }
-    }
-  );
+  private readonly vmSignal = signal<FoodOrderVm>({
+    services: [],
+    loading: true,
+    error: null
+  });
 
   private readonly bookingsVmSignal = toSignal(
     toObservable(
@@ -203,7 +171,13 @@ export class FoodOrderFlowFacade {
   }
 
   setConfig(config: TenantConfig): void {
+    if (this.configSignal()?.slug === config.slug) {
+      return;
+    }
+
     this.configSignal.set(config);
+    this.resetForTenant(config.slug);
+    this.loadServices(config.slug);
   }
 
   increase(serviceId: number): void {
@@ -375,8 +349,50 @@ export class FoodOrderFlowFacade {
     this.selectedBooking.set(null);
     this.activeView.set('menu');
     this.customerDetailsHydrated.set(false);
+    this.vmSignal.set({
+      services: [],
+      loading: true,
+      error: null
+    });
     this.resetCheckoutForm();
     this.bookingsReloadKey.update((value) => value + 1);
+  }
+
+  private loadServices(slug: string): void {
+    const requestVersion = this.servicesRequestVersion() + 1;
+    this.servicesRequestVersion.set(requestVersion);
+    this.vmSignal.set({
+      services: [],
+      loading: true,
+      error: null
+    });
+
+    this.api.getServices(slug).subscribe({
+      next: (services) => {
+        if (this.servicesRequestVersion() !== requestVersion || this.configSignal()?.slug !== slug) {
+          return;
+        }
+
+        this.store.setServices(services);
+        this.vmSignal.set({
+          services,
+          loading: false,
+          error: null
+        });
+      },
+      error: () => {
+        if (this.servicesRequestVersion() !== requestVersion || this.configSignal()?.slug !== slug) {
+          return;
+        }
+
+        this.store.setServices([]);
+        this.vmSignal.set({
+          services: [],
+          loading: false,
+          error: 'Check the backend service or tenant data and try again.'
+        });
+      }
+    });
   }
 
   private async handlePrimaryAction(): Promise<void> {
