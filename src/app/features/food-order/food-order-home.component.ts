@@ -44,7 +44,7 @@ interface CustomerDetailsDraft {
       <header class="panel-header">
         <div>
           <p class="eyebrow">Menu</p>
-          <h2>Order in a few taps</h2>
+          <h2>Place your order</h2>
         </div>
         <div class="header-stat" *ngIf="vm().services.length && !vm().loading && !vm().error">
           <strong>{{ vm().services.length }}</strong>
@@ -52,7 +52,7 @@ interface CustomerDetailsDraft {
         </div>
       </header>
 
-      <p class="copy">Pick products, confirm delivery details, and follow booking status here.</p>
+      <p class="copy">Choose your items, add delivery details, and track your order.</p>
 
       <nav class="view-switch" aria-label="Order sections">
         <button
@@ -75,7 +75,7 @@ interface CustomerDetailsDraft {
 
       <section class="status-card" *ngIf="vm().loading">
         <h3>Loading menu</h3>
-        <p>Fetching active items for {{ config().slug }}.</p>
+        <p>Please wait while the menu loads.</p>
       </section>
 
       <section class="status-card error" *ngIf="vm().error as error">
@@ -85,7 +85,7 @@ interface CustomerDetailsDraft {
 
       <section class="status-card" *ngIf="!vm().loading && !vm().error && !vm().services.length">
         <h3>No products yet</h3>
-        <p>Add active services in the admin panel and they will appear here.</p>
+        <p>No items are available right now.</p>
       </section>
 
       <ng-container *ngIf="activeView() === 'menu'">
@@ -125,7 +125,7 @@ interface CustomerDetailsDraft {
 
         <div class="catalog-note">
           <span class="catalog-dot"></span>
-          <p>Tap plus to add items, then review everything in the cart bar.</p>
+          <p>Add items to your cart to continue.</p>
         </div>
 
         <div class="catalog">
@@ -197,7 +197,7 @@ interface CustomerDetailsDraft {
         </div>
 
         <span class="cart-action">
-          {{ checkoutOpen() ? (showLocalCheckoutButtons ? 'Review below' : 'Use Telegram button') : 'Open checkout' }}
+          {{ checkoutOpen() ? 'Review order' : 'Open checkout' }}
         </span>
       </button>
 
