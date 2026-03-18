@@ -158,11 +158,24 @@ interface CustomerDetailsDraft {
               <p class="price">{{ service.price | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
             </div>
             <div class="quantity">
-              <button type="button" (click)="decrease(service.id)" [disabled]="store.quantityFor(service.id) === 0">
-                -
+              <button
+                type="button"
+                class="quantity-button quantity-button-decrease"
+                (click)="decrease(service.id)"
+                [disabled]="store.quantityFor(service.id) === 0"
+                [attr.aria-label]="'Decrease quantity for ' + service.name"
+              >
+                <span aria-hidden="true">-</span>
               </button>
-              <span>{{ store.quantityFor(service.id) }}</span>
-              <button type="button" (click)="increase(service.id)">+</button>
+              <span class="quantity-value" aria-live="polite">{{ store.quantityFor(service.id) }}</span>
+              <button
+                type="button"
+                class="quantity-button quantity-button-increase"
+                (click)="increase(service.id)"
+                [attr.aria-label]="'Increase quantity for ' + service.name"
+              >
+                <span aria-hidden="true">+</span>
+              </button>
             </div>
           </div>
         </article>
@@ -545,11 +558,14 @@ interface CustomerDetailsDraft {
     .quantity {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.25rem;
+      gap: 0.32rem;
+      padding: 0.24rem;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.92);
-      border: 1px solid var(--yoobu-border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 240, 0.94));
+      border: 1px solid rgba(255, 107, 53, 0.16);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 8px 16px rgba(36, 22, 15, 0.06);
     }
 
     .quantity button,
@@ -559,27 +575,75 @@ interface CustomerDetailsDraft {
       font: inherit;
     }
 
-    .quantity button {
-      width: 2rem;
-      height: 2rem;
-      border: 0;
+    .quantity-button {
+      width: 2.05rem;
+      height: 2.05rem;
+      border: 1px solid transparent;
       border-radius: 999px;
-      background: var(--yoobu-primary);
-      color: white;
-      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      font-size: 1.05rem;
+      font-weight: 800;
+      transition:
+        transform 140ms ease,
+        box-shadow 140ms ease,
+        background 140ms ease,
+        border-color 140ms ease,
+        color 140ms ease,
+        opacity 140ms ease;
     }
 
-    .quantity button:disabled,
+    .quantity-button span {
+      transform: translateY(-0.03em);
+    }
+
+    .quantity-button-decrease {
+      background: rgba(255, 255, 255, 0.92);
+      border-color: rgba(36, 22, 15, 0.08);
+      color: var(--yoobu-ink);
+      box-shadow: 0 3px 10px rgba(36, 22, 15, 0.06);
+    }
+
+    .quantity-button-increase {
+      background: linear-gradient(135deg, var(--yoobu-primary), #ff8753);
+      color: white;
+      box-shadow: 0 8px 16px rgba(255, 107, 53, 0.22);
+    }
+
+    .quantity-button:not(:disabled):hover {
+      transform: translateY(-1px);
+    }
+
+    .quantity-button:not(:disabled):active {
+      transform: translateY(0) scale(0.96);
+      box-shadow: inset 0 2px 5px rgba(36, 22, 15, 0.14);
+    }
+
+    .quantity-button:focus-visible {
+      outline: 2px solid rgba(255, 107, 53, 0.28);
+      outline-offset: 2px;
+    }
+
+    .quantity-button:disabled,
     .ghost-button:disabled {
       opacity: 0.45;
       cursor: not-allowed;
     }
 
-    .quantity span {
-      min-width: 1.25rem;
+    .quantity-button:disabled {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .quantity-value {
+      min-width: 2rem;
+      padding: 0 0.2rem;
       text-align: center;
       font-weight: 700;
-      font-size: 0.95rem;
+      font-size: 0.96rem;
+      color: var(--yoobu-ink);
     }
 
     .cart-bar {
