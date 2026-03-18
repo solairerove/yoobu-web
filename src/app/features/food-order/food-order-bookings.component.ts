@@ -20,7 +20,7 @@ import { BookingResponse } from '../../core/models/booking.model';
 
       <section class="status-card" *ngIf="loading()">
         <h4>Loading bookings</h4>
-        <p>Fetching orders for the current Telegram user.</p>
+        <p>Loading your orders.</p>
       </section>
 
       <section class="status-card error" *ngIf="error() as error">

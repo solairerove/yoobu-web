@@ -47,9 +47,7 @@ interface CheckoutSelection {
           </label>
 
           <p class="form-error" *ngIf="submitError() as error">{{ error }}</p>
-          <p class="form-hint" *ngIf="!submitError()">
-            Telegram MainButton will submit this order. The local page button does the same action.
-          </p>
+          <p class="form-hint" *ngIf="!submitError()">Review your details, then submit the order.</p>
 
           <button type="submit" class="primary-button" [disabled]="submitting()">
             {{ submitting() ? 'Submitting...' : 'Place order' }}
@@ -120,7 +118,7 @@ interface CheckoutSelection {
             </label>
 
             <p class="form-error" *ngIf="submitError() as error">{{ error }}</p>
-            <p class="form-hint" *ngIf="!submitError()">Use the Telegram MainButton to submit this order.</p>
+            <p class="form-hint" *ngIf="!submitError()">Review your details, then submit the order.</p>
           </form>
 
           <aside class="review-card">
