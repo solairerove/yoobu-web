@@ -1,4 +1,4 @@
-import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { CurrencyPipe, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ServiceItem } from '../../core/models/service.model';
@@ -10,9 +10,36 @@ interface CheckoutSelection {
 
 @Component({
   selector: 'app-food-order-checkout',
-  imports: [CurrencyPipe, NgFor, NgIf, ReactiveFormsModule],
+  imports: [CurrencyPipe, NgFor, NgIf, NgTemplateOutlet, ReactiveFormsModule],
   template: `
-    <section class="checkout-card" *ngIf="open() && localMode()">
+    <ng-container *ngIf="open()">
+      <section class="checkout-card" *ngIf="localMode(); else telegramCheckout">
+        <ng-container
+          *ngTemplateOutlet="checkoutContent; context: { showSheetHandle: false, showSubmitButton: true }"
+        />
+      </section>
+
+      <ng-template #telegramCheckout>
+        <div class="checkout-overlay">
+          <button
+            type="button"
+            class="checkout-scrim"
+            aria-label="Close checkout"
+            (click)="closeRequested.emit()"
+          ></button>
+
+          <section class="checkout-card checkout-sheet">
+            <ng-container
+              *ngTemplateOutlet="checkoutContent; context: { showSheetHandle: true, showSubmitButton: false }"
+            />
+          </section>
+        </div>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #checkoutContent let-showSheetHandle="showSheetHandle" let-showSubmitButton="showSubmitButton">
+      <div class="sheet-handle" aria-hidden="true" *ngIf="showSheetHandle"></div>
+
       <div class="checkout-head">
         <div>
           <p class="eyebrow">Checkout</p>
@@ -49,7 +76,7 @@ interface CheckoutSelection {
           <p class="form-error" *ngIf="submitError() as error">{{ error }}</p>
           <p class="form-hint" *ngIf="!submitError()">Review your details, then submit the order.</p>
 
-          <button type="submit" class="primary-button" [disabled]="submitting()">
+          <button type="submit" class="primary-button" [disabled]="submitting()" *ngIf="showSubmitButton">
             {{ submitting() ? 'Submitting...' : 'Place order' }}
           </button>
         </form>
@@ -76,75 +103,7 @@ interface CheckoutSelection {
           </div>
         </aside>
       </div>
-    </section>
-
-    <div class="checkout-overlay" *ngIf="open() && !localMode()">
-      <button type="button" class="checkout-scrim" aria-label="Close checkout" (click)="closeRequested.emit()"></button>
-
-      <section class="checkout-card checkout-sheet">
-        <div class="sheet-handle" aria-hidden="true"></div>
-
-        <div class="checkout-head">
-          <div>
-            <p class="eyebrow">Checkout</p>
-            <h3>Customer details</h3>
-          </div>
-
-          <button type="button" class="ghost-button" (click)="closeRequested.emit()" [disabled]="submitting()">
-            Back to menu
-          </button>
-        </div>
-
-        <div class="checkout-grid">
-          <form class="checkout-form" [formGroup]="form()" (ngSubmit)="submitRequested.emit()">
-            <label>
-              <span>Name</span>
-              <input type="text" formControlName="customerName" placeholder="Your name" />
-            </label>
-
-            <label>
-              <span>Phone</span>
-              <input type="tel" formControlName="customerPhone" placeholder="Phone number" />
-            </label>
-
-            <label>
-              <span>Delivery date</span>
-              <input type="date" formControlName="deliveryDate" />
-            </label>
-
-            <label>
-              <span>Note</span>
-              <textarea rows="4" formControlName="note" placeholder="Add a note for your order"></textarea>
-            </label>
-
-            <p class="form-error" *ngIf="submitError() as error">{{ error }}</p>
-            <p class="form-hint" *ngIf="!submitError()">Review your details, then submit the order.</p>
-          </form>
-
-          <aside class="review-card">
-            <div class="review-head">
-              <h4>Order review</h4>
-              <span>{{ selectedCount() }} items</span>
-            </div>
-
-            <div class="review-list">
-              <div class="review-row" *ngFor="let entry of selectedItems()">
-                <div>
-                  <strong>{{ entry.service.name }}</strong>
-                  <p>{{ entry.quantity }} × {{ entry.service.price | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
-                </div>
-                <span>{{ entry.service.price * entry.quantity | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
-              </div>
-            </div>
-
-            <div class="review-total">
-              <span>Total</span>
-              <strong>{{ selectedTotal() | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</strong>
-            </div>
-          </aside>
-        </div>
-      </section>
-    </div>
+    </ng-template>
   `,
   styles: `
     .eyebrow {
