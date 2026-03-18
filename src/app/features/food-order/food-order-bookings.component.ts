@@ -161,15 +161,6 @@ import { BookingResponse } from '../../core/models/booking.model';
     </section>
   `,
   styles: `
-    .eyebrow {
-      margin: 0;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: var(--yoobu-primary);
-      font-size: 0.72rem;
-      font-weight: 700;
-    }
-
     h3,
     h4,
     h5,
@@ -223,8 +214,7 @@ import { BookingResponse } from '../../core/models/booking.model';
       gap: 0.9rem;
     }
 
-    .booking-item,
-    .ghost-button {
+    .booking-item {
       cursor: pointer;
       font: inherit;
     }
@@ -241,8 +231,7 @@ import { BookingResponse } from '../../core/models/booking.model';
       color: inherit;
     }
 
-    .booking-item:disabled,
-    .ghost-button:disabled {
+    .booking-item:disabled {
       opacity: 0.45;
       cursor: not-allowed;
     }
@@ -422,14 +411,6 @@ import { BookingResponse } from '../../core/models/booking.model';
       align-items: center;
       padding-top: 0.85rem;
       border-top: 1px solid var(--yoobu-border);
-    }
-
-    .ghost-button {
-      border: 1px solid var(--yoobu-border);
-      border-radius: 999px;
-      padding: 0.75rem 1rem;
-      background: rgba(255, 255, 255, 0.92);
-      color: var(--yoobu-ink);
     }
 
     .form-error {
