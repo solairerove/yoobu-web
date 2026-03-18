@@ -84,14 +84,14 @@ interface CustomerDetailsDraft {
       </section>
 
       <section class="status-card" *ngIf="!vm().loading && !vm().error && !vm().services.length">
-        <h3>No products yet</h3>
+        <h3>No items available</h3>
         <p>No items are available right now.</p>
       </section>
 
       <ng-container *ngIf="activeView() === 'menu'">
         <section class="success-card" *ngIf="submittedBooking() as booking">
           <p class="eyebrow">Order sent</p>
-          <h3>Booking #{{ booking.id }}</h3>
+          <h3>Order #{{ booking.id }}</h3>
           <p class="copy">
             {{ booking.customerName }}, your order for {{ booking.deliveryDate | date: 'mediumDate' }} is now
             in status <strong>{{ booking.status }}</strong>.
@@ -104,8 +104,8 @@ interface CustomerDetailsDraft {
           </div>
 
           <div class="success-actions">
-            <button type="button" class="ghost-button" (click)="startNewOrder()">Create another order</button>
-            <button type="button" class="ghost-button" (click)="setActiveView('orders')">View my orders</button>
+            <button type="button" class="ghost-button" (click)="startNewOrder()">New order</button>
+            <button type="button" class="ghost-button" (click)="setActiveView('orders')">My orders</button>
           </div>
         </section>
       </ng-container>
@@ -113,12 +113,12 @@ interface CustomerDetailsDraft {
       <section class="catalog-shell" *ngIf="activeView() === 'menu' && vm().services.length && !submittedBooking()">
         <div class="catalog-head">
           <div>
-            <p class="eyebrow">Available now</p>
-            <h3>Choose your items</h3>
+            <p class="eyebrow">Menu</p>
+            <h3>Items</h3>
           </div>
 
           <div class="catalog-meta">
-            <span class="catalog-pill">{{ vm().services.length }} choices</span>
+            <span class="catalog-pill">{{ vm().services.length }} items</span>
             <span class="catalog-pill" *ngIf="store.selectedCount() > 0">{{ store.selectedCount() }} in cart</span>
           </div>
         </div>
@@ -874,7 +874,7 @@ export class FoodOrderHomeComponent {
             of({
               bookings: [],
               loading: false,
-              error: 'Could not load bookings for this Telegram user.'
+              error: 'Could not load your orders.'
             })
           )
         )
@@ -978,7 +978,7 @@ export class FoodOrderHomeComponent {
       const booking = await firstValueFrom(this.api.getBooking(this.config().slug, bookingId));
       this.selectedBooking.set(booking);
     } catch {
-      this.cancelError.set('Could not load booking details.');
+      this.cancelError.set('Could not load the order details.');
     }
   }
 
@@ -1024,8 +1024,8 @@ export class FoodOrderHomeComponent {
     if (this.checkoutForm.invalid) {
       this.checkoutOpen.set(true);
       this.checkoutForm.markAllAsTouched();
-      this.submitError.set('Fill in name, phone, and delivery date before placing the order.');
-      await this.telegram.alert('Fill in name, phone, and delivery date before placing the order.');
+      this.submitError.set('Enter your name, phone number, and delivery date before placing the order.');
+      await this.telegram.alert('Enter your name, phone number, and delivery date before placing the order.');
       return;
     }
 
@@ -1053,8 +1053,8 @@ export class FoodOrderHomeComponent {
       this.refreshBookings();
     } catch {
       this.checkoutOpen.set(true);
-      this.submitError.set('Booking request failed. Check tenant cutoff rules and Telegram auth headers.');
-      await this.telegram.alert('Booking request failed. Check tenant cutoff rules and Telegram auth headers.');
+      this.submitError.set('Could not place your order. Please try again.');
+      await this.telegram.alert('Could not place your order. Please try again.');
     } finally {
       this.submitting.set(false);
     }

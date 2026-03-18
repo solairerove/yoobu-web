@@ -28,12 +28,12 @@ interface CheckoutSelection {
         <form class="checkout-form" [formGroup]="form()" (ngSubmit)="submitRequested.emit()">
           <label>
             <span>Name</span>
-            <input type="text" formControlName="customerName" placeholder="Alexey" />
+            <input type="text" formControlName="customerName" placeholder="Your name" />
           </label>
 
           <label>
             <span>Phone</span>
-            <input type="tel" formControlName="customerPhone" placeholder="+84..." />
+            <input type="tel" formControlName="customerPhone" placeholder="Phone number" />
           </label>
 
           <label>
@@ -43,7 +43,7 @@ interface CheckoutSelection {
 
           <label>
             <span>Note</span>
-            <textarea rows="4" formControlName="note" placeholder="No onion, gate code, delivery note"></textarea>
+            <textarea rows="4" formControlName="note" placeholder="Add a note for your order"></textarea>
           </label>
 
           <p class="form-error" *ngIf="submitError() as error">{{ error }}</p>
@@ -99,12 +99,12 @@ interface CheckoutSelection {
           <form class="checkout-form" [formGroup]="form()" (ngSubmit)="submitRequested.emit()">
             <label>
               <span>Name</span>
-              <input type="text" formControlName="customerName" placeholder="Alexey" />
+              <input type="text" formControlName="customerName" placeholder="Your name" />
             </label>
 
             <label>
               <span>Phone</span>
-              <input type="tel" formControlName="customerPhone" placeholder="+84..." />
+              <input type="tel" formControlName="customerPhone" placeholder="Phone number" />
             </label>
 
             <label>
@@ -114,7 +114,7 @@ interface CheckoutSelection {
 
             <label>
               <span>Note</span>
-              <textarea rows="4" formControlName="note" placeholder="No onion, gate code, delivery note"></textarea>
+              <textarea rows="4" formControlName="note" placeholder="Add a note for your order"></textarea>
             </label>
 
             <p class="form-error" *ngIf="submitError() as error">{{ error }}</p>

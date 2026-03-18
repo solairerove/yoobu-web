@@ -21,7 +21,7 @@ interface TenantVm {
       <main class="shell" [style.--yoobu-primary]="vm.config?.primaryColor || '#ff6b35'">
         <header class="hero" *ngIf="vm.config; else loadingOrError">
           <div class="hero-top">
-            <p class="kicker">Telegram Mini App</p>
+            <p class="kicker">Yoobu</p>
             <span class="hero-badge">{{ vm.config.type === 'FOOD_ORDER' ? 'Ordering' : vm.config.type }}</span>
           </div>
 
@@ -34,7 +34,7 @@ interface TenantVm {
             <div class="hero-aside">
               <div class="hero-chip">
                 <strong>{{ vm.config.slug }}</strong>
-                <span>tenant</span>
+                <span>store</span>
               </div>
             </div>
           </div>
@@ -49,8 +49,8 @@ interface TenantVm {
 
         <ng-template #loading>
           <section class="status-card">
-            <h1>Loading tenant</h1>
-            <p>Fetching config and preparing Telegram WebApp state.</p>
+            <h1>Loading</h1>
+            <p>Please wait while the page loads.</p>
           </section>
         </ng-template>
 
@@ -210,8 +210,7 @@ export class TenantShellComponent {
   private readonly tenantApi = inject(TenantApiService);
   private readonly telegram = inject(TelegramService);
 
-  protected readonly defaultWelcome =
-    'Tenant shell is ready. Next we will replace this placeholder with the catalog and cart flow.';
+  protected readonly defaultWelcome = 'Browse the menu and place your order here.';
 
   protected readonly vm$ = this.route.paramMap.pipe(
     map((params) => params.get('slug')?.trim() ?? ''),
@@ -227,7 +226,7 @@ export class TenantShellComponent {
         catchError(() =>
           of({
             config: null,
-            error: 'Check the tenant slug or make sure the backend is running.'
+            error: 'This page is unavailable right now. Please try again later.'
           })
         )
       )

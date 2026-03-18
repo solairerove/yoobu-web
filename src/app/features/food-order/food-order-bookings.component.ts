@@ -10,7 +10,7 @@ import { BookingResponse } from '../../core/models/booking.model';
       <div class="bookings-head">
         <div>
           <p class="eyebrow">My orders</p>
-          <h3>Recent bookings</h3>
+          <h3>Order history</h3>
         </div>
 
         <button type="button" class="ghost-button" (click)="refreshRequested.emit()" [disabled]="loading()">
@@ -19,18 +19,18 @@ import { BookingResponse } from '../../core/models/booking.model';
       </div>
 
       <section class="status-card" *ngIf="loading()">
-        <h4>Loading bookings</h4>
+        <h4>Loading orders</h4>
         <p>Loading your orders.</p>
       </section>
 
       <section class="status-card error" *ngIf="error() as error">
-        <h4>Bookings unavailable</h4>
+        <h4>Orders unavailable</h4>
         <p>{{ error }}</p>
       </section>
 
       <section class="status-card" *ngIf="!loading() && !error() && !bookings().length">
-        <h4>No bookings yet</h4>
-        <p>Your submitted orders will appear here with status updates and cancellation controls.</p>
+        <h4>No orders yet</h4>
+        <p>Your orders will appear here.</p>
       </section>
 
       <div class="bookings-grid" *ngIf="bookings().length">
@@ -62,7 +62,7 @@ import { BookingResponse } from '../../core/models/booking.model';
         <section class="booking-detail" *ngIf="selectedBooking() as booking; else chooseBooking">
           <div class="booking-detail-head">
             <div class="booking-summary">
-              <p class="eyebrow">Booking #{{ booking.id }}</p>
+              <p class="eyebrow">Order #{{ booking.id }}</p>
               <div class="booking-status-line">
                 <h4>{{ bookingStatusTitle(booking.status) }}</h4>
                 <span
@@ -89,7 +89,7 @@ import { BookingResponse } from '../../core/models/booking.model';
             </button>
           </div>
 
-          <div class="booking-timeline" aria-label="Booking progress">
+          <div class="booking-timeline" aria-label="Order progress">
             <div
               class="timeline-step"
               *ngFor="let step of bookingTimeline(booking.status)"
@@ -153,8 +153,8 @@ import { BookingResponse } from '../../core/models/booking.model';
 
         <ng-template #chooseBooking>
           <section class="status-card">
-            <h4>Select a booking</h4>
-            <p>Choose an order from the list to inspect items and status.</p>
+            <h4>Select an order</h4>
+            <p>Choose an order to view the details.</p>
           </section>
         </ng-template>
       </div>
@@ -501,13 +501,13 @@ export class FoodOrderBookingsComponent {
   protected bookingStatusDescription(status: BookingResponse['status']): string {
     switch (status) {
       case 'NEW':
-        return 'Your order has been received and is waiting for the kitchen or staff to confirm it.';
+        return 'Your order has been received and is waiting for confirmation.';
       case 'CONFIRMED':
-        return 'The order is accepted and being prepared for the scheduled delivery date.';
+        return 'Your order has been confirmed and is being prepared.';
       case 'DONE':
-        return 'This order is finished. Keep this receipt view for reference if you need to check the details.';
+        return 'This order has been completed.';
       case 'CANCELLED':
-        return 'This order is no longer active. If you still need it, create a new order from the menu.';
+        return 'This order was cancelled.';
     }
   }
 
@@ -520,7 +520,7 @@ export class FoodOrderBookingsComponent {
       return [
         {
           label: 'Order placed',
-          description: 'We captured your item list and customer details.',
+          description: 'Your order was placed successfully.',
           state: 'complete'
         },
         {
@@ -534,12 +534,12 @@ export class FoodOrderBookingsComponent {
     return [
       {
         label: 'Order placed',
-        description: 'Your request is in the system.',
+          description: 'Your order has been received.',
         state: status === 'NEW' ? 'current' : 'complete'
       },
       {
         label: 'Confirmed',
-        description: 'Staff reviewed and accepted the order.',
+        description: 'Your order has been confirmed.',
         state: status === 'CONFIRMED' ? 'current' : status === 'DONE' ? 'complete' : 'pending'
       },
       {
