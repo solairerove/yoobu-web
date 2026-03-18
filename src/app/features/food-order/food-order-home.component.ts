@@ -1,33 +1,11 @@
 import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { FormBuilder, Validators } from '@angular/forms';
-import { firstValueFrom, catchError, distinctUntilChanged, map, of, startWith, switchMap, tap } from 'rxjs';
-import { BookingResponse, CreateBookingRequest } from '../../core/models/booking.model';
+import { Component, effect, inject, input } from '@angular/core';
 import { TenantConfig } from '../../core/models/tenant-config.model';
 import { ServiceItem } from '../../core/models/service.model';
-import { TenantApiService } from '../../core/services/tenant-api.service';
-import { TelegramService } from '../../core/telegram/telegram.service';
 import { FoodOrderBookingsComponent } from './food-order-bookings.component';
 import { FoodOrderCheckoutComponent } from './food-order-checkout.component';
+import { FoodOrderFlowFacade } from './food-order-flow.facade';
 import { FoodOrderStore } from './food-order.store';
-
-interface FoodOrderVm {
-  services: ServiceItem[];
-  loading: boolean;
-  error: string | null;
-}
-
-interface MyBookingsVm {
-  bookings: BookingResponse[];
-  loading: boolean;
-  error: string | null;
-}
-
-interface CustomerDetailsDraft {
-  customerName: string;
-  customerPhone: string;
-}
 
 @Component({
   selector: 'app-food-order-home',
@@ -39,6 +17,7 @@ interface CustomerDetailsDraft {
     FoodOrderBookingsComponent,
     FoodOrderCheckoutComponent
   ],
+  providers: [FoodOrderFlowFacade],
   template: `
     <section class="panel" [class.has-cart]="store.selectedCount() > 0 && !submittedBooking()">
       <header class="panel-header">
@@ -750,180 +729,27 @@ interface CustomerDetailsDraft {
   `
 })
 export class FoodOrderHomeComponent {
-  private readonly api = inject(TenantApiService);
-  private readonly fb = inject(FormBuilder);
-  private readonly telegram = inject(TelegramService);
-
   readonly config = input.required<TenantConfig>();
-  readonly store = inject(FoodOrderStore);
+  private readonly facade = inject(FoodOrderFlowFacade);
+  readonly store: FoodOrderStore = this.facade.store;
   protected readonly defaultUnit = 'item';
-  protected readonly showLocalCheckoutButtons = this.telegram.isLocalhost();
-
-  protected readonly checkoutForm = this.fb.nonNullable.group({
-    customerName: ['', [Validators.required]],
-    customerPhone: ['', [Validators.required]],
-    deliveryDate: [this.defaultDeliveryDate(), [Validators.required]],
-    note: ['']
-  });
-  private readonly checkoutFormStatus = toSignal(
-    this.checkoutForm.statusChanges.pipe(startWith(this.checkoutForm.status)),
-    { initialValue: this.checkoutForm.status }
-  );
-
-  protected readonly bookingsReloadKey = signal(0);
-  protected readonly selectedBookingId = signal<number | null>(null);
-  protected readonly selectedBooking = signal<BookingResponse | null>(null);
-  protected readonly activeView = signal<'menu' | 'orders'>('menu');
-  protected readonly checkoutOpen = signal(false);
-  protected readonly submitting = signal(false);
-  protected readonly submitError = signal<string | null>(null);
-  protected readonly submittedBooking = signal<BookingResponse | null>(null);
-  protected readonly cancellingBookingId = signal<number | null>(null);
-  protected readonly cancelError = signal<string | null>(null);
-  private readonly selectedBookingRequestVersion = signal(0);
-  private readonly customerDetailsDraft = signal<CustomerDetailsDraft>({
-    customerName: '',
-    customerPhone: ''
-  });
-  private readonly customerDetailsHydrated = signal(false);
-
-  private readonly vmSignal = toSignal(
-    toObservable(this.config).pipe(
-      distinctUntilChanged((previous, current) => previous.slug === current.slug),
-      tap((config) => {
-        this.store.setTenant(config.slug);
-        this.checkoutOpen.set(false);
-        this.submitting.set(false);
-        this.submitError.set(null);
-        this.submittedBooking.set(null);
-        this.cancellingBookingId.set(null);
-        this.cancelError.set(null);
-        this.selectedBookingRequestVersion.set(0);
-        this.selectedBookingId.set(null);
-        this.selectedBooking.set(null);
-        this.activeView.set('menu');
-        this.customerDetailsHydrated.set(false);
-        this.resetCheckoutForm();
-        this.bookingsReloadKey.update((value) => value + 1);
-      }),
-      switchMap((config) =>
-        this.api.getServices(config.slug).pipe(
-          tap((services) => this.store.setServices(services)),
-          map((services) => ({
-            services,
-            loading: false,
-            error: null
-          })),
-          startWith({
-            services: [],
-            loading: true,
-            error: null
-          }),
-          catchError(() => {
-            this.store.setServices([]);
-            return of({
-              services: [],
-              loading: false,
-              error: 'Check the backend service or tenant data and try again.'
-            });
-          })
-        )
-      )
-    ),
-    {
-      initialValue: {
-        services: [],
-        loading: true,
-        error: null
-      }
-    }
-  );
-
-  private readonly bookingsVmSignal = toSignal(
-    toObservable(
-      computed(() => ({
-        slug: this.config().slug,
-        reloadKey: this.bookingsReloadKey()
-      }))
-    ).pipe(
-      distinctUntilChanged(
-        (previous, current) => previous.slug === current.slug && previous.reloadKey === current.reloadKey
-      ),
-      switchMap(({ slug }) =>
-        this.api.getMyBookings(slug).pipe(
-          tap((bookings) => {
-            const nextSelectedId =
-              bookings.some((booking) => booking.id === this.selectedBookingId())
-                ? this.selectedBookingId()
-                : bookings[0]?.id ?? null;
-            const latestBooking = this.findLatestBooking(bookings);
-
-            this.selectedBookingId.set(nextSelectedId);
-            this.selectedBooking.set(bookings.find((booking) => booking.id === nextSelectedId) ?? null);
-            this.hydrateCustomerDetails(latestBooking);
-          }),
-          map((bookings) => ({
-            bookings,
-            loading: false,
-            error: null
-          })),
-          startWith({
-            bookings: [],
-            loading: true,
-            error: null
-          }),
-          catchError(() =>
-            of({
-              bookings: [],
-              loading: false,
-              error: 'Could not load your orders.'
-            })
-          )
-        )
-      )
-    ),
-    {
-      initialValue: {
-        bookings: [],
-        loading: true,
-        error: null
-      }
-    }
-  );
-
-  protected readonly vm = computed<FoodOrderVm>(() => this.vmSignal());
-  protected readonly bookingsVm = computed<MyBookingsVm>(() => this.bookingsVmSignal());
-
-  private readonly mainButtonAction = () => {
-    void this.handlePrimaryAction();
-  };
+  protected readonly showLocalCheckoutButtons = this.facade.showLocalCheckoutButtons;
+  protected readonly checkoutForm = this.facade.checkoutForm;
+  protected readonly selectedBookingId = this.facade.selectedBookingId;
+  protected readonly selectedBooking = this.facade.selectedBooking;
+  protected readonly activeView = this.facade.activeView;
+  protected readonly checkoutOpen = this.facade.checkoutOpen;
+  protected readonly submitting = this.facade.submitting;
+  protected readonly submitError = this.facade.submitError;
+  protected readonly submittedBooking = this.facade.submittedBooking;
+  protected readonly cancellingBookingId = this.facade.cancellingBookingId;
+  protected readonly cancelError = this.facade.cancelError;
+  protected readonly vm = this.facade.vm;
+  protected readonly bookingsVm = this.facade.bookingsVm;
 
   constructor() {
     effect(() => {
-      const booking = this.submittedBooking();
-      const itemCount = this.store.selectedCount();
-      const total = this.store.selectedTotal();
-      const checkoutOpen = this.checkoutOpen();
-      const submitting = this.submitting();
-      const formStatus = this.checkoutFormStatus();
-
-      if (booking || itemCount === 0) {
-        this.telegram.setMainButton(null);
-        this.telegram.onMainButtonClick(null);
-        return;
-      }
-
-      if (!checkoutOpen) {
-        this.telegram.setMainButton(`Checkout • ${this.formatCurrency(total)}`);
-        this.telegram.onMainButtonClick(this.mainButtonAction);
-        return;
-      }
-
-      this.telegram.setMainButton(
-        submitting ? 'Submitting...' : `Place order • ${this.formatCurrency(total)}`,
-        !submitting && formStatus === 'VALID'
-      );
-      this.telegram.onMainButtonClick(this.mainButtonAction);
+      this.facade.setConfig(this.config());
     });
   }
 
@@ -932,237 +758,42 @@ export class FoodOrderHomeComponent {
   }
 
   protected increase(serviceId: number): void {
-    this.submitError.set(null);
-    this.store.increase(serviceId);
+    this.facade.increase(serviceId);
   }
 
   protected decrease(serviceId: number): void {
-    this.submitError.set(null);
-    this.store.decrease(serviceId);
-    if (this.store.selectedCount() === 0) {
-      this.checkoutOpen.set(false);
-    }
+    this.facade.decrease(serviceId);
   }
 
   protected openCheckout(): void {
-    this.submitError.set(null);
-    this.checkoutOpen.set(true);
+    this.facade.openCheckout();
   }
 
   protected closeCheckout(): void {
-    this.submitError.set(null);
-    this.checkoutOpen.set(false);
+    this.facade.closeCheckout();
   }
 
   protected startNewOrder(): void {
-    this.activeView.set('menu');
-    this.submittedBooking.set(null);
-    this.submitError.set(null);
-    this.checkoutOpen.set(false);
-    this.store.clearCart();
-    this.checkoutForm.patchValue({
-      deliveryDate: this.defaultDeliveryDate(),
-      note: ''
-    });
+    this.facade.startNewOrder();
   }
 
   protected refreshBookings(): void {
-    this.cancelError.set(null);
-    this.bookingsReloadKey.update((value) => value + 1);
+    this.facade.refreshBookings();
   }
 
   protected async selectBooking(bookingId: number): Promise<void> {
-    this.activeView.set('orders');
-    this.selectedBookingId.set(bookingId);
-    this.cancelError.set(null);
-    const requestVersion = this.selectedBookingRequestVersion() + 1;
-    this.selectedBookingRequestVersion.set(requestVersion);
-
-    try {
-      const booking = await firstValueFrom(this.api.getBooking(this.config().slug, bookingId));
-
-      if (this.selectedBookingRequestVersion() !== requestVersion || this.selectedBookingId() !== bookingId) {
-        return;
-      }
-
-      this.selectedBooking.set(booking);
-    } catch {
-      if (this.selectedBookingRequestVersion() !== requestVersion || this.selectedBookingId() !== bookingId) {
-        return;
-      }
-
-      this.cancelError.set('Could not load the order details.');
-    }
+    await this.facade.selectBooking(bookingId);
   }
 
   protected async cancelBooking(bookingId: number): Promise<void> {
-    if (this.cancellingBookingId()) {
-      return;
-    }
-
-    const confirmed = await this.telegram.confirm(
-      'Cancel this order? This can only be done while the booking is still active.'
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.cancelError.set(null);
-    this.cancellingBookingId.set(bookingId);
-
-    try {
-      const booking = await firstValueFrom(this.api.cancelBooking(this.config().slug, bookingId));
-      this.selectedBooking.set(booking);
-      this.submittedBooking.update((current) => (current?.id === booking.id ? booking : current));
-      this.refreshBookings();
-    } catch {
-      this.cancelError.set('Cancel request failed. The booking may already be done or unavailable.');
-      await this.telegram.alert('Could not cancel this order. It may already be processed or unavailable.');
-    } finally {
-      this.cancellingBookingId.set(null);
-    }
+    await this.facade.cancelBooking(bookingId);
   }
 
   protected async submitOrder(): Promise<void> {
-    if (this.submitting()) {
-      return;
-    }
-
-    if (this.store.selectedCount() === 0) {
-      this.checkoutOpen.set(false);
-      return;
-    }
-
-    if (this.checkoutForm.invalid) {
-      this.checkoutOpen.set(true);
-      this.checkoutForm.markAllAsTouched();
-      this.submitError.set('Enter your name, phone number, and delivery date before placing the order.');
-      await this.telegram.alert('Enter your name, phone number, and delivery date before placing the order.');
-      return;
-    }
-
-    const confirmed = await this.telegram.confirm(
-      `Submit this order for ${this.formatCurrency(this.store.selectedTotal())}?`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.submitting.set(true);
-    this.submitError.set(null);
-    this.rememberCustomerDetails();
-
-    try {
-      const booking = await firstValueFrom(this.api.createBooking(this.config().slug, this.toBookingRequest()));
-
-      this.submittedBooking.set(booking);
-      this.selectedBookingId.set(booking.id);
-      this.selectedBooking.set(booking);
-      this.store.clearCart();
-      this.checkoutOpen.set(false);
-      this.resetCheckoutForm();
-      this.refreshBookings();
-    } catch {
-      this.checkoutOpen.set(true);
-      this.submitError.set('Could not place your order. Please try again.');
-      await this.telegram.alert('Could not place your order. Please try again.');
-    } finally {
-      this.submitting.set(false);
-    }
-  }
-
-  private async handlePrimaryAction(): Promise<void> {
-    if (!this.checkoutOpen()) {
-      this.openCheckout();
-      return;
-    }
-
-    await this.submitOrder();
+    await this.facade.submitOrder();
   }
 
   protected setActiveView(view: 'menu' | 'orders'): void {
-    this.activeView.set(view);
-  }
-
-  private toBookingRequest(): CreateBookingRequest {
-    const formValue = this.checkoutForm.getRawValue();
-
-    return {
-      customerName: formValue.customerName.trim(),
-      customerPhone: formValue.customerPhone.trim(),
-      deliveryDate: formValue.deliveryDate,
-      note: formValue.note.trim() || null,
-      items: this.store.selectedItems().map((entry) => ({
-        serviceId: entry.service.id,
-        quantity: entry.quantity
-      }))
-    };
-  }
-
-  private rememberCustomerDetails(): void {
-    const { customerName, customerPhone } = this.checkoutForm.getRawValue();
-
-    this.customerDetailsDraft.set({
-      customerName: customerName.trim(),
-      customerPhone: customerPhone.trim()
-    });
-  }
-
-  private resetCheckoutForm(): void {
-    const customerDetails = this.customerDetailsDraft();
-
-    this.checkoutForm.reset({
-      customerName: customerDetails.customerName,
-      customerPhone: customerDetails.customerPhone,
-      deliveryDate: this.defaultDeliveryDate(),
-      note: ''
-    });
-  }
-
-  private hydrateCustomerDetails(booking: BookingResponse | null): void {
-    if (this.customerDetailsHydrated()) {
-      return;
-    }
-
-    this.customerDetailsHydrated.set(true);
-
-    if (!booking) {
-      return;
-    }
-
-    this.customerDetailsDraft.set({
-      customerName: booking.customerName.trim(),
-      customerPhone: booking.customerPhone.trim()
-    });
-
-    this.resetCheckoutForm();
-  }
-
-  private findLatestBooking(bookings: BookingResponse[]): BookingResponse | null {
-    if (bookings.length === 0) {
-      return null;
-    }
-
-    return bookings.reduce((latest, booking) =>
-      new Date(booking.createdAt).getTime() > new Date(latest.createdAt).getTime() ? booking : latest
-    );
-  }
-
-  private defaultDeliveryDate(): string {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  private formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'VND',
-      maximumFractionDigits: 0
-    }).format(amount);
+    this.facade.setActiveView(view);
   }
 }
