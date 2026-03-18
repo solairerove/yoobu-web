@@ -79,6 +79,24 @@ button:active {
   cursor: not-allowed;
 }
 
+.ui-copy {
+  color: var(--yoobu-muted);
+  line-height: 1.45;
+  font-size: 0.95rem;
+}
+
+.ui-status-card {
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--yoobu-border);
+}
+
+.ui-status-card.error {
+  border-color: rgba(165, 42, 42, 0.2);
+  background: rgba(255, 246, 244, 0.95);
+}
+
 ::selection {
   background: rgba(255, 107, 53, 0.18);
 }

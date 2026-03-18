@@ -18,17 +18,17 @@ import { BookingResponse } from '../../core/models/booking.model';
         </button>
       </div>
 
-      <section class="status-card" *ngIf="loading()">
+      <section class="status-card ui-status-card" *ngIf="loading()">
         <h4>Loading orders</h4>
         <p>Loading your orders.</p>
       </section>
 
-      <section class="status-card error" *ngIf="error() as error">
+      <section class="status-card ui-status-card error" *ngIf="error() as error">
         <h4>Orders unavailable</h4>
         <p>{{ error }}</p>
       </section>
 
-      <section class="status-card" *ngIf="!loading() && !error() && !bookings().length">
+      <section class="status-card ui-status-card" *ngIf="!loading() && !error() && !bookings().length">
         <h4>No orders yet</h4>
         <p>Your orders will appear here.</p>
       </section>
@@ -75,7 +75,7 @@ import { BookingResponse } from '../../core/models/booking.model';
                   {{ bookingStatusLabel(booking.status) }}
                 </span>
               </div>
-              <p class="copy">{{ bookingStatusDescription(booking.status) }}</p>
+              <p class="copy ui-copy">{{ bookingStatusDescription(booking.status) }}</p>
             </div>
 
             <button
@@ -152,7 +152,7 @@ import { BookingResponse } from '../../core/models/booking.model';
         </section>
 
         <ng-template #chooseBooking>
-          <section class="status-card">
+          <section class="status-card ui-status-card">
             <h4>Select an order</h4>
             <p>Choose an order to view the details.</p>
           </section>
@@ -168,24 +168,12 @@ import { BookingResponse } from '../../core/models/booking.model';
       margin: 0;
     }
 
-    .copy {
-      color: var(--yoobu-muted);
-      line-height: 1.45;
-      font-size: 0.95rem;
-    }
-
     .bookings-card,
-    .booking-detail,
-    .status-card {
+    .booking-detail {
       padding: 0.95rem 1rem;
       border-radius: 18px;
       background: rgba(255, 255, 255, 0.82);
       border: 1px solid var(--yoobu-border);
-    }
-
-    .status-card.error {
-      border-color: rgba(165, 42, 42, 0.2);
-      background: rgba(255, 246, 244, 0.95);
     }
 
     .status-card p {

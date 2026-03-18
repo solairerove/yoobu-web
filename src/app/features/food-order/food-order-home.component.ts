@@ -31,7 +31,7 @@ import { FoodOrderStore } from './food-order.store';
         </div>
       </header>
 
-      <p class="copy">Choose your items, add delivery details, and track your order.</p>
+      <p class="copy ui-copy">Choose your items, add delivery details, and track your order.</p>
 
       <nav class="view-switch" aria-label="Order sections">
         <button
@@ -52,17 +52,17 @@ import { FoodOrderStore } from './food-order.store';
         </button>
       </nav>
 
-      <section class="status-card" *ngIf="vm().loading">
+      <section class="status-card ui-status-card" *ngIf="vm().loading">
         <h3>Loading menu</h3>
         <p>Please wait while the menu loads.</p>
       </section>
 
-      <section class="status-card error" *ngIf="vm().error as error">
+      <section class="status-card ui-status-card error" *ngIf="vm().error as error">
         <h3>Menu unavailable</h3>
         <p>{{ error }}</p>
       </section>
 
-      <section class="status-card" *ngIf="!vm().loading && !vm().error && !vm().services.length">
+      <section class="status-card ui-status-card" *ngIf="!vm().loading && !vm().error && !vm().services.length">
         <h3>No items available</h3>
         <p>No items are available right now.</p>
       </section>
@@ -71,7 +71,7 @@ import { FoodOrderStore } from './food-order.store';
         <section class="success-card" *ngIf="submittedBooking() as booking">
           <p class="eyebrow">Order sent</p>
           <h3>Order #{{ booking.id }}</h3>
-          <p class="copy">
+          <p class="copy ui-copy">
             {{ booking.customerName }}, your order for {{ booking.deliveryDate | date: 'mediumDate' }} is now
             in status <strong>{{ booking.status }}</strong>.
           </p>
@@ -268,12 +268,6 @@ import { FoodOrderStore } from './food-order.store';
       line-height: 1.15;
     }
 
-    .copy {
-      color: var(--yoobu-muted);
-      line-height: 1.45;
-      font-size: 0.95rem;
-    }
-
     .view-switch {
       display: inline-grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -301,7 +295,6 @@ import { FoodOrderStore } from './food-order.store';
       box-shadow: 0 2px 10px rgba(36, 22, 15, 0.08);
     }
 
-    .status-card,
     .success-card,
     .bookings-card,
     .booking-detail {
@@ -309,11 +302,6 @@ import { FoodOrderStore } from './food-order.store';
       border-radius: 18px;
       background: rgba(255, 255, 255, 0.82);
       border: 1px solid var(--yoobu-border);
-    }
-
-    .status-card.error {
-      border-color: rgba(165, 42, 42, 0.2);
-      background: rgba(255, 246, 244, 0.95);
     }
 
     .success-card {
