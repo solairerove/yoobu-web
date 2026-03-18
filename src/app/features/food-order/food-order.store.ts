@@ -63,7 +63,8 @@ export class FoodOrderStore {
       const nextQuantity = Math.max((current[serviceId] ?? 0) - 1, 0);
 
       if (nextQuantity === 0) {
-        const { [serviceId]: _removed, ...rest } = current;
+        const rest = { ...current };
+        delete rest[serviceId];
         return rest;
       }
 

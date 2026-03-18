@@ -1,33 +1,54 @@
 # Yoobu Web
 
-Initial Angular shell for the Telegram Mini App frontend.
+Angular frontend for the Yoobu Telegram Mini App.
 
 ## Current scope
 
-- standalone Angular app structure
-- route pattern `t/:slug`
-- tenant config fetch from `GET /t/{slug}/config`
-- Telegram `initData` header interceptor
-- theme application from tenant config
-- placeholder `FOOD_ORDER` screen
-
-## Next slice
-
-1. Load `GET /t/{slug}/services`
-2. Build cart state with signals
-3. Connect Telegram `MainButton` to checkout
-4. Submit `POST /t/{slug}/bookings`
+- standalone Angular app with route pattern `t/:slug`
+- tenant config loading and dynamic theming
+- `FOOD_ORDER` flow:
+  - services catalog
+  - cart state via signal store
+  - checkout form
+  - booking creation and cancellation
+  - my bookings history/details
+- Telegram integration:
+  - `X-Telegram-Init-Data` interceptor
+  - localhost fallback user header
+  - Telegram `MainButton` action wiring
+- feature orchestration extracted into `FoodOrderFlowFacade`
 
 ## Run
 
 ```bash
 npm install
-npm test
 npm start
 ```
 
 The Angular dev server proxies `/api/*` to the backend defined in `proxy.conf.json`.
 On localhost, the checkout and submit page buttons remain visible for manual testing. Outside localhost, the flow uses the Telegram `MainButton`.
+
+## Quality checks
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+```
+
+Useful options:
+
+```bash
+npm run lint:fix
+npm run test:watch
+```
+
+## Test structure
+
+- Unit tests are co-located with source files as `*.spec.ts`
+- Current baseline specs:
+  - `FoodOrderStore` cart/state behavior
+  - `FoodOrderFlowFacade` orchestration behavior (including stale response protection)
 
 ## Railway deployment
 

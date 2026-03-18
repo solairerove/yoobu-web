@@ -8,11 +8,6 @@ import { TenantConfig } from '../core/models/tenant-config.model';
 import { TenantApiService } from '../core/services/tenant-api.service';
 import { TelegramService } from '../core/telegram/telegram.service';
 
-interface TenantVm {
-  config: TenantConfig | null;
-  error: string | null;
-}
-
 @Component({
   selector: 'app-tenant-shell',
   imports: [AsyncPipe, NgComponentOutlet, NgIf],
