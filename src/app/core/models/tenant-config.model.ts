@@ -4,6 +4,7 @@ export interface TenantConfig {
   slug: string;
   name: string;
   type: TenantType;
+  currency?: string | null;
   primaryColor: string | null;
   logoUrl: string | null;
   welcomeMessage: string | null;

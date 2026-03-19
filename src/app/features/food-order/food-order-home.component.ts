@@ -1,7 +1,8 @@
 import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, effect, inject, input } from '@angular/core';
+import { Component, computed, effect, inject, input } from '@angular/core';
 import { TenantConfig } from '../../core/models/tenant-config.model';
 import { ServiceItem } from '../../core/models/service.model';
+import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 import { FoodOrderBookingsComponent } from './food-order-bookings.component';
 import { FoodOrderCheckoutComponent } from './food-order-checkout.component';
 import { FoodOrderFlowFacade } from './food-order-flow.facade';
@@ -77,7 +78,7 @@ import { FoodOrderStore } from './food-order.store';
           </p>
 
           <div class="success-meta">
-            <span>{{ booking.totalPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
+            <span>{{ booking.totalPrice | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
             <span>{{ booking.items.length }} products</span>
             <span>{{ booking.createdAt | date: 'short' }}</span>
           </div>
@@ -134,7 +135,7 @@ import { FoodOrderStore } from './food-order.store';
           <div class="product-side">
             <div class="price-block">
               <p class="price-label">Price</p>
-              <p class="price">{{ service.price | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+              <p class="price">{{ service.price | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
             </div>
             <div class="quantity">
               <button
@@ -172,7 +173,7 @@ import { FoodOrderStore } from './food-order.store';
           <strong>
             {{ checkoutOpen() ? 'Checkout is open' : store.selectedCount() + ' item' + (store.selectedCount() > 1 ? 's' : '') }}
           </strong>
-          <p class="summary-total">{{ store.selectedTotal() | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+          <p class="summary-total">{{ store.selectedTotal() | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
         </div>
 
         <span class="cart-action">
@@ -191,6 +192,7 @@ import { FoodOrderStore } from './food-order.store';
         [customerNameHint]="config().checkoutNameHint || null"
         [customerPhoneHint]="config().checkoutPhoneHint || null"
         [customerNoteHint]="config().checkoutNoteHint || null"
+        [currencyCode]="currencyCode()"
         [selectedItems]="store.selectedItems()"
         [selectedCount]="store.selectedCount()"
         [selectedTotal]="store.selectedTotal()"
@@ -207,6 +209,7 @@ import { FoodOrderStore } from './food-order.store';
         [selectedBooking]="selectedBooking()"
         [cancellingBookingId]="cancellingBookingId()"
         [cancelError]="cancelError()"
+        [currencyCode]="currencyCode()"
         (refreshRequested)="refreshBookings()"
         (bookingSelected)="selectBooking($event)"
         (cancelRequested)="cancelBooking($event)"
@@ -717,6 +720,7 @@ export class FoodOrderHomeComponent {
   protected readonly vm = this.facade.vm;
   protected readonly bookingsVm = this.facade.bookingsVm;
   protected readonly isFirstOrder = this.facade.isFirstOrder;
+  protected readonly currencyCode = computed(() => normalizeCurrencyCode(this.config().currency));
 
   constructor() {
     effect(() => {

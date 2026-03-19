@@ -7,6 +7,7 @@ import { TenantConfig } from '../../core/models/tenant-config.model';
 import { ServiceItem } from '../../core/models/service.model';
 import { TenantApiService } from '../../core/services/tenant-api.service';
 import { TelegramService } from '../../core/telegram/telegram.service';
+import { currencySymbolFor, normalizeCurrencyCode } from '../../core/utils/currency.util';
 import { FoodOrderStore } from './food-order.store';
 
 interface FoodOrderVm {
@@ -481,10 +482,17 @@ export class FoodOrderFlowFacade {
   }
 
   private formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'VND',
-      maximumFractionDigits: 0
-    }).format(amount);
+    const currencyCode = normalizeCurrencyCode(this.configSignal()?.currency);
+
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currencyCode,
+        maximumFractionDigits: 0
+      }).format(amount);
+    } catch {
+      const symbol = currencySymbolFor(currencyCode);
+      return `${symbol}${Math.round(amount).toLocaleString('en-US')}`;
+    }
   }
 }

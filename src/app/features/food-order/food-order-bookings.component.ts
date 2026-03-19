@@ -55,7 +55,7 @@ import { BookingResponse } from '../../core/models/booking.model';
               </span>
             </div>
             <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
-            <p>{{ booking.totalPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+            <p>{{ booking.totalPrice | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
           </button>
         </div>
 
@@ -136,15 +136,15 @@ import { BookingResponse } from '../../core/models/booking.model';
               <div class="review-row" *ngFor="let item of booking.items">
                 <div>
                   <strong>{{ item.serviceName }}</strong>
-                  <p>{{ item.quantity }} × {{ item.unitPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+                  <p>{{ item.quantity }} × {{ item.unitPrice | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
                 </div>
-                <span>{{ item.unitPrice * item.quantity | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
+                <span>{{ item.unitPrice * item.quantity | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
               </div>
             </div>
 
             <div class="review-total">
               <span>Total</span>
-              <strong>{{ booking.totalPrice | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</strong>
+              <strong>{{ booking.totalPrice | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</strong>
             </div>
           </div>
 
@@ -432,6 +432,7 @@ export class FoodOrderBookingsComponent {
   readonly selectedBooking = input.required<BookingResponse | null>();
   readonly cancellingBookingId = input.required<number | null>();
   readonly cancelError = input.required<string | null>();
+  readonly currencyCode = input<string>('VND');
 
   readonly refreshRequested = output<void>();
   readonly bookingSelected = output<number>();

@@ -100,15 +100,15 @@ interface CheckoutSelection {
             <div class="review-row" *ngFor="let entry of selectedItems()">
               <div>
                 <strong>{{ entry.service.name }}</strong>
-                <p>{{ entry.quantity }} × {{ entry.service.price | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</p>
+                <p>{{ entry.quantity }} × {{ entry.service.price | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
               </div>
-              <span>{{ entry.service.price * entry.quantity | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</span>
+              <span>{{ entry.service.price * entry.quantity | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
             </div>
           </div>
 
           <div class="review-total">
             <span>Total</span>
-            <strong>{{ selectedTotal() | currency: 'VND' : 'symbol-narrow' : '1.0-0' }}</strong>
+            <strong>{{ selectedTotal() | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</strong>
           </div>
         </aside>
       </div>
@@ -329,6 +329,7 @@ export class FoodOrderCheckoutComponent {
   readonly customerNameHint = input<string | null>(null);
   readonly customerPhoneHint = input<string | null>(null);
   readonly customerNoteHint = input<string | null>(null);
+  readonly currencyCode = input<string>('VND');
   readonly selectedItems = input.required<CheckoutSelection[]>();
   readonly selectedCount = input.required<number>();
   readonly selectedTotal = input.required<number>();
