@@ -4,11 +4,26 @@
   --yoobu-primary-soft: rgba(255, 107, 53, 0.12);
   --yoobu-surface: #fffaf5;
   --yoobu-surface-strong: rgba(255, 255, 255, 0.88);
+  --yoobu-surface-card: rgba(255, 255, 255, 0.92);
+  --yoobu-surface-card-soft: rgba(255, 255, 255, 0.82);
+  --yoobu-surface-card-strong: rgba(255, 255, 255, 0.96);
+  --yoobu-surface-tint: rgba(255, 250, 246, 0.9);
+  --yoobu-surface-muted: rgba(36, 22, 15, 0.05);
   --yoobu-ink: #24160f;
   --yoobu-muted: #6b5d56;
   --yoobu-border: rgba(36, 22, 15, 0.12);
+  --yoobu-border-soft: rgba(36, 22, 15, 0.08);
+  --yoobu-border-accent-soft: rgba(255, 107, 53, 0.16);
+  --yoobu-border-accent: rgba(255, 107, 53, 0.24);
+  --yoobu-overlay-light: rgba(255, 255, 255, 0.18);
   --yoobu-shadow: 0 18px 50px rgba(36, 22, 15, 0.12);
   --yoobu-shadow-soft: 0 10px 24px rgba(36, 22, 15, 0.07);
+  --yoobu-shadow-xs: 0 2px 10px rgba(36, 22, 15, 0.08);
+  --yoobu-shadow-sm: 0 8px 16px rgba(36, 22, 15, 0.06);
+  --yoobu-shadow-accent: 0 10px 24px rgba(255, 107, 53, 0.08);
+  --yoobu-shadow-modal: 0 -10px 40px rgba(36, 22, 15, 0.18);
+  --yoobu-ring-soft: 0 0 0 6px rgba(36, 22, 15, 0.04);
+  --yoobu-ring-accent: 0 0 0 6px rgba(255, 107, 53, 0.12);
   font-family: "SF Pro Display", "Avenir Next", "Segoe UI", sans-serif;
   color: var(--yoobu-ink);
   background:

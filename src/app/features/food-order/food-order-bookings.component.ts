@@ -172,7 +172,7 @@ import { BookingResponse } from '../../core/models/booking.model';
     .booking-detail {
       padding: 0.95rem 1rem;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.82);
+      background: var(--yoobu-surface-card-soft);
       border: 1px solid var(--yoobu-border);
     }
 
@@ -214,7 +214,7 @@ import { BookingResponse } from '../../core/models/booking.model';
       padding: 0.95rem 1rem;
       border-radius: 16px;
       border: 1px solid var(--yoobu-border);
-      background: rgba(255, 255, 255, 0.96);
+      background: var(--yoobu-surface-card-strong);
       text-align: left;
       color: inherit;
     }
@@ -225,8 +225,8 @@ import { BookingResponse } from '../../core/models/booking.model';
     }
 
     .booking-item.active {
-      border-color: rgba(255, 107, 53, 0.35);
-      background: rgba(255, 248, 242, 0.96);
+      border-color: var(--yoobu-border-accent);
+      background: var(--yoobu-surface-tint);
     }
 
     .booking-item-top {
@@ -245,7 +245,7 @@ import { BookingResponse } from '../../core/models/booking.model';
     .booking-status {
       padding: 0.2rem 0.55rem;
       border-radius: 999px;
-      background: rgba(255, 107, 53, 0.12);
+      background: var(--yoobu-primary-soft);
       color: var(--yoobu-primary);
       font-size: 0.8rem;
       font-weight: 700;
@@ -257,7 +257,7 @@ import { BookingResponse } from '../../core/models/booking.model';
     }
 
     .booking-status.status-new {
-      background: rgba(255, 107, 53, 0.12);
+      background: var(--yoobu-primary-soft);
       color: var(--yoobu-primary);
     }
 
@@ -315,9 +315,9 @@ import { BookingResponse } from '../../core/models/booking.model';
       height: 0.8rem;
       margin-top: 0.3rem;
       border-radius: 999px;
-      border: 2px solid rgba(36, 22, 15, 0.14);
-      background: rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 0 6px rgba(36, 22, 15, 0.04);
+      border: 2px solid var(--yoobu-border-soft);
+      background: var(--yoobu-surface-card);
+      box-shadow: var(--yoobu-ring-soft);
     }
 
     .timeline-step strong {
@@ -335,7 +335,7 @@ import { BookingResponse } from '../../core/models/booking.model';
     .timeline-step.current .timeline-dot {
       border-color: var(--yoobu-primary);
       background: var(--yoobu-primary);
-      box-shadow: 0 0 0 6px rgba(255, 107, 53, 0.12);
+      box-shadow: var(--yoobu-ring-accent);
     }
 
     .timeline-step.current strong {
@@ -357,8 +357,8 @@ import { BookingResponse } from '../../core/models/booking.model';
       gap: 0.9rem;
       padding: 1rem;
       border-radius: 18px;
-      background: rgba(255, 250, 246, 0.88);
-      border: 1px solid rgba(36, 22, 15, 0.08);
+      background: var(--yoobu-surface-tint);
+      border: 1px solid var(--yoobu-border-soft);
     }
 
     .receipt-head span,
@@ -370,13 +370,13 @@ import { BookingResponse } from '../../core/models/booking.model';
     .receipt-row {
       align-items: baseline;
       padding-bottom: 0.65rem;
-      border-bottom: 1px solid rgba(36, 22, 15, 0.08);
+      border-bottom: 1px solid var(--yoobu-border-soft);
     }
 
     .receipt-note {
       padding: 0.85rem 0.95rem;
       border-radius: 14px;
-      background: rgba(255, 255, 255, 0.92);
+      background: var(--yoobu-surface-card);
       color: var(--yoobu-muted);
       line-height: 1.5;
     }

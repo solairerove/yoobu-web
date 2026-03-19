@@ -115,7 +115,7 @@ interface CheckoutSelection {
     .checkout-card {
       padding: 0.95rem 1rem;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.82);
+      background: var(--yoobu-surface-card-soft);
       border: 1px solid var(--yoobu-border);
     }
 
@@ -142,11 +142,11 @@ interface CheckoutSelection {
       max-height: min(85vh, 920px);
       margin: 0 0 max(0.5rem, env(safe-area-inset-bottom));
       border-radius: 24px 24px 0 0;
-      box-shadow: 0 -10px 40px rgba(36, 22, 15, 0.18);
+      box-shadow: var(--yoobu-shadow-modal);
       overflow: auto;
       pointer-events: auto;
       background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 246, 0.96));
+        linear-gradient(180deg, var(--yoobu-surface-card-strong), var(--yoobu-surface-tint));
     }
 
     .sheet-handle {
@@ -154,7 +154,7 @@ interface CheckoutSelection {
       height: 0.32rem;
       margin: 0 auto 0.8rem;
       border-radius: 999px;
-      background: rgba(36, 22, 15, 0.14);
+      background: var(--yoobu-border);
     }
 
     .checkout-head {
@@ -193,7 +193,7 @@ interface CheckoutSelection {
       padding: 0.85rem 0.95rem;
       border-radius: 14px;
       border: 1px solid var(--yoobu-border);
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--yoobu-surface-card-strong);
       color: var(--yoobu-ink);
     }
 
@@ -206,8 +206,8 @@ interface CheckoutSelection {
       align-content: start;
       padding: 1rem;
       border-radius: 18px;
-      background: rgba(255, 250, 246, 0.88);
-      border: 1px solid rgba(36, 22, 15, 0.08);
+      background: var(--yoobu-surface-tint);
+      border: 1px solid var(--yoobu-border-soft);
     }
 
     .review-head {

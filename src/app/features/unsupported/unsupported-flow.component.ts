@@ -17,7 +17,7 @@ import { TenantConfig } from '../../core/models/tenant-config.model';
       padding: 1.5rem;
       border-radius: 24px;
       border: 1px dashed var(--yoobu-border);
-      background: rgba(255, 255, 255, 0.75);
+      background: var(--yoobu-surface-card-soft);
     }
 
     .label {

@@ -69,7 +69,7 @@ import { TelegramService } from '../core/telegram/telegram.service';
     .status-card {
       padding: 1rem 1rem 1.1rem;
       border-radius: 22px;
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 246, 0.94));
+      background: linear-gradient(145deg, var(--yoobu-surface-card-strong), var(--yoobu-surface-tint));
       border: 1px solid var(--yoobu-border);
       box-shadow: var(--yoobu-shadow);
     }
@@ -81,7 +81,7 @@ import { TelegramService } from '../core/telegram/telegram.service';
       overflow: hidden;
       background:
         radial-gradient(circle at top right, color-mix(in srgb, var(--yoobu-primary) 18%, transparent), transparent 34%),
-        linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 249, 244, 0.96));
+        linear-gradient(145deg, var(--yoobu-surface-card-strong), var(--yoobu-surface-tint));
     }
 
     .hero::after {
@@ -139,8 +139,8 @@ import { TelegramService } from '../core/telegram/telegram.service';
       min-width: 6rem;
       padding: 0.7rem 0.85rem;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.74);
-      border: 1px solid rgba(36, 22, 15, 0.08);
+      background: var(--yoobu-surface-card);
+      border: 1px solid var(--yoobu-border-soft);
       box-shadow: var(--yoobu-shadow-soft);
       backdrop-filter: blur(10px);
     }

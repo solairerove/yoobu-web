@@ -215,7 +215,7 @@ import { FoodOrderStore } from './food-order.store';
       gap: 0.85rem;
       padding: 1rem;
       border-radius: 22px;
-      background: rgba(255, 255, 255, 0.94);
+      background: var(--yoobu-surface-card);
       border: 1px solid var(--yoobu-border);
       box-shadow: var(--yoobu-shadow);
     }
@@ -235,7 +235,7 @@ import { FoodOrderStore } from './food-order.store';
       min-width: 4.75rem;
       padding: 0.55rem 0.7rem;
       border-radius: 16px;
-      background: rgba(255, 107, 53, 0.08);
+      background: var(--yoobu-primary-soft);
       text-align: center;
     }
 
@@ -274,7 +274,7 @@ import { FoodOrderStore } from './food-order.store';
       gap: 0.3rem;
       padding: 0.25rem;
       border-radius: 16px;
-      background: rgba(36, 22, 15, 0.05);
+      background: var(--yoobu-surface-muted);
       width: fit-content;
     }
 
@@ -290,9 +290,9 @@ import { FoodOrderStore } from './food-order.store';
     }
 
     .view-switch-button.active {
-      background: rgba(255, 255, 255, 0.96);
+      background: var(--yoobu-surface-card-strong);
       color: var(--yoobu-ink);
-      box-shadow: 0 2px 10px rgba(36, 22, 15, 0.08);
+      box-shadow: var(--yoobu-shadow-xs);
     }
 
     .success-card,
@@ -300,7 +300,7 @@ import { FoodOrderStore } from './food-order.store';
     .booking-detail {
       padding: 0.95rem 1rem;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.82);
+      background: var(--yoobu-surface-card-soft);
       border: 1px solid var(--yoobu-border);
     }
 
@@ -360,7 +360,7 @@ import { FoodOrderStore } from './food-order.store';
     .catalog-pill {
       padding: 0.35rem 0.6rem;
       border-radius: 999px;
-      background: rgba(36, 22, 15, 0.05);
+      background: var(--yoobu-surface-muted);
       color: var(--yoobu-muted);
       font-size: 0.8rem;
       font-weight: 700;
@@ -373,8 +373,8 @@ import { FoodOrderStore } from './food-order.store';
       align-items: center;
       padding: 0.8rem 0.9rem;
       border-radius: 16px;
-      background: rgba(255, 248, 242, 0.9);
-      border: 1px solid rgba(255, 107, 53, 0.12);
+      background: var(--yoobu-surface-tint);
+      border: 1px solid var(--yoobu-border-accent-soft);
     }
 
     .catalog-dot {
@@ -383,7 +383,7 @@ import { FoodOrderStore } from './food-order.store';
       border-radius: 999px;
       background: var(--yoobu-primary);
       flex-shrink: 0;
-      box-shadow: 0 0 0 6px rgba(255, 107, 53, 0.12);
+      box-shadow: var(--yoobu-ring-accent);
     }
 
     .catalog-note p {
@@ -403,8 +403,8 @@ import { FoodOrderStore } from './food-order.store';
       gap: 0.9rem;
       padding: 0.9rem;
       border-radius: 16px;
-      background: rgba(255, 250, 246, 0.88);
-      border: 1px solid rgba(36, 22, 15, 0.08);
+      background: var(--yoobu-surface-tint);
+      border: 1px solid var(--yoobu-border-soft);
       align-items: center;
       position: relative;
       overflow: hidden;
@@ -416,9 +416,9 @@ import { FoodOrderStore } from './food-order.store';
     }
 
     .product-card.selected {
-      border-color: rgba(255, 107, 53, 0.28);
+      border-color: var(--yoobu-border-accent);
       background: linear-gradient(135deg, rgba(255, 246, 240, 0.98), rgba(255, 252, 249, 0.92));
-      box-shadow: 0 10px 24px rgba(255, 107, 53, 0.08);
+      box-shadow: var(--yoobu-shadow-accent);
     }
 
     .product-accent {
@@ -454,7 +454,7 @@ import { FoodOrderStore } from './food-order.store';
       height: 1.9rem;
       padding: 0 0.45rem;
       border-radius: 999px;
-      background: rgba(36, 22, 15, 0.05);
+      background: var(--yoobu-surface-muted);
       color: var(--yoobu-muted);
       font-size: 0.78rem;
       font-weight: 800;
@@ -502,7 +502,7 @@ import { FoodOrderStore } from './food-order.store';
     .unit {
       padding: 0.15rem 0.45rem;
       border-radius: 999px;
-      background: rgba(36, 22, 15, 0.05);
+      background: var(--yoobu-surface-muted);
       color: var(--yoobu-muted);
       font-size: 0.82rem;
     }
@@ -520,10 +520,10 @@ import { FoodOrderStore } from './food-order.store';
       padding: 0.24rem;
       border-radius: 999px;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 240, 0.94));
-      border: 1px solid rgba(255, 107, 53, 0.16);
+      border: 1px solid var(--yoobu-border-accent-soft);
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.8),
-        0 8px 16px rgba(36, 22, 15, 0.06);
+        var(--yoobu-shadow-sm);
     }
 
     .quantity button,
@@ -557,10 +557,10 @@ import { FoodOrderStore } from './food-order.store';
     }
 
     .quantity-button-decrease {
-      background: rgba(255, 255, 255, 0.92);
-      border-color: rgba(36, 22, 15, 0.08);
+      background: var(--yoobu-surface-card);
+      border-color: var(--yoobu-border-soft);
       color: var(--yoobu-ink);
-      box-shadow: 0 3px 10px rgba(36, 22, 15, 0.06);
+      box-shadow: var(--yoobu-shadow-sm);
     }
 
     .quantity-button-increase {
@@ -579,7 +579,7 @@ import { FoodOrderStore } from './food-order.store';
     }
 
     .quantity-button:focus-visible {
-      outline: 2px solid rgba(255, 107, 53, 0.28);
+      outline: 2px solid var(--yoobu-border-accent);
       outline-offset: 2px;
     }
 
@@ -611,7 +611,7 @@ import { FoodOrderStore } from './food-order.store';
       transform: translateX(-50%);
       z-index: 5;
       padding: 0.9rem 1rem;
-      border: 1px solid rgba(255, 107, 53, 0.24);
+      border: 1px solid var(--yoobu-border-accent);
       border-radius: 18px;
       background: linear-gradient(135deg, rgba(255, 107, 53, 0.96), rgba(255, 131, 84, 0.96));
       color: white;
@@ -641,7 +641,7 @@ import { FoodOrderStore } from './food-order.store';
       flex-shrink: 0;
       padding: 0.45rem 0.75rem;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.18);
+      background: var(--yoobu-overlay-light);
       color: white;
       font-size: 0.82rem;
       font-weight: 700;
