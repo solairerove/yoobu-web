@@ -1,5 +1,6 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
+import { throwError } from 'rxjs';
 import { BookingResponse } from '../../core/models/booking.model';
 import { ServiceItem } from '../../core/models/service.model';
 import { TenantConfig } from '../../core/models/tenant-config.model';
@@ -11,6 +12,7 @@ import { FoodOrderStore } from './food-order.store';
 describe('FoodOrderFlowFacade', () => {
   let facade: FoodOrderFlowFacade;
   let api: jasmine.SpyObj<TenantApiService>;
+  let telegram: jasmine.SpyObj<TelegramService>;
 
   const service: ServiceItem = {
     id: 1,
@@ -41,7 +43,7 @@ describe('FoodOrderFlowFacade', () => {
       'cancelBooking'
     ]);
 
-    const telegram = jasmine.createSpyObj<TelegramService>('TelegramService', [
+    telegram = jasmine.createSpyObj<TelegramService>('TelegramService', [
       'isLocalhost',
       'setMainButton',
       'onMainButtonClick',
@@ -110,6 +112,142 @@ describe('FoodOrderFlowFacade', () => {
 
     expect(facade.selectedBookingId()).toBe(2);
     expect(facade.selectedBooking()?.id).toBe(2);
+  });
+
+  it('shows an error when service loading fails', fakeAsync(() => {
+    api.getServices.and.returnValue(throwError(() => new Error('failed')));
+
+    void facade.vm();
+    facade.setConfig(tenantConfig);
+    tick();
+
+    expect(facade.vm().services).toEqual([]);
+    expect(facade.vm().loading).toBeFalse();
+    expect(facade.vm().error).toBe('Check the backend service or tenant data and try again.');
+  }));
+
+  it('does not submit an order when confirmation is declined', async () => {
+    telegram.confirm.and.resolveTo(false);
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.increase(service.id);
+    facade.openCheckout();
+    facade.checkoutForm.setValue({
+      customerName: 'Alice',
+      customerPhone: '0123456789',
+      deliveryDate: '2026-03-19',
+      note: ''
+    });
+
+    await facade.submitOrder();
+
+    expect(api.createBooking).not.toHaveBeenCalled();
+    expect(facade.submitting()).toBeFalse();
+    expect(facade.store.selectedCount()).toBe(1);
+    expect(facade.checkoutOpen()).toBeTrue();
+  });
+
+  it('submits an order and resets checkout state on success', async () => {
+    const createdBooking = createBookingResponse(42);
+    api.getServices.and.returnValue(of([service]));
+    api.createBooking.and.returnValue(of(createdBooking));
+
+    facade.setConfig(tenantConfig);
+    facade.increase(service.id);
+    facade.openCheckout();
+    facade.checkoutForm.setValue({
+      customerName: ' Alice ',
+      customerPhone: ' 0123456789 ',
+      deliveryDate: '2026-03-19',
+      note: ' no sugar '
+    });
+
+    const reloadKeyBefore = facade.bookingsReloadKey();
+
+    await facade.submitOrder();
+
+    expect(api.createBooking).toHaveBeenCalledWith('demo', {
+      customerName: 'Alice',
+      customerPhone: '0123456789',
+      deliveryDate: '2026-03-19',
+      note: 'no sugar',
+      items: [{ serviceId: service.id, quantity: 1 }]
+    });
+    expect(facade.submittedBooking()?.id).toBe(createdBooking.id);
+    expect(facade.selectedBookingId()).toBe(createdBooking.id);
+    expect(facade.store.selectedCount()).toBe(0);
+    expect(facade.checkoutOpen()).toBeFalse();
+    expect(facade.submitting()).toBeFalse();
+    expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
+    expect(facade.checkoutForm.getRawValue().customerName).toBe('Alice');
+    expect(facade.checkoutForm.getRawValue().customerPhone).toBe('0123456789');
+    expect(facade.checkoutForm.getRawValue().note).toBe('');
+  });
+
+  it('keeps checkout open and shows validation errors when submit form is invalid', async () => {
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.increase(service.id);
+    facade.openCheckout();
+
+    await facade.submitOrder();
+
+    expect(api.createBooking).not.toHaveBeenCalled();
+    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.submitError()).toBe('Enter your name, phone number, and delivery date before placing the order.');
+    expect(telegram.alert).toHaveBeenCalledWith(
+      'Enter your name, phone number, and delivery date before placing the order.'
+    );
+  });
+
+  it('closes checkout when trying to submit with an empty cart', async () => {
+    facade.setConfig(tenantConfig);
+    facade.openCheckout();
+
+    await facade.submitOrder();
+
+    expect(api.createBooking).not.toHaveBeenCalled();
+    expect(facade.checkoutOpen()).toBeFalse();
+  });
+
+  it('does not call cancel API when cancellation is not confirmed', async () => {
+    telegram.confirm.and.resolveTo(false);
+    facade.setConfig(tenantConfig);
+
+    await facade.cancelBooking(1);
+
+    expect(api.cancelBooking).not.toHaveBeenCalled();
+    expect(facade.cancellingBookingId()).toBeNull();
+  });
+
+  it('updates selected booking and refreshes bookings after successful cancellation', async () => {
+    const cancelledBooking: BookingResponse = {
+      ...createBookingResponse(1),
+      status: 'CANCELLED'
+    };
+    api.cancelBooking.and.returnValue(of(cancelledBooking));
+    facade.setConfig(tenantConfig);
+    const reloadKeyBefore = facade.bookingsReloadKey();
+
+    await facade.cancelBooking(1);
+
+    expect(api.cancelBooking).toHaveBeenCalledWith('demo', 1);
+    expect(facade.selectedBooking()?.status).toBe('CANCELLED');
+    expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
+    expect(facade.cancellingBookingId()).toBeNull();
+  });
+
+  it('shows error and alerts when cancellation fails', async () => {
+    api.cancelBooking.and.returnValue(throwError(() => new Error('failed')));
+    facade.setConfig(tenantConfig);
+
+    await facade.cancelBooking(1);
+
+    expect(facade.cancelError()).toBe('Cancel request failed. The booking may already be done or unavailable.');
+    expect(telegram.alert).toHaveBeenCalledWith(
+      'Could not cancel this order. It may already be processed or unavailable.'
+    );
+    expect(facade.cancellingBookingId()).toBeNull();
   });
 });
 
