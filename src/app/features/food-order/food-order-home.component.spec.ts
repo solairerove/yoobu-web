@@ -35,6 +35,7 @@ describe('FoodOrderHomeComponent', () => {
     submittedBooking: ReturnType<typeof signal<BookingResponse | null>>;
     cancellingBookingId: ReturnType<typeof signal<number | null>>;
     cancelError: ReturnType<typeof signal<string | null>>;
+    isFirstOrder: ReturnType<typeof signal<boolean>>;
     vm: ReturnType<typeof signal<{ services: ServiceItem[]; loading: boolean; error: string | null }>>;
     bookingsVm: ReturnType<typeof signal<{ bookings: BookingResponse[]; loading: boolean; error: string | null }>>;
   };
@@ -93,6 +94,7 @@ describe('FoodOrderHomeComponent', () => {
       submittedBooking: signal<BookingResponse | null>(null),
       cancellingBookingId: signal<number | null>(null),
       cancelError: signal<string | null>(null),
+      isFirstOrder: signal(true),
       vm: signal({
         services: [service],
         loading: false,

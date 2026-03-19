@@ -187,6 +187,10 @@ import { FoodOrderStore } from './food-order.store';
         [submitting]="submitting()"
         [submitError]="submitError()"
         [form]="checkoutForm"
+        [isFirstOrder]="isFirstOrder()"
+        [customerNameHint]="config().checkoutNameHint || null"
+        [customerPhoneHint]="config().checkoutPhoneHint || null"
+        [customerNoteHint]="config().checkoutNoteHint || null"
         [selectedItems]="store.selectedItems()"
         [selectedCount]="store.selectedCount()"
         [selectedTotal]="store.selectedTotal()"
@@ -712,6 +716,7 @@ export class FoodOrderHomeComponent {
   protected readonly cancelError = this.facade.cancelError;
   protected readonly vm = this.facade.vm;
   protected readonly bookingsVm = this.facade.bookingsVm;
+  protected readonly isFirstOrder = this.facade.isFirstOrder;
 
   constructor() {
     effect(() => {

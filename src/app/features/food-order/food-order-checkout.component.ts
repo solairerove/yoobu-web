@@ -55,12 +55,18 @@ interface CheckoutSelection {
         <form class="checkout-form" [formGroup]="form()" (ngSubmit)="submitRequested.emit()">
           <label>
             <span>Name</span>
-            <input type="text" formControlName="customerName" placeholder="Your name" />
+            <input type="text" formControlName="customerName" />
+            <small class="field-hint" *ngIf="isFirstOrder() && customerNameHint() as customerNameHint">
+              {{ customerNameHint }}
+            </small>
           </label>
 
           <label>
             <span>Phone</span>
-            <input type="tel" formControlName="customerPhone" placeholder="Phone number" />
+            <input type="tel" formControlName="customerPhone" />
+            <small class="field-hint" *ngIf="isFirstOrder() && customerPhoneHint() as customerPhoneHint">
+              {{ customerPhoneHint }}
+            </small>
           </label>
 
           <label>
@@ -70,7 +76,10 @@ interface CheckoutSelection {
 
           <label>
             <span>Note</span>
-            <textarea rows="4" formControlName="note" placeholder="Add a note for your order"></textarea>
+            <textarea rows="4" formControlName="note"></textarea>
+            <small class="field-hint" *ngIf="isFirstOrder() && customerNoteHint() as customerNoteHint">
+              {{ customerNoteHint }}
+            </small>
           </label>
 
           <p class="form-error" *ngIf="submitError() as error">{{ error }}</p>
@@ -202,6 +211,13 @@ interface CheckoutSelection {
       border-color: rgba(165, 42, 42, 0.35);
     }
 
+    .field-hint {
+      color: var(--yoobu-muted);
+      font-size: 0.84rem;
+      line-height: 1.35;
+      font-weight: 500;
+    }
+
     .review-card {
       align-content: start;
       padding: 1rem;
@@ -309,6 +325,10 @@ export class FoodOrderCheckoutComponent {
   readonly submitting = input.required<boolean>();
   readonly submitError = input.required<string | null>();
   readonly form = input.required<FormGroup>();
+  readonly isFirstOrder = input<boolean>(false);
+  readonly customerNameHint = input<string | null>(null);
+  readonly customerPhoneHint = input<string | null>(null);
+  readonly customerNoteHint = input<string | null>(null);
   readonly selectedItems = input.required<CheckoutSelection[]>();
   readonly selectedCount = input.required<number>();
   readonly selectedTotal = input.required<number>();

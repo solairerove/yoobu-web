@@ -136,6 +136,10 @@ export class FoodOrderFlowFacade {
 
   readonly vm = computed<FoodOrderVm>(() => this.vmSignal());
   readonly bookingsVm = computed<MyBookingsVm>(() => this.bookingsVmSignal());
+  readonly isFirstOrder = computed<boolean>(() => {
+    const bookingsVm = this.bookingsVm();
+    return !bookingsVm.loading && bookingsVm.bookings.length === 0 && this.submittedBooking() === null;
+  });
 
   private readonly mainButtonAction = () => {
     void this.handlePrimaryAction();
