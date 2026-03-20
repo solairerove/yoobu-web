@@ -195,7 +195,7 @@ describe('FoodOrderBookingsComponent', () => {
     expect(details[0].nativeElement.textContent).toContain('Order #3');
     expect(details[1].nativeElement.textContent).toContain('Order #2');
 
-    const historyItems = fixture.debugElement.queryAll(By.css('.bookings-grid .booking-item'));
+    const historyItems = fixture.debugElement.queryAll(By.css('.orders-section:nth-of-type(2) .booking-item'));
     expect(historyItems.length).toBe(1);
     expect(historyItems[0].nativeElement.textContent).toContain('#2');
   });
@@ -223,5 +223,47 @@ describe('FoodOrderBookingsComponent', () => {
     const openHeading = fixture.debugElement.query(By.css('.orders-section .booking-group-title'));
     expect(openHeading.nativeElement.textContent).toContain('Open order');
     expect(fixture.debugElement.query(By.css('.booking-summary .eyebrow')).nativeElement.textContent).toContain('Order #5');
+  });
+
+  it('shows all payment-pending orders in open section and keeps done orders in history', () => {
+    const pendingA: BookingResponse = {
+      ...booking,
+      id: 6,
+      status: 'PAYMENT_PENDING',
+      createdAt: '2026-03-22T10:00:00.000Z'
+    };
+    const pendingB: BookingResponse = {
+      ...booking,
+      id: 7,
+      status: 'PAYMENT_PENDING',
+      createdAt: '2026-03-21T10:00:00.000Z'
+    };
+    const doneBooking: BookingResponse = {
+      ...booking,
+      id: 8,
+      status: 'DONE',
+      createdAt: '2026-03-20T10:00:00.000Z'
+    };
+
+    fixture.componentRef.setInput('bookings', [doneBooking, pendingB, pendingA]);
+    fixture.componentRef.setInput('loading', false);
+    fixture.componentRef.setInput('error', null);
+    fixture.componentRef.setInput('paymentQrUrl', null);
+    fixture.componentRef.setInput('selectedBookingId', pendingA.id);
+    fixture.componentRef.setInput('selectedBooking', pendingA);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.componentRef.setInput('cancellingBookingId', null);
+    fixture.componentRef.setInput('cancelError', null);
+    fixture.detectChanges();
+
+    const openItems = fixture.debugElement.queryAll(By.css('.orders-section:first-of-type .booking-item'));
+    expect(openItems.length).toBe(2);
+    expect(openItems[0].nativeElement.textContent).toContain('#6');
+    expect(openItems[1].nativeElement.textContent).toContain('#7');
+
+    const historyItems = fixture.debugElement.queryAll(By.css('.orders-section:nth-of-type(2) .booking-item'));
+    expect(historyItems.length).toBe(1);
+    expect(historyItems[0].nativeElement.textContent).toContain('#8');
   });
 });

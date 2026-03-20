@@ -35,9 +35,48 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       </section>
 
       <ng-container *ngIf="bookings().length">
-        <section class="orders-section" *ngIf="openBooking() as booking">
+        <section class="orders-section">
           <p class="booking-group-title">Open order</p>
-          <ng-container *ngTemplateOutlet="bookingDetailTemplate; context: { $implicit: booking }" />
+
+          <section class="status-card ui-status-card" *ngIf="!currentBookings().length">
+            <h4>No open orders</h4>
+            <p>Active orders will appear here.</p>
+          </section>
+
+          <div class="bookings-grid" *ngIf="currentBookings().length">
+            <div class="booking-list">
+              <button
+                type="button"
+                class="booking-item"
+                *ngFor="let booking of currentBookings()"
+                [class.active]="selectedBookingId() === booking.id"
+                (click)="bookingSelected.emit(booking.id)"
+              >
+                <div class="booking-item-top">
+                  <strong>#{{ booking.id }}</strong>
+                  <span
+                    class="booking-status"
+                    [class.status-new]="booking.status === 'NEW'"
+                    [class.status-payment-pending]="booking.status === 'PAYMENT_PENDING'"
+                    [class.status-confirmed]="booking.status === 'CONFIRMED'"
+                    [class.status-done]="booking.status === 'DONE'"
+                    [class.status-cancelled]="booking.status === 'CANCELLED'"
+                  >
+                    {{ bookingStatusLabel(booking.status) }}
+                  </span>
+                </div>
+                <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
+                <p class="booking-address" [title]="displayAddress(booking.deliveryAddress)">
+                  {{ displayAddress(booking.deliveryAddress) }}
+                </p>
+                <p>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
+              </button>
+            </div>
+
+            <ng-container *ngIf="selectedOpenBooking() as booking; else chooseOpenBooking">
+              <ng-container *ngTemplateOutlet="bookingDetailTemplate; context: { $implicit: booking }" />
+            </ng-container>
+          </div>
         </section>
 
         <section class="orders-section">
@@ -221,10 +260,17 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
         </section>
       </ng-template>
 
+      <ng-template #chooseOpenBooking>
+        <section class="status-card ui-status-card">
+          <h4>Select an order</h4>
+          <p>Choose an open order to view the details.</p>
+        </section>
+      </ng-template>
+
       <ng-template #chooseHistoryBooking>
           <section class="status-card ui-status-card">
             <h4>Select an order</h4>
-            <p>Choose an order to view the details.</p>
+            <p>Choose a previous order to view the details.</p>
           </section>
       </ng-template>
     </section>
@@ -599,7 +645,7 @@ export class FoodOrderBookingsComponent {
   readonly cancelRequested = output<number>();
   readonly currentBookings = computed(() => this.sortedBookings().filter((booking) => this.isCurrentBooking(booking)));
   readonly previousBookings = computed(() => this.sortedBookings().filter((booking) => !this.isCurrentBooking(booking)));
-  readonly openBooking = computed<BookingResponse | null>(() => {
+  readonly selectedOpenBooking = computed<BookingResponse | null>(() => {
     const selected = this.selectedBooking();
     if (selected && this.isCurrentBooking(selected)) {
       return selected;
