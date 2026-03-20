@@ -10,7 +10,7 @@ describe('FoodOrderBookingsComponent', () => {
   const booking: BookingResponse = {
     id: 1,
     type: 'ORDER',
-    status: 'NEW',
+    status: 'DONE',
     customerName: 'Alice',
     customerPhone: '0123456789',
     deliveryAddress: '123 Main St',
@@ -68,7 +68,18 @@ describe('FoodOrderBookingsComponent', () => {
   });
 
   it('emits cancelRequested for cancellable selected booking', () => {
-    setRequiredInputs({ selectedBooking: booking });
+    const activeBooking: BookingResponse = { ...booking, status: 'CONFIRMED' };
+    fixture.componentRef.setInput('bookings', [activeBooking]);
+    fixture.componentRef.setInput('loading', false);
+    fixture.componentRef.setInput('error', null);
+    fixture.componentRef.setInput('paymentQrUrl', 'https://example.com/qr.png');
+    fixture.componentRef.setInput('selectedBookingId', activeBooking.id);
+    fixture.componentRef.setInput('selectedBooking', activeBooking);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.componentRef.setInput('cancellingBookingId', null);
+    fixture.componentRef.setInput('cancelError', null);
+    fixture.detectChanges();
     const cancelSpy = jasmine.createSpy('cancelSpy');
     component.cancelRequested.subscribe(cancelSpy);
 
@@ -81,7 +92,7 @@ describe('FoodOrderBookingsComponent', () => {
     }
     cancelButton.nativeElement.click();
 
-    expect(cancelSpy).toHaveBeenCalledWith(booking.id);
+    expect(cancelSpy).toHaveBeenCalledWith(activeBooking.id);
   });
 
   it('emits repeatRequested when repeat button is clicked', () => {
@@ -102,7 +113,18 @@ describe('FoodOrderBookingsComponent', () => {
   });
 
   it('emits paymentConfirmRequested for new selected booking', () => {
-    setRequiredInputs({ selectedBooking: booking });
+    const activeBooking: BookingResponse = { ...booking, status: 'NEW' };
+    fixture.componentRef.setInput('bookings', [activeBooking]);
+    fixture.componentRef.setInput('loading', false);
+    fixture.componentRef.setInput('error', null);
+    fixture.componentRef.setInput('paymentQrUrl', 'https://example.com/qr.png');
+    fixture.componentRef.setInput('selectedBookingId', activeBooking.id);
+    fixture.componentRef.setInput('selectedBooking', activeBooking);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.componentRef.setInput('cancellingBookingId', null);
+    fixture.componentRef.setInput('cancelError', null);
+    fixture.detectChanges();
     const confirmSpy = jasmine.createSpy('confirmSpy');
     component.paymentConfirmRequested.subscribe(confirmSpy);
 
@@ -115,7 +137,7 @@ describe('FoodOrderBookingsComponent', () => {
     }
     paymentButton.nativeElement.click();
 
-    expect(confirmSpy).toHaveBeenCalledWith(booking.id);
+    expect(confirmSpy).toHaveBeenCalledWith(activeBooking.id);
   });
 
   it('renders delivery address and falls back to N/A when missing', () => {
@@ -138,7 +160,7 @@ describe('FoodOrderBookingsComponent', () => {
     expect(allMetaRows.map((row) => row.nativeElement.textContent).join(' ')).toContain('N/A');
   });
 
-  it('shows current orders first and previous orders below', () => {
+  it('renders open order section above order history', () => {
     const doneBooking: BookingResponse = {
       ...booking,
       id: 2,
@@ -164,13 +186,17 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const items = fixture.debugElement.queryAll(By.css('.booking-item'));
-    expect(items.length).toBe(2);
-    expect(items[0].nativeElement.textContent).toContain('#3');
-    expect(items[1].nativeElement.textContent).toContain('#2');
+    const headings = fixture.debugElement.queryAll(By.css('.orders-section .booking-group-title'));
+    expect(headings.length).toBe(2);
+    expect(headings[0].nativeElement.textContent).toContain('Open order');
+    expect(headings[1].nativeElement.textContent).toContain('Order history');
 
-    const groupTitles = fixture.debugElement.queryAll(By.css('.booking-group-title'));
-    expect(groupTitles[0].nativeElement.textContent).toContain('Current order');
-    expect(groupTitles[1].nativeElement.textContent).toContain('Previous orders');
+    const details = fixture.debugElement.queryAll(By.css('.booking-summary .eyebrow'));
+    expect(details[0].nativeElement.textContent).toContain('Order #3');
+    expect(details[1].nativeElement.textContent).toContain('Order #2');
+
+    const historyItems = fixture.debugElement.queryAll(By.css('.bookings-grid .booking-item'));
+    expect(historyItems.length).toBe(1);
+    expect(historyItems[0].nativeElement.textContent).toContain('#2');
   });
 });
