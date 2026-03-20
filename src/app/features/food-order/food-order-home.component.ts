@@ -74,6 +74,10 @@ import { FoodOrderStore } from './food-order.store';
         *ngIf="activeView() === 'menu' && submittedBooking() as booking"
         [booking]="booking"
         [fallbackCurrency]="currencyCode()"
+        [paymentQrUrl]="config().paymentQrUrl || null"
+        [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
+        [paymentError]="paymentError()"
+        (paymentConfirmRequested)="confirmPayment($event)"
         (newOrderRequested)="startNewOrder()"
         (ordersRequested)="setActiveView('orders')"
       />
@@ -122,13 +126,17 @@ import { FoodOrderStore } from './food-order.store';
         [bookings]="bookingsVm().bookings"
         [loading]="bookingsVm().loading"
         [error]="bookingsVm().error"
+        [paymentQrUrl]="config().paymentQrUrl || null"
         [selectedBookingId]="selectedBookingId()"
         [selectedBooking]="selectedBooking()"
+        [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
+        [paymentError]="paymentError()"
         [cancellingBookingId]="cancellingBookingId()"
         [cancelError]="cancelError()"
         [currencyCode]="currencyCode()"
         (refreshRequested)="refreshBookings()"
         (bookingSelected)="selectBooking($event)"
+        (paymentConfirmRequested)="confirmPayment($event)"
         (cancelRequested)="cancelBooking($event)"
       />
     </section>
@@ -245,6 +253,8 @@ export class FoodOrderHomeComponent {
   protected readonly submitting = this.facade.submitting;
   protected readonly submitError = this.facade.submitError;
   protected readonly submittedBooking = this.facade.submittedBooking;
+  protected readonly confirmingPaymentBookingId = this.facade.confirmingPaymentBookingId;
+  protected readonly paymentError = this.facade.paymentError;
   protected readonly cancellingBookingId = this.facade.cancellingBookingId;
   protected readonly cancelError = this.facade.cancelError;
   protected readonly vm = this.facade.vm;
@@ -295,6 +305,10 @@ export class FoodOrderHomeComponent {
 
   protected async cancelBooking(bookingId: number): Promise<void> {
     await this.facade.cancelBooking(bookingId);
+  }
+
+  protected async confirmPayment(bookingId: number): Promise<void> {
+    await this.facade.confirmPayment(bookingId);
   }
 
   protected async submitOrder(): Promise<void> {

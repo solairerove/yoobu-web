@@ -34,6 +34,9 @@ describe('FoodOrderSuccessCardComponent', () => {
   function setRequiredInputs(): void {
     fixture.componentRef.setInput('booking', booking);
     fixture.componentRef.setInput('fallbackCurrency', 'VND');
+    fixture.componentRef.setInput('paymentQrUrl', 'https://example.com/qr.png');
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
     fixture.detectChanges();
   }
 
@@ -52,8 +55,14 @@ describe('FoodOrderSuccessCardComponent', () => {
     const newOrderSpy = jasmine.createSpy('newOrderSpy');
     component.newOrderRequested.subscribe(newOrderSpy);
 
-    const buttons = fixture.debugElement.queryAll(By.css('.ghost-button'));
-    buttons[0].nativeElement.click();
+    const button = fixture.debugElement
+      .queryAll(By.css('.success-actions .ghost-button'))
+      .find((item) => item.nativeElement.textContent.includes('New order'));
+    if (!button) {
+      fail('Expected New order button to be present');
+      return;
+    }
+    button.nativeElement.click();
 
     expect(newOrderSpy).toHaveBeenCalledTimes(1);
   });
@@ -63,9 +72,32 @@ describe('FoodOrderSuccessCardComponent', () => {
     const ordersSpy = jasmine.createSpy('ordersSpy');
     component.ordersRequested.subscribe(ordersSpy);
 
-    const buttons = fixture.debugElement.queryAll(By.css('.ghost-button'));
-    buttons[1].nativeElement.click();
+    const button = fixture.debugElement
+      .queryAll(By.css('.success-actions .ghost-button'))
+      .find((item) => item.nativeElement.textContent.includes('My orders'));
+    if (!button) {
+      fail('Expected My orders button to be present');
+      return;
+    }
+    button.nativeElement.click();
 
     expect(ordersSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('emits paymentConfirmRequested when I paid is clicked for NEW status', () => {
+    setRequiredInputs();
+    const confirmSpy = jasmine.createSpy('confirmSpy');
+    component.paymentConfirmRequested.subscribe(confirmSpy);
+
+    const paymentButton = fixture.debugElement
+      .queryAll(By.css('.ghost-button'))
+      .find((item) => item.nativeElement.textContent.includes('I paid'));
+    if (!paymentButton) {
+      fail('Expected I paid button to be present');
+      return;
+    }
+    paymentButton.nativeElement.click();
+
+    expect(confirmSpy).toHaveBeenCalledWith(booking.id);
   });
 });

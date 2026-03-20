@@ -22,7 +22,7 @@ export interface BookingItem {
 export interface BookingResponse {
   id: number;
   type: 'ORDER' | 'APPOINTMENT' | 'REQUEST' | string;
-  status: 'NEW' | 'CONFIRMED' | 'DONE' | 'CANCELLED' | string;
+  status: BookingStatus;
   customerName: string;
   customerPhone: string;
   deliveryAddress: string | null;
@@ -33,3 +33,5 @@ export interface BookingResponse {
   items: BookingItem[];
   createdAt: string;
 }
+
+export type BookingStatus = 'NEW' | 'PAYMENT_PENDING' | 'CONFIRMED' | 'DONE' | 'CANCELLED' | string;

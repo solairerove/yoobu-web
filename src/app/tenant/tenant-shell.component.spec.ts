@@ -20,6 +20,7 @@ describe('TenantShellComponent', () => {
       'getMyBookings',
       'getBooking',
       'createBooking',
+      'confirmBookingPayment',
       'cancelBooking'
     ]);
     telegram = jasmine.createSpyObj<TelegramService>('TelegramService', [
@@ -34,6 +35,7 @@ describe('TenantShellComponent', () => {
     api.getMyBookings.and.returnValue(of([]));
     api.getBooking.and.returnValue(of(createBookingResponse(1)));
     api.createBooking.and.returnValue(of(createBookingResponse(1)));
+    api.confirmBookingPayment.and.returnValue(of(createBookingResponse(1)));
     api.cancelBooking.and.returnValue(of(createBookingResponse(1)));
     telegram.isLocalhost.and.returnValue(false);
     telegram.confirm.and.resolveTo(true);

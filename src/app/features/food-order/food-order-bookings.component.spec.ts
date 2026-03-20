@@ -35,8 +35,11 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('bookings', [booking]);
     fixture.componentRef.setInput('loading', false);
     fixture.componentRef.setInput('error', null);
+    fixture.componentRef.setInput('paymentQrUrl', 'https://example.com/qr.png');
     fixture.componentRef.setInput('selectedBookingId', booking.id);
     fixture.componentRef.setInput('selectedBooking', overrides.selectedBooking ?? booking);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
     fixture.componentRef.setInput('cancellingBookingId', null);
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
@@ -69,10 +72,33 @@ describe('FoodOrderBookingsComponent', () => {
     const cancelSpy = jasmine.createSpy('cancelSpy');
     component.cancelRequested.subscribe(cancelSpy);
 
-    const cancelButton = fixture.debugElement.query(By.css('.booking-detail-head .ghost-button'));
+    const cancelButton = fixture.debugElement
+      .queryAll(By.css('.booking-actions .ghost-button'))
+      .find((button) => button.nativeElement.textContent.includes('Cancel order'));
+    if (!cancelButton) {
+      fail('Expected cancel button to be present');
+      return;
+    }
     cancelButton.nativeElement.click();
 
     expect(cancelSpy).toHaveBeenCalledWith(booking.id);
+  });
+
+  it('emits paymentConfirmRequested for new selected booking', () => {
+    setRequiredInputs({ selectedBooking: booking });
+    const confirmSpy = jasmine.createSpy('confirmSpy');
+    component.paymentConfirmRequested.subscribe(confirmSpy);
+
+    const paymentButton = fixture.debugElement
+      .queryAll(By.css('.booking-actions .ghost-button'))
+      .find((button) => button.nativeElement.textContent.includes('I paid'));
+    if (!paymentButton) {
+      fail('Expected payment confirmation button to be present');
+      return;
+    }
+    paymentButton.nativeElement.click();
+
+    expect(confirmSpy).toHaveBeenCalledWith(booking.id);
   });
 
   it('renders delivery address and falls back to N/A when missing', () => {
@@ -80,8 +106,11 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('bookings', [bookingWithoutAddress]);
     fixture.componentRef.setInput('loading', false);
     fixture.componentRef.setInput('error', null);
+    fixture.componentRef.setInput('paymentQrUrl', null);
     fixture.componentRef.setInput('selectedBookingId', bookingWithoutAddress.id);
     fixture.componentRef.setInput('selectedBooking', bookingWithoutAddress);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
     fixture.componentRef.setInput('cancellingBookingId', null);
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();

@@ -48,6 +48,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
               <span
                 class="booking-status"
                 [class.status-new]="booking.status === 'NEW'"
+                [class.status-payment-pending]="booking.status === 'PAYMENT_PENDING'"
                 [class.status-confirmed]="booking.status === 'CONFIRMED'"
                 [class.status-done]="booking.status === 'DONE'"
                 [class.status-cancelled]="booking.status === 'CANCELLED'"
@@ -72,6 +73,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
                 <span
                   class="booking-status large"
                   [class.status-new]="booking.status === 'NEW'"
+                  [class.status-payment-pending]="booking.status === 'PAYMENT_PENDING'"
                   [class.status-confirmed]="booking.status === 'CONFIRMED'"
                   [class.status-done]="booking.status === 'DONE'"
                   [class.status-cancelled]="booking.status === 'CANCELLED'"
@@ -82,15 +84,27 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
               <p class="copy ui-copy">{{ bookingStatusDescription(booking.status) }}</p>
             </div>
 
-            <button
-              type="button"
-              class="ghost-button"
-              *ngIf="canCancel(booking)"
-              (click)="cancelRequested.emit(booking.id)"
-              [disabled]="cancellingBookingId() === booking.id"
-            >
-              {{ cancellingBookingId() === booking.id ? 'Cancelling...' : 'Cancel order' }}
-            </button>
+            <div class="booking-actions">
+              <button
+                type="button"
+                class="ghost-button"
+                *ngIf="canConfirmPayment(booking)"
+                (click)="paymentConfirmRequested.emit(booking.id)"
+                [disabled]="confirmingPaymentBookingId() === booking.id"
+              >
+                {{ confirmingPaymentBookingId() === booking.id ? 'Confirming...' : 'I paid' }}
+              </button>
+
+              <button
+                type="button"
+                class="ghost-button"
+                *ngIf="canCancel(booking)"
+                (click)="cancelRequested.emit(booking.id)"
+                [disabled]="cancellingBookingId() === booking.id"
+              >
+                {{ cancellingBookingId() === booking.id ? 'Cancelling...' : 'Cancel order' }}
+              </button>
+            </div>
           </div>
 
           <div class="booking-timeline" aria-label="Order progress">
@@ -108,6 +122,12 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
               </div>
             </div>
           </div>
+
+          <section class="payment-qr-card" *ngIf="shouldShowPaymentQr(booking) && paymentQrUrl() as paymentQrUrl">
+            <h5>Payment QR</h5>
+            <p class="copy ui-copy">Scan this QR to pay, then tap "I paid" so the admin can verify your payment.</p>
+            <img [src]="paymentQrUrl" alt="Payment QR code" loading="lazy" />
+          </section>
 
           <div class="receipt-card">
             <div class="receipt-head">
@@ -156,6 +176,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
             </div>
           </div>
 
+          <p class="form-error" *ngIf="paymentError() as error">{{ error }}</p>
           <p class="form-error" *ngIf="cancelError() as error">{{ error }}</p>
         </section>
 
@@ -275,6 +296,11 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       color: var(--yoobu-primary);
     }
 
+    .booking-status.status-payment-pending {
+      background: rgba(13, 71, 161, 0.14);
+      color: #0d47a1;
+    }
+
     .booking-status.status-confirmed {
       background: rgba(181, 131, 0, 0.14);
       color: #9a6800;
@@ -301,6 +327,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     }
 
     .booking-status-line,
+    .booking-actions,
     .receipt-head,
     .receipt-row {
       display: flex;
@@ -310,6 +337,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     }
 
     .booking-timeline,
+    .payment-qr-card,
     .receipt-meta,
     .review-list {
       display: grid;
@@ -364,6 +392,25 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 
     .timeline-step.cancelled strong {
       color: brown;
+    }
+
+    .payment-qr-card {
+      padding: 1rem;
+      border-radius: 18px;
+      background: var(--yoobu-surface-tint);
+      border: 1px solid var(--yoobu-border-soft);
+    }
+
+    .payment-qr-card p {
+      color: var(--yoobu-muted);
+      line-height: 1.5;
+    }
+
+    .payment-qr-card img {
+      width: min(260px, 100%);
+      border-radius: 14px;
+      border: 1px solid var(--yoobu-border);
+      background: white;
     }
 
     .receipt-card {
@@ -429,6 +476,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       .booking-detail-head,
       .review-row,
       .booking-status-line,
+      .booking-actions,
       .receipt-head,
       .receipt-row,
       .review-total {
@@ -442,24 +490,38 @@ export class FoodOrderBookingsComponent {
   readonly bookings = input.required<BookingResponse[]>();
   readonly loading = input.required<boolean>();
   readonly error = input.required<string | null>();
+  readonly paymentQrUrl = input<string | null>(null);
   readonly selectedBookingId = input.required<number | null>();
   readonly selectedBooking = input.required<BookingResponse | null>();
+  readonly confirmingPaymentBookingId = input.required<number | null>();
+  readonly paymentError = input.required<string | null>();
   readonly cancellingBookingId = input.required<number | null>();
   readonly cancelError = input.required<string | null>();
   readonly currencyCode = input<string>('VND');
 
   readonly refreshRequested = output<void>();
   readonly bookingSelected = output<number>();
+  readonly paymentConfirmRequested = output<number>();
   readonly cancelRequested = output<number>();
 
   protected canCancel(booking: BookingResponse): boolean {
-    return booking.status === 'NEW' || booking.status === 'CONFIRMED';
+    return booking.status === 'NEW' || booking.status === 'PAYMENT_PENDING' || booking.status === 'CONFIRMED';
+  }
+
+  protected canConfirmPayment(booking: BookingResponse): boolean {
+    return booking.status === 'NEW';
+  }
+
+  protected shouldShowPaymentQr(booking: BookingResponse): boolean {
+    return !!this.paymentQrUrl() && (booking.status === 'NEW' || booking.status === 'PAYMENT_PENDING');
   }
 
   protected bookingStatusLabel(status: BookingResponse['status']): string {
     switch (status) {
       case 'NEW':
         return 'New';
+      case 'PAYMENT_PENDING':
+        return 'Awaiting verification';
       case 'CONFIRMED':
         return 'Confirmed';
       case 'DONE':
@@ -475,6 +537,8 @@ export class FoodOrderBookingsComponent {
     switch (status) {
       case 'NEW':
         return 'Waiting for confirmation';
+      case 'PAYMENT_PENDING':
+        return 'Awaiting admin verification';
       case 'CONFIRMED':
         return 'Order confirmed';
       case 'DONE':
@@ -490,6 +554,8 @@ export class FoodOrderBookingsComponent {
     switch (status) {
       case 'NEW':
         return 'Your order has been received and is waiting for confirmation.';
+      case 'PAYMENT_PENDING':
+        return 'Payment was submitted and is waiting for admin verification.';
       case 'CONFIRMED':
         return 'Your order has been confirmed and is being prepared.';
       case 'DONE':
@@ -524,8 +590,13 @@ export class FoodOrderBookingsComponent {
     return [
       {
         label: 'Order placed',
-          description: 'Your order has been received.',
+        description: 'Your order has been received.',
         state: status === 'NEW' ? 'current' : 'complete'
+      },
+      {
+        label: 'Payment verification',
+        description: 'Admin verifies your payment after you tap "I paid".',
+        state: status === 'PAYMENT_PENDING' ? 'current' : status === 'CONFIRMED' || status === 'DONE' ? 'complete' : 'pending'
       },
       {
         label: 'Confirmed',

@@ -1,4 +1,5 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { of, Subject } from 'rxjs';
 import { throwError } from 'rxjs';
 import { BookingResponse } from '../../core/models/booking.model';
@@ -40,6 +41,7 @@ describe('FoodOrderFlowFacade', () => {
       'getMyBookings',
       'getBooking',
       'createBooking',
+      'confirmBookingPayment',
       'cancelBooking'
     ]);
 
@@ -55,6 +57,7 @@ describe('FoodOrderFlowFacade', () => {
     api.getMyBookings.and.returnValue(of([]));
     api.getBooking.and.returnValue(of(createBookingResponse(1)));
     api.createBooking.and.returnValue(of(createBookingResponse(1)));
+    api.confirmBookingPayment.and.returnValue(of(createBookingResponse(1)));
     api.cancelBooking.and.returnValue(of(createBookingResponse(1)));
 
     telegram.isLocalhost.and.returnValue(false);
@@ -262,6 +265,52 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.selectedBooking()?.status).toBe('CANCELLED');
     expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
     expect(facade.cancellingBookingId()).toBeNull();
+  });
+
+  it('confirms payment and refreshes bookings after success', async () => {
+    const pendingBooking: BookingResponse = {
+      ...createBookingResponse(1),
+      status: 'PAYMENT_PENDING'
+    };
+    api.confirmBookingPayment.and.returnValue(of(pendingBooking));
+    facade.setConfig(tenantConfig);
+    const reloadKeyBefore = facade.bookingsReloadKey();
+
+    await facade.confirmPayment(1);
+
+    expect(api.confirmBookingPayment).toHaveBeenCalledWith('demo', 1);
+    expect(facade.selectedBooking()?.status).toBe('PAYMENT_PENDING');
+    expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
+    expect(facade.confirmingPaymentBookingId()).toBeNull();
+    expect(facade.paymentError()).toBeNull();
+  });
+
+  it('handles payment confirmation conflicts by refreshing and reloading selected booking', async () => {
+    api.confirmBookingPayment.and.returnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 409,
+            error: {
+              reason: 'Payment can only be confirmed for booking in NEW status'
+            }
+          })
+      )
+    );
+    api.getBooking.and.returnValue(of(createBookingResponse(1)));
+    facade.setConfig(tenantConfig);
+    facade.selectedBookingId.set(1);
+    const reloadKeyBefore = facade.bookingsReloadKey();
+
+    await facade.confirmPayment(1);
+
+    expect(telegram.alert).toHaveBeenCalledWith(
+      'Payment can only be confirmed for orders still in NEW status. Refreshing status.'
+    );
+    expect(facade.paymentError()).toBeNull();
+    expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
+    expect(api.getBooking).toHaveBeenCalledWith('demo', 1);
+    expect(facade.confirmingPaymentBookingId()).toBeNull();
   });
 
   it('shows error and alerts when cancellation fails', async () => {

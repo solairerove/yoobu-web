@@ -20,6 +20,7 @@ describe('FoodOrderHomeComponent', () => {
     startNewOrder: jasmine.Spy;
     refreshBookings: jasmine.Spy;
     selectBooking: jasmine.Spy;
+    confirmPayment: jasmine.Spy;
     cancelBooking: jasmine.Spy;
     submitOrder: jasmine.Spy;
     setActiveView: jasmine.Spy;
@@ -33,6 +34,8 @@ describe('FoodOrderHomeComponent', () => {
     submitting: ReturnType<typeof signal<boolean>>;
     submitError: ReturnType<typeof signal<string | null>>;
     submittedBooking: ReturnType<typeof signal<BookingResponse | null>>;
+    confirmingPaymentBookingId: ReturnType<typeof signal<number | null>>;
+    paymentError: ReturnType<typeof signal<string | null>>;
     cancellingBookingId: ReturnType<typeof signal<number | null>>;
     cancelError: ReturnType<typeof signal<string | null>>;
     isFirstOrder: ReturnType<typeof signal<boolean>>;
@@ -74,6 +77,7 @@ describe('FoodOrderHomeComponent', () => {
       startNewOrder: jasmine.createSpy('startNewOrder'),
       refreshBookings: jasmine.createSpy('refreshBookings'),
       selectBooking: jasmine.createSpy('selectBooking'),
+      confirmPayment: jasmine.createSpy('confirmPayment'),
       cancelBooking: jasmine.createSpy('cancelBooking'),
       submitOrder: jasmine.createSpy('submitOrder'),
       setActiveView: jasmine.createSpy('setActiveView'),
@@ -93,6 +97,8 @@ describe('FoodOrderHomeComponent', () => {
       submitting: signal(false),
       submitError: signal<string | null>(null),
       submittedBooking: signal<BookingResponse | null>(null),
+      confirmingPaymentBookingId: signal<number | null>(null),
+      paymentError: signal<string | null>(null),
       cancellingBookingId: signal<number | null>(null),
       cancelError: signal<string | null>(null),
       isFirstOrder: signal(true),
@@ -112,6 +118,7 @@ describe('FoodOrderHomeComponent', () => {
     facade.decrease.and.callFake((serviceId: number) => store.decrease(serviceId));
     facade.setActiveView.and.callFake((view: 'menu' | 'orders') => facade.activeView.set(view));
     facade.selectBooking.and.resolveTo();
+    facade.confirmPayment.and.resolveTo();
     facade.cancelBooking.and.resolveTo();
     facade.submitOrder.and.resolveTo();
 

@@ -5,6 +5,7 @@ export interface TenantConfig {
   name: string;
   type: TenantType;
   currency?: string | null;
+  paymentQrUrl?: string | null;
   primaryColor: string | null;
   logoUrl: string | null;
   welcomeMessage: string | null;

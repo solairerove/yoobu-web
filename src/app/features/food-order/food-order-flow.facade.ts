@@ -1,6 +1,7 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, distinctUntilChanged, filter, firstValueFrom, map, of, startWith, switchMap, tap } from 'rxjs';
 import { BookingResponse, CreateBookingRequest } from '../../core/models/booking.model';
 import { TenantConfig } from '../../core/models/tenant-config.model';
@@ -56,6 +57,8 @@ export class FoodOrderFlowFacade {
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
   readonly submittedBooking = signal<BookingResponse | null>(null);
+  readonly confirmingPaymentBookingId = signal<number | null>(null);
+  readonly paymentError = signal<string | null>(null);
   readonly cancellingBookingId = signal<number | null>(null);
   readonly cancelError = signal<string | null>(null);
   private readonly selectedBookingRequestVersion = signal(0);
@@ -223,6 +226,7 @@ export class FoodOrderFlowFacade {
   }
 
   refreshBookings(): void {
+    this.paymentError.set(null);
     this.cancelError.set(null);
     this.bookingsReloadKey.update((value) => value + 1);
   }
@@ -236,6 +240,7 @@ export class FoodOrderFlowFacade {
 
     this.activeView.set('orders');
     this.selectedBookingId.set(bookingId);
+    this.paymentError.set(null);
     this.cancelError.set(null);
     const requestVersion = this.selectedBookingRequestVersion() + 1;
     this.selectedBookingRequestVersion.set(requestVersion);
@@ -285,6 +290,37 @@ export class FoodOrderFlowFacade {
       await this.telegram.alert('Could not cancel this order. It may already be processed or unavailable.');
     } finally {
       this.cancellingBookingId.set(null);
+    }
+  }
+
+  async confirmPayment(bookingId: number): Promise<void> {
+    const config = this.configSignal();
+
+    if (!config || this.confirmingPaymentBookingId()) {
+      return;
+    }
+
+    this.paymentError.set(null);
+    this.confirmingPaymentBookingId.set(bookingId);
+
+    try {
+      const booking = await firstValueFrom(this.api.confirmBookingPayment(config.slug, bookingId));
+      this.selectedBooking.set(booking);
+      this.submittedBooking.update((current) => (current?.id === booking.id ? booking : current));
+      this.refreshBookings();
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.status === 409) {
+        await this.telegram.alert('Payment can only be confirmed for orders still in NEW status. Refreshing status.');
+        this.refreshBookings();
+        if (this.selectedBookingId() === bookingId) {
+          await this.selectBooking(bookingId);
+        }
+      } else {
+        this.paymentError.set('Could not confirm your payment. Please try again.');
+        await this.telegram.alert('Could not confirm your payment. Please try again.');
+      }
+    } finally {
+      this.confirmingPaymentBookingId.set(null);
     }
   }
 
@@ -351,6 +387,8 @@ export class FoodOrderFlowFacade {
     this.submitting.set(false);
     this.submitError.set(null);
     this.submittedBooking.set(null);
+    this.confirmingPaymentBookingId.set(null);
+    this.paymentError.set(null);
     this.cancellingBookingId.set(null);
     this.cancelError.set(null);
     this.selectedBookingRequestVersion.set(0);
