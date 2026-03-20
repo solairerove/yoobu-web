@@ -10,7 +10,7 @@ describe('telegramInitDataInterceptor', () => {
   let telegram: jasmine.SpyObj<TelegramService>;
 
   beforeEach(() => {
-    telegram = jasmine.createSpyObj<TelegramService>('TelegramService', ['getInitData', 'getDevTelegramUserId']);
+    telegram = jasmine.createSpyObj<TelegramService>('TelegramService', ['init', 'getInitData', 'getDevTelegramUserId']);
     telegram.getInitData.and.returnValue(null);
     telegram.getDevTelegramUserId.and.returnValue(null);
 
@@ -37,6 +37,7 @@ describe('telegramInitDataInterceptor', () => {
     http.get('/api/demo').subscribe();
     const request = httpMock.expectOne('/api/demo');
 
+    expect(telegram.init).toHaveBeenCalled();
     expect(request.request.headers.get('X-Telegram-Init-Data')).toBe('init-data-value');
     expect(request.request.headers.has('X-Telegram-User-Id')).toBeFalse();
     request.flush({});
@@ -49,6 +50,7 @@ describe('telegramInitDataInterceptor', () => {
     http.get('/api/demo').subscribe();
     const request = httpMock.expectOne('/api/demo');
 
+    expect(telegram.init).toHaveBeenCalled();
     expect(request.request.headers.get('X-Telegram-User-Id')).toBe('101');
     expect(request.request.headers.has('X-Telegram-Init-Data')).toBeFalse();
     request.flush({});
@@ -61,9 +63,9 @@ describe('telegramInitDataInterceptor', () => {
     http.get('/api/demo').subscribe();
     const request = httpMock.expectOne('/api/demo');
 
+    expect(telegram.init).toHaveBeenCalled();
     expect(request.request.headers.has('X-Telegram-Init-Data')).toBeFalse();
     expect(request.request.headers.has('X-Telegram-User-Id')).toBeFalse();
     request.flush({});
   });
 });
-

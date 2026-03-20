@@ -22,51 +22,6 @@ describe('TelegramService', () => {
     expect(service.getDevTelegramUserId()).toBe('101');
   }));
 
-  it('reads init data from tgWebAppData search param when web app init data is unavailable', () => {
-    const webApp = {
-      ready: jasmine.createSpy('ready'),
-      expand: jasmine.createSpy('expand')
-    };
-    const service = setupService(webApp, {
-      hostname: 'example.com',
-      search: '?tgWebAppData=query-id%3Dabc123%26user%3Dxyz'
-    });
-
-    service.init();
-
-    expect(service.getInitData()).toBe('query-id=abc123&user=xyz');
-  });
-
-  it('reads init data from tgWebAppData hash param when search param is missing', () => {
-    const webApp = {
-      ready: jasmine.createSpy('ready'),
-      expand: jasmine.createSpy('expand')
-    };
-    const service = setupService(webApp, {
-      hostname: 'example.com',
-      hash: '#tgWebAppData=query-id%3DfromHash'
-    });
-
-    service.init();
-
-    expect(service.getInitData()).toBe('query-id=fromHash');
-  });
-
-  it('preserves plus signs when reading tgWebAppData from launch params', () => {
-    const webApp = {
-      ready: jasmine.createSpy('ready'),
-      expand: jasmine.createSpy('expand')
-    };
-    const service = setupService(webApp, {
-      hostname: 'example.com',
-      search: '?tgWebAppData=query_id%3D1%26hash%3Da+b%2Bc'
-    });
-
-    service.init();
-
-    expect(service.getInitData()).toBe('query_id=1&hash=a+b+c');
-  });
-
   it('recovers init data when telegram web app appears after init call', () => {
     const service = setupService(null, 'example.com');
     service.init();

@@ -4,6 +4,7 @@ import { TelegramService } from '../telegram/telegram.service';
 
 export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) => {
   const telegram = inject(TelegramService);
+  telegram.init();
   const initData = telegram.getInitData();
   const devTelegramUserId = telegram.getDevTelegramUserId();
 
