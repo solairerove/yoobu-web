@@ -3,6 +3,7 @@ import { DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 
 interface TelegramWebApp {
   initData?: string;
+  version?: string;
   ready(): void;
   expand(): void;
   showAlert?(message: string, callback?: () => void): void;
@@ -26,6 +27,7 @@ interface TelegramWindow extends Window {
 
 @Injectable({ providedIn: 'root' })
 export class TelegramService {
+  private static readonly POPUP_API_MIN_VERSION = '6.2';
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly webAppSignal = signal<TelegramWebApp | null>(null);
@@ -117,7 +119,7 @@ export class TelegramService {
   alert(message: string): Promise<void> {
     const webApp = this.webAppSignal();
 
-    if (webApp?.showAlert) {
+    if (webApp?.showAlert && this.supportsPopupApi(webApp)) {
       return new Promise<void>((resolve) => {
         try {
           webApp.showAlert?.(message, resolve);
@@ -138,7 +140,7 @@ export class TelegramService {
   confirm(message: string): Promise<boolean> {
     const webApp = this.webAppSignal();
 
-    if (webApp?.showConfirm) {
+    if (webApp?.showConfirm && this.supportsPopupApi(webApp)) {
       return new Promise<boolean>((resolve) => {
         try {
           webApp.showConfirm?.(message, resolve);
@@ -152,5 +154,42 @@ export class TelegramService {
     }
 
     return Promise.resolve(this.document.defaultView?.confirm(message) ?? false);
+  }
+
+  private supportsPopupApi(webApp: TelegramWebApp): boolean {
+    const version = webApp.version?.trim();
+    if (!version) {
+      return true;
+    }
+
+    return this.isVersionAtLeast(version, TelegramService.POPUP_API_MIN_VERSION);
+  }
+
+  private isVersionAtLeast(current: string, minimum: string): boolean {
+    const currentParts = this.parseVersionParts(current);
+    const minimumParts = this.parseVersionParts(minimum);
+    const length = Math.max(currentParts.length, minimumParts.length);
+
+    for (let index = 0; index < length; index += 1) {
+      const currentPart = currentParts[index] ?? 0;
+      const minimumPart = minimumParts[index] ?? 0;
+
+      if (currentPart > minimumPart) {
+        return true;
+      }
+
+      if (currentPart < minimumPart) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private parseVersionParts(version: string): number[] {
+    return version
+      .split('.')
+      .map((part) => Number.parseInt(part, 10))
+      .filter((part) => Number.isFinite(part));
   }
 }

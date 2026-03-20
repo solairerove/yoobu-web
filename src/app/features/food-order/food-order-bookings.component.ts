@@ -126,7 +126,16 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
           <section class="payment-qr-card" *ngIf="shouldShowPaymentQr(booking) && paymentQrUrl() as paymentQrUrl">
             <h5>Payment QR</h5>
             <p class="copy ui-copy">Scan this QR to pay, then tap "I paid" so the admin can verify your payment.</p>
-            <img [src]="paymentQrUrl" alt="Payment QR code" loading="lazy" />
+            <a
+              class="payment-qr-link"
+              [href]="paymentQrUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open payment QR code in a new tab"
+            >
+              <img [src]="paymentQrUrl" alt="Payment QR code" loading="lazy" />
+            </a>
+            <a class="qr-open-link" [href]="paymentQrUrl" target="_blank" rel="noopener noreferrer">Open full size</a>
           </section>
 
           <div class="receipt-card">
@@ -214,6 +223,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     .bookings-head,
     .booking-detail-head {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       gap: 1rem;
       align-items: start;
@@ -413,6 +423,35 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       background: white;
     }
 
+    .payment-qr-link {
+      width: fit-content;
+      max-width: 100%;
+      display: block;
+    }
+
+    .qr-open-link {
+      width: fit-content;
+      color: var(--yoobu-primary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .qr-open-link:hover {
+      text-decoration: underline;
+    }
+
+    .booking-actions {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      margin-left: auto;
+    }
+
+    .booking-actions .ghost-button {
+      max-width: 100%;
+      white-space: normal;
+    }
+
     .receipt-card {
       display: grid;
       gap: 0.9rem;
@@ -482,6 +521,15 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       .review-total {
         flex-direction: column;
         align-items: flex-start;
+      }
+
+      .booking-actions {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      .booking-actions .ghost-button {
+        width: 100%;
       }
     }
   `

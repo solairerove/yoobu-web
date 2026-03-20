@@ -134,6 +134,32 @@ describe('TelegramService', () => {
     expect(confirmed).toBeFalse();
     expect(fallbackConfirm).toHaveBeenCalledWith('continue?');
   });
+
+  it('uses browser dialogs when telegram runtime version is too old for popup api', async () => {
+    const fallbackAlert = jasmine.createSpy('fallbackAlert');
+    const fallbackConfirm = jasmine.createSpy('fallbackConfirm').and.returnValue(true);
+    const showAlert = jasmine.createSpy('showAlert');
+    const showConfirm = jasmine.createSpy('showConfirm');
+    const webApp = {
+      version: '6.0',
+      ready: jasmine.createSpy('ready'),
+      expand: jasmine.createSpy('expand'),
+      showAlert,
+      showConfirm
+    };
+
+    const service = setupService(webApp, 'example.com', fallbackAlert, fallbackConfirm);
+    service.init();
+
+    await service.alert('hi');
+    const confirmed = await service.confirm('continue?');
+
+    expect(showAlert).not.toHaveBeenCalled();
+    expect(showConfirm).not.toHaveBeenCalled();
+    expect(fallbackAlert).toHaveBeenCalledWith('hi');
+    expect(fallbackConfirm).toHaveBeenCalledWith('continue?');
+    expect(confirmed).toBeTrue();
+  });
 });
 
 function setupService(

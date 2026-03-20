@@ -24,7 +24,16 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       <section class="payment-qr-card" *ngIf="shouldShowPaymentQr() && paymentQrUrl() as paymentQrUrl">
         <h4>Payment QR</h4>
         <p class="copy ui-copy">Scan this QR to pay, then tap "I paid" so the admin can verify your payment.</p>
-        <img [src]="paymentQrUrl" alt="Payment QR code" loading="lazy" />
+        <a
+          class="payment-qr-link"
+          [href]="paymentQrUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open payment QR code in a new tab"
+        >
+          <img [src]="paymentQrUrl" alt="Payment QR code" loading="lazy" />
+        </a>
+        <a class="qr-open-link" [href]="paymentQrUrl" target="_blank" rel="noopener noreferrer">Open full size</a>
       </section>
 
       <button
@@ -90,11 +99,40 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       background: white;
     }
 
+    .payment-qr-link {
+      width: fit-content;
+      max-width: 100%;
+      display: block;
+    }
+
+    .qr-open-link {
+      width: fit-content;
+      color: var(--yoobu-primary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .qr-open-link:hover {
+      text-decoration: underline;
+    }
+
     .success-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 0.65rem;
       margin-top: 1rem;
+    }
+
+    .success-actions .ghost-button {
+      max-width: 100%;
+      white-space: normal;
+    }
+
+    .success-card > .ghost-button {
+      margin-top: 1rem;
+      max-width: 100%;
+      white-space: normal;
     }
 
     .form-error {
@@ -107,6 +145,11 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       .success-actions {
         flex-direction: column;
         align-items: flex-start;
+      }
+
+      .success-actions .ghost-button,
+      .success-card > .ghost-button {
+        width: 100%;
       }
     }
   `
