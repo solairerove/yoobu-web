@@ -25,6 +25,16 @@ describe('FoodOrderFlowFacade', () => {
     sortOrder: 1,
     status: 'ACTIVE'
   };
+  const teaService: ServiceItem = {
+    id: 2,
+    name: 'Tea',
+    description: null,
+    price: 20000,
+    unit: 'cup',
+    durationMinutes: null,
+    sortOrder: 2,
+    status: 'ACTIVE'
+  };
 
   const tenantConfig: TenantConfig = {
     slug: 'demo',
@@ -129,6 +139,101 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.vm().error).toBe('Check the backend service or tenant data and try again.');
   }));
 
+  it('repeats a booking by restoring matching items in cart and opening checkout', async () => {
+    const completedBooking: BookingResponse = {
+      ...createBookingResponse(7),
+      status: 'DONE',
+      deliveryAddress: ' 456 Side St ',
+      note: ' ring bell ',
+      items: [
+        { serviceName: 'Coffee', quantity: 2, unitPrice: 30000, currency: 'VND' },
+        { serviceName: 'Tea', quantity: 1, unitPrice: 20000, currency: 'VND' }
+      ]
+    };
+    api.getServices.and.returnValue(of([service, teaService]));
+    facade.setConfig(tenantConfig);
+    facade.selectedBookingId.set(completedBooking.id);
+    facade.selectedBooking.set(completedBooking);
+    await facade.repeatBooking(completedBooking.id);
+
+    expect(facade.activeView()).toBe('menu');
+    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.store.quantityFor(service.id)).toBe(2);
+    expect(facade.store.quantityFor(teaService.id)).toBe(1);
+    expect(facade.checkoutForm.getRawValue().customerName).toBe(completedBooking.customerName);
+    expect(facade.checkoutForm.getRawValue().customerPhone).toBe(completedBooking.customerPhone);
+    expect(facade.checkoutForm.getRawValue().deliveryAddress).toBe('456 Side St');
+    expect(facade.checkoutForm.getRawValue().note).toBe('ring bell');
+    expect(telegram.alert).not.toHaveBeenCalledWith('None of the items from this order are available now.');
+  });
+
+  it('shows an alert when repeated booking has no available items', async () => {
+    const legacyBooking: BookingResponse = {
+      ...createBookingResponse(9),
+      status: 'DONE',
+      items: [{ serviceName: 'Old item', quantity: 1, unitPrice: 15000, currency: 'VND' }]
+    };
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.selectedBookingId.set(legacyBooking.id);
+    facade.selectedBooking.set(legacyBooking);
+
+    await facade.repeatBooking(legacyBooking.id);
+
+    expect(facade.store.selectedCount()).toBe(0);
+    expect(facade.checkoutOpen()).toBeFalse();
+    expect(telegram.alert).toHaveBeenCalledWith('None of the items from this order are available now.');
+  });
+
+  it('shows and dismisses repeat banner after restoring an order', async () => {
+    const repeated: BookingResponse = {
+      ...createBookingResponse(15),
+      status: 'DONE',
+      items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000, currency: 'VND' }]
+    };
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.selectedBookingId.set(repeated.id);
+    facade.selectedBooking.set(repeated);
+
+    await facade.repeatBooking(repeated.id);
+    expect(facade.repeatOrderBanner()).toContain(`#${repeated.id}`);
+
+    facade.dismissRepeatOrderBanner();
+    expect(facade.repeatOrderBanner()).toBeNull();
+  });
+
+  it('does not replace an existing cart on repeat when confirmation is declined', async () => {
+    const repeatBooking: BookingResponse = {
+      ...createBookingResponse(11),
+      status: 'DONE',
+      customerName: 'Repeat User',
+      items: [{ serviceName: 'Coffee', quantity: 3, unitPrice: 30000, currency: 'VND' }]
+    };
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.increase(service.id);
+    telegram.confirm.and.resolveTo(false);
+    facade.selectedBookingId.set(repeatBooking.id);
+    facade.selectedBooking.set(repeatBooking);
+
+    await facade.repeatBooking(repeatBooking.id);
+
+    expect(facade.store.quantityFor(service.id)).toBe(1);
+    expect(facade.checkoutForm.getRawValue().customerName).toBe('');
+    expect(telegram.confirm).toHaveBeenCalledWith('Replace your current cart with items from order #11?');
+  });
+
+  it('shows an alert when trying to repeat while menu is loading', async () => {
+    const loadingServices$ = new Subject<ServiceItem[]>();
+    api.getServices.and.returnValue(loadingServices$.asObservable());
+    facade.setConfig(tenantConfig);
+
+    await facade.repeatBooking(1);
+
+    expect(telegram.alert).toHaveBeenCalledWith('Menu is still loading. Please wait a moment and try again.');
+  });
+
   it('does not submit an order when confirmation is declined', async () => {
     telegram.confirm.and.resolveTo(false);
     api.getServices.and.returnValue(of([service]));
@@ -187,6 +292,7 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
     expect(facade.checkoutForm.getRawValue().customerName).toBe('Alice');
     expect(facade.checkoutForm.getRawValue().customerPhone).toBe('0123456789');
+    expect(facade.checkoutForm.getRawValue().deliveryAddress).toBe('123 Main St');
     expect(facade.checkoutForm.getRawValue().note).toBe('');
   });
 
@@ -208,6 +314,28 @@ describe('FoodOrderFlowFacade', () => {
     );
   });
 
+  it('keeps saved delivery address when starting a new order', async () => {
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.increase(service.id);
+    facade.openCheckout();
+    facade.checkoutForm.setValue({
+      customerName: 'Alice',
+      customerPhone: '0123456789',
+      deliveryAddress: '123 Main St',
+      deliveryDate: '2026-03-19',
+      note: ''
+    });
+
+    await facade.submitOrder();
+    facade.startNewOrder();
+
+    expect(facade.checkoutForm.getRawValue().customerName).toBe('Alice');
+    expect(facade.checkoutForm.getRawValue().customerPhone).toBe('0123456789');
+    expect(facade.checkoutForm.getRawValue().deliveryAddress).toBe('123 Main St');
+    expect(facade.checkoutForm.getRawValue().note).toBe('');
+  });
+
   it('blocks submit when delivery address is blank', async () => {
     api.getServices.and.returnValue(of([service]));
     facade.setConfig(tenantConfig);
@@ -226,6 +354,26 @@ describe('FoodOrderFlowFacade', () => {
     expect(api.createBooking).not.toHaveBeenCalled();
     expect(facade.checkoutOpen()).toBeTrue();
     expect(facade.submitError()).toBe(
+      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
+    );
+  });
+
+  it('keeps telegram main button clickable and shows validation error on invalid checkout form', async () => {
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.increase(service.id);
+
+    (facade as unknown as { mainButtonAction: () => void }).mainButtonAction();
+    await Promise.resolve();
+    (facade as unknown as { mainButtonAction: () => void }).mainButtonAction();
+    await Promise.resolve();
+
+    expect(facade.checkoutOpen()).toBeTrue();
+    expect(api.createBooking).not.toHaveBeenCalled();
+    expect(facade.submitError()).toBe(
+      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
+    );
+    expect(telegram.alert).toHaveBeenCalledWith(
       'Enter your name, phone number, delivery address, and delivery date before placing the order.'
     );
   });

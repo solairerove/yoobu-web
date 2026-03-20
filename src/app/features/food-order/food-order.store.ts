@@ -75,6 +75,17 @@ export class FoodOrderStore {
     });
   }
 
+  setQuantities(quantities: Record<number, number>): void {
+    const allowedIds = new Set(this.servicesSignal().map((service) => service.id));
+    this.quantitiesSignal.set(
+      Object.fromEntries(
+        Object.entries(quantities).filter(([serviceId, quantity]) => {
+          return allowedIds.has(Number(serviceId)) && Number.isFinite(quantity) && quantity > 0;
+        })
+      )
+    );
+  }
+
   clearCart(): void {
     this.quantitiesSignal.set({});
   }

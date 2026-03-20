@@ -22,6 +22,26 @@ describe('TelegramService', () => {
     expect(service.getDevTelegramUserId()).toBe('101');
   }));
 
+  it('recovers init data when telegram web app appears after init call', () => {
+    const service = setupService(null, 'example.com');
+    service.init();
+
+    const document = TestBed.inject(DOCUMENT) as {
+      defaultView: {
+        Telegram?: { WebApp?: { initData?: string; ready(): void; expand(): void } };
+      };
+    };
+    document.defaultView.Telegram = {
+      WebApp: {
+        initData: ' late-token ',
+        ready: jasmine.createSpy('ready'),
+        expand: jasmine.createSpy('expand')
+      }
+    };
+
+    expect(service.getInitData()).toBe('late-token');
+  });
+
   it('reads init data from tgWebAppData search param when web app init data is unavailable', () => {
     const webApp = {
       ready: jasmine.createSpy('ready'),
@@ -50,6 +70,21 @@ describe('TelegramService', () => {
     service.init();
 
     expect(service.getInitData()).toBe('query-id=fromHash');
+  });
+
+  it('preserves plus signs when reading tgWebAppData from launch params', () => {
+    const webApp = {
+      ready: jasmine.createSpy('ready'),
+      expand: jasmine.createSpy('expand')
+    };
+    const service = setupService(webApp, {
+      hostname: 'example.com',
+      search: '?tgWebAppData=query_id%3D1%26hash%3Da+b%2Bc'
+    });
+
+    service.init();
+
+    expect(service.getInitData()).toBe('query_id=1&hash=a+b+c');
   });
 
   it('hides main button when text is null', () => {
@@ -193,7 +228,7 @@ describe('TelegramService', () => {
 });
 
 function setupService(
-  webApp: object,
+  webApp: object | null,
   locationConfig: string | { hostname?: string; search?: string; hash?: string } = 'example.com',
   alertSpy = jasmine.createSpy('alert'),
   confirmSpy = jasmine.createSpy('confirm').and.returnValue(true)
@@ -202,14 +237,21 @@ function setupService(
   const search = typeof locationConfig === 'string' ? '' : (locationConfig.search ?? '');
   const hash = typeof locationConfig === 'string' ? '' : (locationConfig.hash ?? '');
 
-  const defaultView = {
+  const defaultView: {
+    location: { hostname: string; search: string; hash: string };
+    alert: typeof alertSpy;
+    confirm: typeof confirmSpy;
+    Telegram?: { WebApp: object };
+  } = {
     location: { hostname, search, hash },
     alert: alertSpy,
-    confirm: confirmSpy,
-    Telegram: {
-      WebApp: webApp
-    }
+    confirm: confirmSpy
   };
+  if (webApp) {
+    defaultView.Telegram = {
+      WebApp: webApp
+    };
+  }
 
   TestBed.configureTestingModule({
     providers: [TelegramService, { provide: DOCUMENT, useValue: { defaultView } }]

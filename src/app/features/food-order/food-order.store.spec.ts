@@ -51,6 +51,19 @@ describe('FoodOrderStore', () => {
     expect(store.selectedItems().map((entry) => entry.service.id)).toEqual([serviceA.id]);
   });
 
+  it('sets cart quantities from a prepared snapshot and ignores unknown services', () => {
+    store.setQuantities({
+      [serviceA.id]: 2,
+      [serviceB.id]: 1,
+      99: 5
+    });
+
+    expect(store.quantityFor(serviceA.id)).toBe(2);
+    expect(store.quantityFor(serviceB.id)).toBe(1);
+    expect(store.quantityFor(99)).toBe(0);
+    expect(store.selectedCount()).toBe(3);
+  });
+
   it('clears tenant state when slug changes', () => {
     store.setTenant('demo');
     store.increase(serviceA.id);

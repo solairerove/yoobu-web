@@ -104,4 +104,21 @@ describe('FoodOrderCheckoutComponent', () => {
     fixture.detectChanges();
     expect(fixture.debugElement.queryAll(By.css('.field-hint')).length).toBe(0);
   });
+
+  it('renders and dismisses repeat-order banner', () => {
+    setRequiredInputs(true);
+    fixture.componentRef.setInput('repeatOrderBanner', 'Cart prefilled from order #12.');
+    fixture.detectChanges();
+    const dismissSpy = jasmine.createSpy('dismissSpy');
+    component.repeatOrderBannerDismissed.subscribe(dismissSpy);
+
+    const banner = fixture.debugElement.query(By.css('.repeat-banner'));
+    expect(banner).not.toBeNull();
+    expect(banner.nativeElement.textContent).toContain('Cart prefilled from order #12.');
+
+    const dismissButton = banner.query(By.css('.ghost-button'));
+    dismissButton.nativeElement.click();
+
+    expect(dismissSpy).toHaveBeenCalledTimes(1);
+  });
 });
