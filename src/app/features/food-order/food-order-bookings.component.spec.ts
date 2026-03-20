@@ -84,6 +84,23 @@ describe('FoodOrderBookingsComponent', () => {
     expect(cancelSpy).toHaveBeenCalledWith(booking.id);
   });
 
+  it('emits repeatRequested when repeat button is clicked', () => {
+    setRequiredInputs({ selectedBooking: booking });
+    const repeatSpy = jasmine.createSpy('repeatSpy');
+    component.repeatRequested.subscribe(repeatSpy);
+
+    const repeatButton = fixture.debugElement
+      .queryAll(By.css('.booking-actions .ghost-button'))
+      .find((button) => button.nativeElement.textContent.includes('Repeat order'));
+    if (!repeatButton) {
+      fail('Expected repeat order button to be present');
+      return;
+    }
+    repeatButton.nativeElement.click();
+
+    expect(repeatSpy).toHaveBeenCalledWith(booking.id);
+  });
+
   it('emits paymentConfirmRequested for new selected booking', () => {
     setRequiredInputs({ selectedBooking: booking });
     const confirmSpy = jasmine.createSpy('confirmSpy');

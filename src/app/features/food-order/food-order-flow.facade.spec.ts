@@ -25,6 +25,16 @@ describe('FoodOrderFlowFacade', () => {
     sortOrder: 1,
     status: 'ACTIVE'
   };
+  const teaService: ServiceItem = {
+    id: 2,
+    name: 'Tea',
+    description: null,
+    price: 20000,
+    unit: 'cup',
+    durationMinutes: null,
+    sortOrder: 2,
+    status: 'ACTIVE'
+  };
 
   const tenantConfig: TenantConfig = {
     slug: 'demo',
@@ -128,6 +138,50 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.vm().loading).toBeFalse();
     expect(facade.vm().error).toBe('Check the backend service or tenant data and try again.');
   }));
+
+  it('repeats a booking by restoring matching items in cart and opening checkout', async () => {
+    const completedBooking: BookingResponse = {
+      ...createBookingResponse(7),
+      status: 'DONE',
+      deliveryAddress: ' 456 Side St ',
+      note: ' ring bell ',
+      items: [
+        { serviceName: 'Coffee', quantity: 2, unitPrice: 30000, currency: 'VND' },
+        { serviceName: 'Tea', quantity: 1, unitPrice: 20000, currency: 'VND' }
+      ]
+    };
+    api.getServices.and.returnValue(of([service, teaService]));
+    facade.setConfig(tenantConfig);
+    facade.selectedBookingId.set(completedBooking.id);
+    facade.selectedBooking.set(completedBooking);
+    await facade.repeatBooking(completedBooking.id);
+
+    expect(facade.activeView()).toBe('menu');
+    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.store.quantityFor(service.id)).toBe(2);
+    expect(facade.store.quantityFor(teaService.id)).toBe(1);
+    expect(facade.checkoutForm.getRawValue().deliveryAddress).toBe('456 Side St');
+    expect(facade.checkoutForm.getRawValue().note).toBe('ring bell');
+    expect(telegram.alert).not.toHaveBeenCalledWith('None of the items from this order are available now.');
+  });
+
+  it('shows an alert when repeated booking has no available items', async () => {
+    const legacyBooking: BookingResponse = {
+      ...createBookingResponse(9),
+      status: 'DONE',
+      items: [{ serviceName: 'Old item', quantity: 1, unitPrice: 15000, currency: 'VND' }]
+    };
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.selectedBookingId.set(legacyBooking.id);
+    facade.selectedBooking.set(legacyBooking);
+
+    await facade.repeatBooking(legacyBooking.id);
+
+    expect(facade.store.selectedCount()).toBe(0);
+    expect(facade.checkoutOpen()).toBeFalse();
+    expect(telegram.alert).toHaveBeenCalledWith('None of the items from this order are available now.');
+  });
 
   it('does not submit an order when confirmation is declined', async () => {
     telegram.confirm.and.resolveTo(false);

@@ -88,6 +88,15 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
               <button
                 type="button"
                 class="ghost-button"
+                *ngIf="canRepeat(booking)"
+                (click)="repeatRequested.emit(booking.id)"
+              >
+                Repeat order
+              </button>
+
+              <button
+                type="button"
+                class="ghost-button"
                 *ngIf="canConfirmPayment(booking)"
                 (click)="paymentConfirmRequested.emit(booking.id)"
                 [disabled]="confirmingPaymentBookingId() === booking.id"
@@ -549,8 +558,13 @@ export class FoodOrderBookingsComponent {
 
   readonly refreshRequested = output<void>();
   readonly bookingSelected = output<number>();
+  readonly repeatRequested = output<number>();
   readonly paymentConfirmRequested = output<number>();
   readonly cancelRequested = output<number>();
+
+  protected canRepeat(booking: BookingResponse): boolean {
+    return booking.items.length > 0;
+  }
 
   protected canCancel(booking: BookingResponse): boolean {
     return booking.status === 'NEW' || booking.status === 'PAYMENT_PENDING' || booking.status === 'CONFIRMED';

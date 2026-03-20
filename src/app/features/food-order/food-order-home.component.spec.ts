@@ -20,6 +20,7 @@ describe('FoodOrderHomeComponent', () => {
     startNewOrder: jasmine.Spy;
     refreshBookings: jasmine.Spy;
     selectBooking: jasmine.Spy;
+    repeatBooking: jasmine.Spy;
     confirmPayment: jasmine.Spy;
     cancelBooking: jasmine.Spy;
     submitOrder: jasmine.Spy;
@@ -77,6 +78,7 @@ describe('FoodOrderHomeComponent', () => {
       startNewOrder: jasmine.createSpy('startNewOrder'),
       refreshBookings: jasmine.createSpy('refreshBookings'),
       selectBooking: jasmine.createSpy('selectBooking'),
+      repeatBooking: jasmine.createSpy('repeatBooking'),
       confirmPayment: jasmine.createSpy('confirmPayment'),
       cancelBooking: jasmine.createSpy('cancelBooking'),
       submitOrder: jasmine.createSpy('submitOrder'),
@@ -118,6 +120,7 @@ describe('FoodOrderHomeComponent', () => {
     facade.decrease.and.callFake((serviceId: number) => store.decrease(serviceId));
     facade.setActiveView.and.callFake((view: 'menu' | 'orders') => facade.activeView.set(view));
     facade.selectBooking.and.resolveTo();
+    facade.repeatBooking.and.resolveTo();
     facade.confirmPayment.and.resolveTo();
     facade.cancelBooking.and.resolveTo();
     facade.submitOrder.and.resolveTo();
@@ -179,6 +182,44 @@ describe('FoodOrderHomeComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.debugElement.query(By.css('app-food-order-bookings'))).not.toBeNull();
+  });
+
+  it('routes repeat order action to facade', () => {
+    facade.activeView.set('orders');
+    const booking: BookingResponse = {
+      id: 1,
+      type: 'ORDER',
+      status: 'DONE',
+      customerName: 'Alice',
+      customerPhone: '0123456789',
+      deliveryAddress: '123 Main St',
+      totalPrice: 30000,
+      currency: 'VND',
+      deliveryDate: '2026-03-19',
+      note: null,
+      items: [{ serviceName: service.name, quantity: 1, unitPrice: service.price, currency: 'VND' }],
+      createdAt: '2026-03-19T10:00:00.000Z'
+    };
+    facade.bookingsVm.set({
+      bookings: [booking],
+      loading: false,
+      error: null
+    });
+    facade.selectedBookingId.set(booking.id);
+    facade.selectedBooking.set(booking);
+
+    fixture.detectChanges();
+
+    const repeatButton = fixture.debugElement
+      .queryAll(By.css('.booking-actions .ghost-button'))
+      .find((button) => button.nativeElement.textContent.includes('Repeat order'));
+    if (!repeatButton) {
+      fail('Expected repeat order button to be present');
+      return;
+    }
+    repeatButton.nativeElement.click();
+
+    expect(facade.repeatBooking).toHaveBeenCalledWith(booking.id);
   });
 
   it('hides local cart bar when local checkout buttons are disabled', () => {

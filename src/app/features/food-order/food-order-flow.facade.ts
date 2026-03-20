@@ -319,6 +319,55 @@ export class FoodOrderFlowFacade {
     }
   }
 
+  async repeatBooking(bookingId: number): Promise<void> {
+    const sourceBooking =
+      this.selectedBooking()?.id === bookingId
+        ? this.selectedBooking()
+        : this.bookingsVm().bookings.find((booking) => booking.id === bookingId) ?? null;
+
+    if (!sourceBooking) {
+      await this.telegram.alert('Could not repeat this order. Please refresh and try again.');
+      return;
+    }
+
+    const servicesByName = new Map(
+      this.vm().services.map((service) => [this.normalizeServiceName(service.name), service] as const)
+    );
+    const nextQuantities: Record<number, number> = {};
+    let missingItemsCount = 0;
+
+    for (const item of sourceBooking.items) {
+      const matchedService = servicesByName.get(this.normalizeServiceName(item.serviceName));
+
+      if (!matchedService) {
+        missingItemsCount += 1;
+        continue;
+      }
+
+      nextQuantities[matchedService.id] = (nextQuantities[matchedService.id] ?? 0) + item.quantity;
+    }
+
+    if (Object.keys(nextQuantities).length === 0) {
+      await this.telegram.alert('None of the items from this order are available now.');
+      return;
+    }
+
+    this.submittedBooking.set(null);
+    this.activeView.set('menu');
+    this.submitError.set(null);
+    this.checkoutOpen.set(true);
+    this.store.setQuantities(nextQuantities);
+    this.checkoutForm.patchValue({
+      deliveryAddress: sourceBooking.deliveryAddress?.trim() ?? '',
+      deliveryDate: this.defaultDeliveryDate(),
+      note: sourceBooking.note?.trim() ?? ''
+    });
+
+    if (missingItemsCount > 0) {
+      await this.telegram.alert('Some items from this order are no longer available and were skipped.');
+    }
+  }
+
   async submitOrder(): Promise<void> {
     const config = this.configSignal();
 
@@ -518,6 +567,10 @@ export class FoodOrderFlowFacade {
     const month = String(currentDate.getMonth() + 1).padStart(2, '0');
     const day = String(currentDate.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private normalizeServiceName(name: string): string {
+    return name.trim().toLowerCase();
   }
 
   private formatCurrency(amount: number): string {
