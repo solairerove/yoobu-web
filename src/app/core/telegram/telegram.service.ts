@@ -218,9 +218,21 @@ export class TelegramService {
       return null;
     }
 
-    const params = new URLSearchParams(paramsSource.startsWith('?') ? paramsSource.slice(1) : paramsSource);
-    const value = params.get('tgWebAppData')?.trim();
-    return value || null;
+    const normalizedSource = paramsSource.startsWith('?') ? paramsSource.slice(1) : paramsSource;
+    const match = normalizedSource.match(/(?:^|&)tgWebAppData=([^&]*)/);
+    const rawValue = match?.[1];
+
+    if (!rawValue) {
+      return null;
+    }
+
+    try {
+      const decoded = decodeURIComponent(rawValue).trim();
+      return decoded || null;
+    } catch {
+      const fallback = rawValue.trim();
+      return fallback || null;
+    }
   }
 
   private resolveWebApp(): TelegramWebApp | null {

@@ -52,6 +52,21 @@ describe('TelegramService', () => {
     expect(service.getInitData()).toBe('query-id=fromHash');
   });
 
+  it('preserves plus signs when reading tgWebAppData from launch params', () => {
+    const webApp = {
+      ready: jasmine.createSpy('ready'),
+      expand: jasmine.createSpy('expand')
+    };
+    const service = setupService(webApp, {
+      hostname: 'example.com',
+      search: '?tgWebAppData=query_id%3D1%26hash%3Da+b%2Bc'
+    });
+
+    service.init();
+
+    expect(service.getInitData()).toBe('query_id=1&hash=a+b+c');
+  });
+
   it('recovers init data when telegram web app appears after init call', () => {
     const service = setupService(null, 'example.com');
     service.init();
