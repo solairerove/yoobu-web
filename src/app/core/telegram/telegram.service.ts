@@ -74,7 +74,12 @@ export class TelegramService {
   }
 
   getInitData(): string | null {
-    return this.resolveWebApp()?.initData?.trim() || null;
+    const webAppInitData = this.resolveWebApp()?.initData?.trim();
+    if (webAppInitData) {
+      return webAppInitData;
+    }
+
+    return this.getInitDataFromLaunchParams();
   }
 
   getDevTelegramUserId(): string | null {
@@ -190,6 +195,45 @@ export class TelegramService {
       .split('.')
       .map((part) => Number.parseInt(part, 10))
       .filter((part) => Number.isFinite(part));
+  }
+
+  private getInitDataFromLaunchParams(): string | null {
+    const location = this.document.defaultView?.location;
+
+    if (!location) {
+      return null;
+    }
+
+    const fromSearch = this.readInitDataFromParams(location.search ?? '');
+    if (fromSearch) {
+      return fromSearch;
+    }
+
+    const hash = location.hash ?? '';
+    const hashValue = hash.startsWith('#') ? hash.slice(1) : hash;
+    return this.readInitDataFromParams(hashValue);
+  }
+
+  private readInitDataFromParams(paramsSource: string): string | null {
+    if (!paramsSource) {
+      return null;
+    }
+
+    const normalizedSource = paramsSource.startsWith('?') ? paramsSource.slice(1) : paramsSource;
+    const match = normalizedSource.match(/(?:^|&)tgWebAppData=([^&]*)/);
+    const rawValue = match?.[1];
+
+    if (!rawValue) {
+      return null;
+    }
+
+    try {
+      const decodedValue = decodeURIComponent(rawValue).trim();
+      return decodedValue || null;
+    } catch {
+      const fallbackValue = rawValue.trim();
+      return fallbackValue || null;
+    }
   }
 
   private resolveWebApp(): TelegramWebApp | null {
