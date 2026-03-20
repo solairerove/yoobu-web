@@ -75,7 +75,12 @@ export class TelegramService {
   }
 
   getInitData(): string | null {
-    return this.webAppSignal()?.initData?.trim() || null;
+    const webAppInitData = this.webAppSignal()?.initData?.trim();
+    if (webAppInitData) {
+      return webAppInitData;
+    }
+
+    return this.getInitDataFromLaunchParams();
   }
 
   getDevTelegramUserId(): string | null {
@@ -191,5 +196,31 @@ export class TelegramService {
       .split('.')
       .map((part) => Number.parseInt(part, 10))
       .filter((part) => Number.isFinite(part));
+  }
+
+  private getInitDataFromLaunchParams(): string | null {
+    const location = this.document.defaultView?.location;
+
+    if (!location) {
+      return null;
+    }
+
+    const fromSearch = this.readInitDataFromParams(location.search ?? '');
+    if (fromSearch) {
+      return fromSearch;
+    }
+
+    const hash = location.hash ?? '';
+    return this.readInitDataFromParams(hash.startsWith('#') ? hash.slice(1) : hash);
+  }
+
+  private readInitDataFromParams(paramsSource: string): string | null {
+    if (!paramsSource) {
+      return null;
+    }
+
+    const params = new URLSearchParams(paramsSource.startsWith('?') ? paramsSource.slice(1) : paramsSource);
+    const value = params.get('tgWebAppData')?.trim();
+    return value || null;
   }
 }

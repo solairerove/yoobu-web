@@ -149,9 +149,12 @@ interface CheckoutSelection {
       border: 0;
       background: rgba(36, 22, 15, 0.32);
       pointer-events: auto;
+      z-index: 0;
     }
 
     .checkout-sheet {
+      position: relative;
+      z-index: 1;
       width: min(720px, calc(100% - 1rem));
       max-height: min(85vh, 920px);
       margin: 0 0 max(0.5rem, env(safe-area-inset-bottom));

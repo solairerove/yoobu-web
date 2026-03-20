@@ -22,6 +22,36 @@ describe('TelegramService', () => {
     expect(service.getDevTelegramUserId()).toBe('101');
   }));
 
+  it('reads init data from tgWebAppData search param when web app init data is unavailable', () => {
+    const webApp = {
+      ready: jasmine.createSpy('ready'),
+      expand: jasmine.createSpy('expand')
+    };
+    const service = setupService(webApp, {
+      hostname: 'example.com',
+      search: '?tgWebAppData=query-id%3Dabc123%26user%3Dxyz'
+    });
+
+    service.init();
+
+    expect(service.getInitData()).toBe('query-id=abc123&user=xyz');
+  });
+
+  it('reads init data from tgWebAppData hash param when search param is missing', () => {
+    const webApp = {
+      ready: jasmine.createSpy('ready'),
+      expand: jasmine.createSpy('expand')
+    };
+    const service = setupService(webApp, {
+      hostname: 'example.com',
+      hash: '#tgWebAppData=query-id%3DfromHash'
+    });
+
+    service.init();
+
+    expect(service.getInitData()).toBe('query-id=fromHash');
+  });
+
   it('hides main button when text is null', () => {
     const hide = jasmine.createSpy('hide');
     const webApp = {
@@ -164,12 +194,16 @@ describe('TelegramService', () => {
 
 function setupService(
   webApp: object,
-  hostname = 'example.com',
+  locationConfig: string | { hostname?: string; search?: string; hash?: string } = 'example.com',
   alertSpy = jasmine.createSpy('alert'),
   confirmSpy = jasmine.createSpy('confirm').and.returnValue(true)
 ): TelegramService {
+  const hostname = typeof locationConfig === 'string' ? locationConfig : (locationConfig.hostname ?? 'example.com');
+  const search = typeof locationConfig === 'string' ? '' : (locationConfig.search ?? '');
+  const hash = typeof locationConfig === 'string' ? '' : (locationConfig.hash ?? '');
+
   const defaultView = {
-    location: { hostname },
+    location: { hostname, search, hash },
     alert: alertSpy,
     confirm: confirmSpy,
     Telegram: {

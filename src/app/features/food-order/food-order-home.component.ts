@@ -94,7 +94,7 @@ import { FoodOrderStore } from './food-order.store';
       />
 
       <app-food-order-cart-bar
-        *ngIf="activeView() === 'menu' && store.selectedCount() > 0 && !submittedBooking()"
+        *ngIf="showLocalCheckoutButtons && activeView() === 'menu' && store.selectedCount() > 0 && !submittedBooking()"
         [checkoutOpen]="checkoutOpen()"
         [selectedCount]="store.selectedCount()"
         [selectedTotal]="store.selectedTotal()"
