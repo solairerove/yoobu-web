@@ -452,6 +452,9 @@ export class FoodOrderFlowFacade {
 
   setActiveView(view: 'menu' | 'orders'): void {
     this.activeView.set(view);
+    if (view === 'orders') {
+      this.refreshBookings();
+    }
   }
 
   private resetForTenant(slug: string): void {
