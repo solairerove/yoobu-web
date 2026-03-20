@@ -26,6 +26,7 @@ interface MyBookingsVm {
 interface CustomerDetailsDraft {
   customerName: string;
   customerPhone: string;
+  deliveryAddress: string;
 }
 
 @Injectable()
@@ -62,7 +63,8 @@ export class FoodOrderFlowFacade {
   private readonly servicesRequestVersion = signal(0);
   private readonly customerDetailsDraft = signal<CustomerDetailsDraft>({
     customerName: '',
-    customerPhone: ''
+    customerPhone: '',
+    deliveryAddress: ''
   });
   private readonly customerDetailsHydrated = signal(false);
   private readonly configSignal = signal<TenantConfig | null>(null);
@@ -218,7 +220,7 @@ export class FoodOrderFlowFacade {
     this.checkoutOpen.set(false);
     this.store.clearCart();
     this.checkoutForm.patchValue({
-      deliveryAddress: '',
+      deliveryAddress: this.customerDetailsDraft().deliveryAddress,
       deliveryDate: this.defaultDeliveryDate(),
       note: ''
     });
@@ -540,11 +542,12 @@ export class FoodOrderFlowFacade {
   }
 
   private rememberCustomerDetails(): void {
-    const { customerName, customerPhone } = this.checkoutForm.getRawValue();
+    const { customerName, customerPhone, deliveryAddress } = this.checkoutForm.getRawValue();
 
     this.customerDetailsDraft.set({
       customerName: customerName.trim(),
-      customerPhone: customerPhone.trim()
+      customerPhone: customerPhone.trim(),
+      deliveryAddress: deliveryAddress.trim()
     });
   }
 
@@ -554,7 +557,7 @@ export class FoodOrderFlowFacade {
     this.checkoutForm.reset({
       customerName: customerDetails.customerName,
       customerPhone: customerDetails.customerPhone,
-      deliveryAddress: '',
+      deliveryAddress: customerDetails.deliveryAddress,
       deliveryDate: this.defaultDeliveryDate(),
       note: ''
     });
@@ -573,7 +576,8 @@ export class FoodOrderFlowFacade {
 
     this.customerDetailsDraft.set({
       customerName: booking.customerName.trim(),
-      customerPhone: booking.customerPhone.trim()
+      customerPhone: booking.customerPhone.trim(),
+      deliveryAddress: booking.deliveryAddress?.trim() ?? ''
     });
 
     this.resetCheckoutForm();

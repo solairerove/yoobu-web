@@ -292,6 +292,7 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
     expect(facade.checkoutForm.getRawValue().customerName).toBe('Alice');
     expect(facade.checkoutForm.getRawValue().customerPhone).toBe('0123456789');
+    expect(facade.checkoutForm.getRawValue().deliveryAddress).toBe('123 Main St');
     expect(facade.checkoutForm.getRawValue().note).toBe('');
   });
 
@@ -311,6 +312,28 @@ describe('FoodOrderFlowFacade', () => {
     expect(telegram.alert).toHaveBeenCalledWith(
       'Enter your name, phone number, delivery address, and delivery date before placing the order.'
     );
+  });
+
+  it('keeps saved delivery address when starting a new order', async () => {
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.increase(service.id);
+    facade.openCheckout();
+    facade.checkoutForm.setValue({
+      customerName: 'Alice',
+      customerPhone: '0123456789',
+      deliveryAddress: '123 Main St',
+      deliveryDate: '2026-03-19',
+      note: ''
+    });
+
+    await facade.submitOrder();
+    facade.startNewOrder();
+
+    expect(facade.checkoutForm.getRawValue().customerName).toBe('Alice');
+    expect(facade.checkoutForm.getRawValue().customerPhone).toBe('0123456789');
+    expect(facade.checkoutForm.getRawValue().deliveryAddress).toBe('123 Main St');
+    expect(facade.checkoutForm.getRawValue().note).toBe('');
   });
 
   it('blocks submit when delivery address is blank', async () => {
