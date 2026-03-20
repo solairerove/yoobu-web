@@ -14,9 +14,10 @@ describe('FoodOrderBookingsComponent', () => {
     customerName: 'Alice',
     customerPhone: '0123456789',
     totalPrice: 30000,
+    currency: 'VND',
     deliveryDate: '2026-03-19',
     note: 'No sugar',
-    items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000 }],
+    items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000, currency: 'VND' }],
     createdAt: '2026-03-19T10:00:00.000Z'
   };
 
@@ -73,4 +74,3 @@ describe('FoodOrderBookingsComponent', () => {
     expect(cancelSpy).toHaveBeenCalledWith(booking.id);
   });
 });
-

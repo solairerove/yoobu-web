@@ -1,6 +1,7 @@
 import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { BookingResponse } from '../../core/models/booking.model';
+import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 
 @Component({
   selector: 'app-food-order-bookings',
@@ -55,7 +56,7 @@ import { BookingResponse } from '../../core/models/booking.model';
               </span>
             </div>
             <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
-            <p>{{ booking.totalPrice | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
+            <p>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
           </button>
         </div>
 
@@ -136,15 +137,15 @@ import { BookingResponse } from '../../core/models/booking.model';
               <div class="review-row" *ngFor="let item of booking.items">
                 <div>
                   <strong>{{ item.serviceName }}</strong>
-                  <p>{{ item.quantity }} × {{ item.unitPrice | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
+                  <p>{{ item.quantity }} × {{ item.unitPrice | currency: itemCurrency(item, booking) : 'symbol-narrow' : '1.0-0' }}</p>
                 </div>
-                <span>{{ item.unitPrice * item.quantity | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
+                <span>{{ item.unitPrice * item.quantity | currency: itemCurrency(item, booking) : 'symbol-narrow' : '1.0-0' }}</span>
               </div>
             </div>
 
             <div class="review-total">
               <span>Total</span>
-              <strong>{{ booking.totalPrice | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</strong>
+              <strong>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</strong>
             </div>
           </div>
 
@@ -452,6 +453,8 @@ export class FoodOrderBookingsComponent {
         return 'Delivered';
       case 'CANCELLED':
         return 'Cancelled';
+      default:
+        return status;
     }
   }
 
@@ -465,6 +468,8 @@ export class FoodOrderBookingsComponent {
         return 'Order completed';
       case 'CANCELLED':
         return 'Order cancelled';
+      default:
+        return 'Order status updated';
     }
   }
 
@@ -478,6 +483,8 @@ export class FoodOrderBookingsComponent {
         return 'This order has been completed.';
       case 'CANCELLED':
         return 'This order was cancelled.';
+      default:
+        return 'Check this order for the latest status details.';
     }
   }
 
@@ -518,5 +525,13 @@ export class FoodOrderBookingsComponent {
         state: status === 'DONE' ? 'current' : 'pending'
       }
     ];
+  }
+
+  protected bookingCurrency(booking: BookingResponse): string {
+    return normalizeCurrencyCode(booking.currency || this.currencyCode());
+  }
+
+  protected itemCurrency(item: BookingResponse['items'][number], booking: BookingResponse): string {
+    return normalizeCurrencyCode(item.currency || booking.currency || this.currencyCode());
   }
 }

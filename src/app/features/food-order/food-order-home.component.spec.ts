@@ -154,4 +154,22 @@ describe('FoodOrderHomeComponent', () => {
     expect(facade.setActiveView).toHaveBeenCalledWith('orders');
     expect(facade.activeView()).toBe('orders');
   });
+
+  it('renders bookings section even when menu vm is still loading', () => {
+    facade.activeView.set('orders');
+    facade.vm.set({
+      services: [],
+      loading: true,
+      error: null
+    });
+    facade.bookingsVm.set({
+      bookings: [],
+      loading: true,
+      error: null
+    });
+
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('app-food-order-bookings'))).not.toBeNull();
+  });
 });

@@ -15,15 +15,17 @@ export interface BookingItem {
   serviceName: string;
   quantity: number;
   unitPrice: number;
+  currency: string;
 }
 
 export interface BookingResponse {
   id: number;
-  type: 'ORDER' | 'APPOINTMENT' | 'REQUEST';
-  status: 'NEW' | 'CONFIRMED' | 'DONE' | 'CANCELLED';
+  type: 'ORDER' | 'APPOINTMENT' | 'REQUEST' | string;
+  status: 'NEW' | 'CONFIRMED' | 'DONE' | 'CANCELLED' | string;
   customerName: string;
   customerPhone: string;
   totalPrice: number;
+  currency: string;
   deliveryDate: string;
   note: string | null;
   items: BookingItem[];

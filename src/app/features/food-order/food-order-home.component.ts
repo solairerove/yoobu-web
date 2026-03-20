@@ -78,7 +78,7 @@ import { FoodOrderStore } from './food-order.store';
           </p>
 
           <div class="success-meta">
-            <span>{{ booking.totalPrice | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
+            <span>{{ booking.totalPrice | currency: bookingCurrency(booking.currency) : 'symbol-narrow' : '1.0-0' }}</span>
             <span>{{ booking.items.length }} products</span>
             <span>{{ booking.createdAt | date: 'short' }}</span>
           </div>
@@ -200,7 +200,7 @@ import { FoodOrderStore } from './food-order.store';
       />
 
       <app-food-order-bookings
-        *ngIf="activeView() === 'orders' && !vm().loading"
+        *ngIf="activeView() === 'orders'"
         [bookings]="bookingsVm().bookings"
         [loading]="bookingsVm().loading"
         [error]="bookingsVm().error"
@@ -734,6 +734,10 @@ export class FoodOrderHomeComponent {
 
   protected startNewOrder(): void {
     this.facade.startNewOrder();
+  }
+
+  protected bookingCurrency(currency: string): string {
+    return normalizeCurrencyCode(currency || this.currencyCode());
   }
 
   protected refreshBookings(): void {

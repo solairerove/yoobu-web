@@ -259,13 +259,15 @@ function createBookingResponse(id: number): BookingResponse {
     customerName: 'Test User',
     customerPhone: '0123456789',
     totalPrice: 30000,
+    currency: 'VND',
     deliveryDate: '2026-03-18',
     note: null,
     items: [
       {
         serviceName: 'Coffee',
         quantity: 1,
-        unitPrice: 30000
+        unitPrice: 30000,
+        currency: 'VND'
       }
     ],
     createdAt: '2026-03-18T10:00:00.000Z'
