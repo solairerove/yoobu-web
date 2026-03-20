@@ -44,10 +44,6 @@ export class FoodOrderFlowFacade {
     deliveryDate: [this.defaultDeliveryDate(), [Validators.required]],
     note: ['']
   });
-  private readonly checkoutFormStatus = toSignal(
-    this.checkoutForm.statusChanges.pipe(startWith(this.checkoutForm.status)),
-    { initialValue: this.checkoutForm.status }
-  );
 
   readonly bookingsReloadKey = signal(0);
   readonly selectedBookingId = signal<number | null>(null);
@@ -157,7 +153,6 @@ export class FoodOrderFlowFacade {
       const total = this.store.selectedTotal();
       const checkoutOpen = this.checkoutOpen();
       const submitting = this.submitting();
-      const formStatus = this.checkoutFormStatus();
 
       if (booking || itemCount === 0) {
         this.telegram.setMainButton(null);
@@ -173,7 +168,7 @@ export class FoodOrderFlowFacade {
 
       this.telegram.setMainButton(
         submitting ? 'Submitting...' : `Place order • ${this.formatCurrency(total)}`,
-        !submitting && formStatus === 'VALID'
+        !submitting
       );
       this.telegram.onMainButtonClick(this.mainButtonAction);
     });

@@ -230,6 +230,26 @@ describe('FoodOrderFlowFacade', () => {
     );
   });
 
+  it('keeps telegram main button clickable and shows validation error on invalid checkout form', async () => {
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.increase(service.id);
+
+    (facade as unknown as { mainButtonAction: () => void }).mainButtonAction();
+    await Promise.resolve();
+    (facade as unknown as { mainButtonAction: () => void }).mainButtonAction();
+    await Promise.resolve();
+
+    expect(facade.checkoutOpen()).toBeTrue();
+    expect(api.createBooking).not.toHaveBeenCalled();
+    expect(facade.submitError()).toBe(
+      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
+    );
+    expect(telegram.alert).toHaveBeenCalledWith(
+      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
+    );
+  });
+
   it('closes checkout when trying to submit with an empty cart', async () => {
     facade.setConfig(tenantConfig);
     facade.openCheckout();
