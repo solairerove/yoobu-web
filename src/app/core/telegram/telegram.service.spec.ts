@@ -52,6 +52,26 @@ describe('TelegramService', () => {
     expect(service.getInitData()).toBe('query-id=fromHash');
   });
 
+  it('recovers init data when telegram web app appears after init call', () => {
+    const service = setupService(null, 'example.com');
+    service.init();
+
+    const document = TestBed.inject(DOCUMENT) as {
+      defaultView: {
+        Telegram?: { WebApp?: { initData?: string; ready(): void; expand(): void } };
+      };
+    };
+    document.defaultView.Telegram = {
+      WebApp: {
+        initData: ' late-token ',
+        ready: jasmine.createSpy('ready'),
+        expand: jasmine.createSpy('expand')
+      }
+    };
+
+    expect(service.getInitData()).toBe('late-token');
+  });
+
   it('hides main button when text is null', () => {
     const hide = jasmine.createSpy('hide');
     const webApp = {
@@ -193,7 +213,7 @@ describe('TelegramService', () => {
 });
 
 function setupService(
-  webApp: object,
+  webApp: object | null,
   locationConfig: string | { hostname?: string; search?: string; hash?: string } = 'example.com',
   alertSpy = jasmine.createSpy('alert'),
   confirmSpy = jasmine.createSpy('confirm').and.returnValue(true)
@@ -202,14 +222,21 @@ function setupService(
   const search = typeof locationConfig === 'string' ? '' : (locationConfig.search ?? '');
   const hash = typeof locationConfig === 'string' ? '' : (locationConfig.hash ?? '');
 
-  const defaultView = {
+  const defaultView: {
+    location: { hostname: string; search: string; hash: string };
+    alert: typeof alertSpy;
+    confirm: typeof confirmSpy;
+    Telegram?: { WebApp: object };
+  } = {
     location: { hostname, search, hash },
     alert: alertSpy,
-    confirm: confirmSpy,
-    Telegram: {
-      WebApp: webApp
-    }
+    confirm: confirmSpy
   };
+  if (webApp) {
+    defaultView.Telegram = {
+      WebApp: webApp
+    };
+  }
 
   TestBed.configureTestingModule({
     providers: [TelegramService, { provide: DOCUMENT, useValue: { defaultView } }]

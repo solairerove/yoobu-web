@@ -70,12 +70,11 @@ export class TelegramService {
   }
 
   init(): void {
-    const win = this.document.defaultView as TelegramWindow | null;
-    this.webAppSignal.set(win?.Telegram?.WebApp ?? null);
+    this.webAppSignal.set(this.resolveWebApp());
   }
 
   getInitData(): string | null {
-    const webAppInitData = this.webAppSignal()?.initData?.trim();
+    const webAppInitData = this.resolveWebApp()?.initData?.trim();
     if (webAppInitData) {
       return webAppInitData;
     }
@@ -97,7 +96,7 @@ export class TelegramService {
   }
 
   setMainButton(text: string | null, enabled = true): void {
-    const mainButton = this.webAppSignal()?.MainButton;
+    const mainButton = this.resolveWebApp()?.MainButton;
 
     if (!mainButton) {
       return;
@@ -122,7 +121,7 @@ export class TelegramService {
   }
 
   alert(message: string): Promise<void> {
-    const webApp = this.webAppSignal();
+    const webApp = this.resolveWebApp();
 
     if (webApp?.showAlert && this.supportsPopupApi(webApp)) {
       return new Promise<void>((resolve) => {
@@ -143,7 +142,7 @@ export class TelegramService {
   }
 
   confirm(message: string): Promise<boolean> {
-    const webApp = this.webAppSignal();
+    const webApp = this.resolveWebApp();
 
     if (webApp?.showConfirm && this.supportsPopupApi(webApp)) {
       return new Promise<boolean>((resolve) => {
@@ -222,5 +221,20 @@ export class TelegramService {
     const params = new URLSearchParams(paramsSource.startsWith('?') ? paramsSource.slice(1) : paramsSource);
     const value = params.get('tgWebAppData')?.trim();
     return value || null;
+  }
+
+  private resolveWebApp(): TelegramWebApp | null {
+    const current = this.webAppSignal();
+    if (current) {
+      return current;
+    }
+
+    const win = this.document.defaultView as TelegramWindow | null;
+    const webApp = win?.Telegram?.WebApp ?? null;
+    if (webApp) {
+      this.webAppSignal.set(webApp);
+    }
+
+    return webApp;
   }
 }
