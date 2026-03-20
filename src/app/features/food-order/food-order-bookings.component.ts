@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { BookingResponse } from '../../core/models/booking.model';
 import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 
@@ -36,10 +36,39 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 
       <div class="bookings-grid" *ngIf="bookings().length">
         <div class="booking-list">
+          <p class="booking-group-title" *ngIf="currentBookings().length">Current order</p>
           <button
             type="button"
             class="booking-item"
-            *ngFor="let booking of bookings()"
+            *ngFor="let booking of currentBookings()"
+            [class.active]="selectedBookingId() === booking.id"
+            (click)="bookingSelected.emit(booking.id)"
+          >
+            <div class="booking-item-top">
+              <strong>#{{ booking.id }}</strong>
+              <span
+                class="booking-status"
+                [class.status-new]="booking.status === 'NEW'"
+                [class.status-payment-pending]="booking.status === 'PAYMENT_PENDING'"
+                [class.status-confirmed]="booking.status === 'CONFIRMED'"
+                [class.status-done]="booking.status === 'DONE'"
+                [class.status-cancelled]="booking.status === 'CANCELLED'"
+              >
+                {{ bookingStatusLabel(booking.status) }}
+              </span>
+            </div>
+            <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
+            <p class="booking-address" [title]="displayAddress(booking.deliveryAddress)">
+              {{ displayAddress(booking.deliveryAddress) }}
+            </p>
+            <p>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
+          </button>
+
+          <p class="booking-group-title" *ngIf="currentBookings().length && previousBookings().length">Previous orders</p>
+          <button
+            type="button"
+            class="booking-item"
+            *ngFor="let booking of previousBookings()"
             [class.active]="selectedBookingId() === booking.id"
             (click)="bookingSelected.emit(booking.id)"
           >
@@ -288,6 +317,15 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     .booking-item p {
       color: var(--yoobu-muted);
       font-size: 0.92rem;
+    }
+
+    .booking-group-title {
+      margin: 0.2rem 0 0;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--yoobu-muted);
+      font-weight: 700;
     }
 
     .booking-address {
@@ -561,9 +599,28 @@ export class FoodOrderBookingsComponent {
   readonly repeatRequested = output<number>();
   readonly paymentConfirmRequested = output<number>();
   readonly cancelRequested = output<number>();
+  readonly currentBookings = computed(() => this.sortedBookings().filter((booking) => this.isCurrentBooking(booking)));
+  readonly previousBookings = computed(() => this.sortedBookings().filter((booking) => !this.isCurrentBooking(booking)));
 
   protected canRepeat(booking: BookingResponse): boolean {
     return booking.items.length > 0;
+  }
+
+  private sortedBookings(): BookingResponse[] {
+    return [...this.bookings()].sort((left, right) => {
+      const currentLeft = this.isCurrentBooking(left);
+      const currentRight = this.isCurrentBooking(right);
+
+      if (currentLeft !== currentRight) {
+        return currentLeft ? -1 : 1;
+      }
+
+      return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+    });
+  }
+
+  private isCurrentBooking(booking: BookingResponse): boolean {
+    return booking.status === 'NEW' || booking.status === 'PAYMENT_PENDING' || booking.status === 'CONFIRMED';
   }
 
   protected canCancel(booking: BookingResponse): boolean {

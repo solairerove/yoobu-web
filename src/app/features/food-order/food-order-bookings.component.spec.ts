@@ -137,4 +137,40 @@ describe('FoodOrderBookingsComponent', () => {
     expect(allMetaRows.map((row) => row.nativeElement.textContent).join(' ')).toContain('Delivery address');
     expect(allMetaRows.map((row) => row.nativeElement.textContent).join(' ')).toContain('N/A');
   });
+
+  it('shows current orders first and previous orders below', () => {
+    const doneBooking: BookingResponse = {
+      ...booking,
+      id: 2,
+      status: 'DONE',
+      createdAt: '2026-03-20T10:00:00.000Z'
+    };
+    const currentBooking: BookingResponse = {
+      ...booking,
+      id: 3,
+      status: 'CONFIRMED',
+      createdAt: '2026-03-19T10:00:00.000Z'
+    };
+
+    fixture.componentRef.setInput('bookings', [doneBooking, currentBooking]);
+    fixture.componentRef.setInput('loading', false);
+    fixture.componentRef.setInput('error', null);
+    fixture.componentRef.setInput('paymentQrUrl', null);
+    fixture.componentRef.setInput('selectedBookingId', currentBooking.id);
+    fixture.componentRef.setInput('selectedBooking', currentBooking);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.componentRef.setInput('cancellingBookingId', null);
+    fixture.componentRef.setInput('cancelError', null);
+    fixture.detectChanges();
+
+    const items = fixture.debugElement.queryAll(By.css('.booking-item'));
+    expect(items.length).toBe(2);
+    expect(items[0].nativeElement.textContent).toContain('#3');
+    expect(items[1].nativeElement.textContent).toContain('#2');
+
+    const groupTitles = fixture.debugElement.queryAll(By.css('.booking-group-title'));
+    expect(groupTitles[0].nativeElement.textContent).toContain('Current order');
+    expect(groupTitles[1].nativeElement.textContent).toContain('Previous orders');
+  });
 });

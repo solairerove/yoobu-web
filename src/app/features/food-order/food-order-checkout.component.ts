@@ -166,6 +166,8 @@ interface CheckoutSelection {
       border-radius: 24px 24px 0 0;
       box-shadow: var(--yoobu-shadow-modal);
       overflow: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
       pointer-events: auto;
       background:
         linear-gradient(180deg, var(--yoobu-surface-card-strong), var(--yoobu-surface-tint));
@@ -218,6 +220,7 @@ interface CheckoutSelection {
     .checkout-form label {
       display: grid;
       gap: 0.45rem;
+      min-width: 0;
       font-weight: 600;
     }
 
@@ -228,11 +231,17 @@ interface CheckoutSelection {
     .checkout-form input,
     .checkout-form textarea {
       width: 100%;
+      min-width: 0;
+      max-width: 100%;
       padding: 0.85rem 0.95rem;
       border-radius: 14px;
       border: 1px solid var(--yoobu-border);
       background: var(--yoobu-surface-card-strong);
       color: var(--yoobu-ink);
+    }
+
+    .checkout-form input[type='date'] {
+      display: block;
     }
 
     .checkout-form input.ng-invalid.ng-touched,
@@ -332,9 +341,11 @@ interface CheckoutSelection {
       }
 
       .checkout-sheet {
-        width: calc(100% - 0.4rem);
-        max-height: 88vh;
-        margin-bottom: 0;
+        width: 100%;
+        max-height: calc(100vh - env(safe-area-inset-top));
+        max-height: calc(100dvh - env(safe-area-inset-top));
+        margin: 0;
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
         border-radius: 24px 24px 0 0;
       }
 
