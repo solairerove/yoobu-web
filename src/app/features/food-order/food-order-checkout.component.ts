@@ -199,6 +199,7 @@ interface CheckoutSelection {
     .review-card {
       display: grid;
       gap: 0.9rem;
+      min-width: 0;
     }
 
     .repeat-banner {
@@ -242,6 +243,13 @@ interface CheckoutSelection {
 
     .checkout-form input[type='date'] {
       display: block;
+      inline-size: 100%;
+      min-inline-size: 0;
+      max-inline-size: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     .checkout-form input.ng-invalid.ng-touched,

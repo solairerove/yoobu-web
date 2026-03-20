@@ -199,4 +199,29 @@ describe('FoodOrderBookingsComponent', () => {
     expect(historyItems.length).toBe(1);
     expect(historyItems[0].nativeElement.textContent).toContain('#2');
   });
+
+  it('treats payment-pending status variants as open order', () => {
+    const pendingBooking: BookingResponse = {
+      ...booking,
+      id: 5,
+      status: 'payment-pending',
+      createdAt: '2026-03-21T10:00:00.000Z'
+    };
+
+    fixture.componentRef.setInput('bookings', [pendingBooking]);
+    fixture.componentRef.setInput('loading', false);
+    fixture.componentRef.setInput('error', null);
+    fixture.componentRef.setInput('paymentQrUrl', null);
+    fixture.componentRef.setInput('selectedBookingId', pendingBooking.id);
+    fixture.componentRef.setInput('selectedBooking', pendingBooking);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.componentRef.setInput('cancellingBookingId', null);
+    fixture.componentRef.setInput('cancelError', null);
+    fixture.detectChanges();
+
+    const openHeading = fixture.debugElement.query(By.css('.orders-section .booking-group-title'));
+    expect(openHeading.nativeElement.textContent).toContain('Open order');
+    expect(fixture.debugElement.query(By.css('.booking-summary .eyebrow')).nativeElement.textContent).toContain('Order #5');
+  });
 });
