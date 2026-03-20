@@ -180,4 +180,16 @@ describe('FoodOrderHomeComponent', () => {
 
     expect(fixture.debugElement.query(By.css('app-food-order-bookings'))).not.toBeNull();
   });
+
+  it('hides local cart bar when local checkout buttons are disabled', () => {
+    fixture.destroy();
+    facade.showLocalCheckoutButtons = false;
+    facade.store.increase(service.id);
+
+    fixture = TestBed.createComponent(FoodOrderHomeComponent);
+    fixture.componentRef.setInput('config', config);
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('app-food-order-cart-bar'))).toBeNull();
+  });
 });
