@@ -120,14 +120,11 @@ export class FoodOrderFlowFacade {
             loading: true,
             error: null
           }),
-          catchError((error: unknown) =>
+          catchError(() =>
             of({
               bookings: [],
               loading: false,
-              error:
-                error instanceof HttpErrorResponse && error.status === 401
-                  ? 'Telegram authorization failed. Reopen this Mini App from Telegram and try again.'
-                  : 'Could not load your orders.'
+              error: 'Could not load your orders.'
             })
           )
         )
@@ -371,14 +368,10 @@ export class FoodOrderFlowFacade {
       this.checkoutOpen.set(false);
       this.resetCheckoutForm();
       this.refreshBookings();
-    } catch (error) {
+    } catch {
       this.checkoutOpen.set(true);
-      const message =
-        error instanceof HttpErrorResponse && error.status === 401
-          ? 'Telegram authorization failed. Please reopen this Mini App from Telegram.'
-          : 'Could not place your order. Please try again.';
-      this.submitError.set(message);
-      await this.telegram.alert(message);
+      this.submitError.set('Could not place your order. Please try again.');
+      await this.telegram.alert('Could not place your order. Please try again.');
     } finally {
       this.submitting.set(false);
     }
