@@ -30,6 +30,10 @@ export class TenantApiService {
     return this.http.get<BookingResponse>(`${this.baseUrl}/${slug}/bookings/${bookingId}`);
   }
 
+  confirmBookingPayment(slug: string, bookingId: number): Observable<BookingResponse> {
+    return this.http.post<BookingResponse>(`${this.baseUrl}/${slug}/bookings/${bookingId}/confirm-payment`, {});
+  }
+
   cancelBooking(slug: string, bookingId: number): Observable<BookingResponse> {
     return this.http.post<BookingResponse>(`${this.baseUrl}/${slug}/bookings/${bookingId}/cancel`, {});
   }

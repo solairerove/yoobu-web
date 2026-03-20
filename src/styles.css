@@ -1,15 +1,35 @@
 :root {
   --yoobu-primary: #ff6b35;
+  --yoobu-primary-strong: #e6521f;
+  --yoobu-primary-soft: rgba(255, 107, 53, 0.12);
   --yoobu-surface: #fffaf5;
+  --yoobu-surface-strong: rgba(255, 255, 255, 0.88);
+  --yoobu-surface-card: rgba(255, 255, 255, 0.92);
+  --yoobu-surface-card-soft: rgba(255, 255, 255, 0.82);
+  --yoobu-surface-card-strong: rgba(255, 255, 255, 0.96);
+  --yoobu-surface-tint: rgba(255, 250, 246, 0.9);
+  --yoobu-surface-muted: rgba(36, 22, 15, 0.05);
   --yoobu-ink: #24160f;
   --yoobu-muted: #6b5d56;
   --yoobu-border: rgba(36, 22, 15, 0.12);
+  --yoobu-border-soft: rgba(36, 22, 15, 0.08);
+  --yoobu-border-accent-soft: rgba(255, 107, 53, 0.16);
+  --yoobu-border-accent: rgba(255, 107, 53, 0.24);
+  --yoobu-overlay-light: rgba(255, 255, 255, 0.18);
   --yoobu-shadow: 0 18px 50px rgba(36, 22, 15, 0.12);
-  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  --yoobu-shadow-soft: 0 10px 24px rgba(36, 22, 15, 0.07);
+  --yoobu-shadow-xs: 0 2px 10px rgba(36, 22, 15, 0.08);
+  --yoobu-shadow-sm: 0 8px 16px rgba(36, 22, 15, 0.06);
+  --yoobu-shadow-accent: 0 10px 24px rgba(255, 107, 53, 0.08);
+  --yoobu-shadow-modal: 0 -10px 40px rgba(36, 22, 15, 0.18);
+  --yoobu-ring-soft: 0 0 0 6px rgba(36, 22, 15, 0.04);
+  --yoobu-ring-accent: 0 0 0 6px rgba(255, 107, 53, 0.12);
+  font-family: "SF Pro Display", "Avenir Next", "Segoe UI", sans-serif;
   color: var(--yoobu-ink);
   background:
-    radial-gradient(circle at top left, rgba(255, 107, 53, 0.18), transparent 28%),
-    linear-gradient(180deg, #fff7f2 0%, #fffdf9 100%);
+    radial-gradient(circle at top left, rgba(255, 107, 53, 0.16), transparent 24%),
+    radial-gradient(circle at 85% 10%, rgba(255, 184, 102, 0.12), transparent 22%),
+    linear-gradient(180deg, #fff7f1 0%, #fffaf5 42%, #fffdf9 100%);
 }
 
 * {
@@ -24,6 +44,13 @@ body {
 
 body {
   min-height: 100vh;
+  color: var(--yoobu-ink);
+  background:
+    radial-gradient(circle at top left, rgba(255, 107, 53, 0.16), transparent 24%),
+    radial-gradient(circle at 85% 10%, rgba(255, 184, 102, 0.12), transparent 22%),
+    linear-gradient(180deg, #fff7f1 0%, #fffaf5 42%, #fffdf9 100%);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -32,3 +59,59 @@ textarea {
   font: inherit;
 }
 
+button {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--yoobu-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ghost-button {
+  cursor: pointer;
+  border: 1px solid var(--yoobu-border);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--yoobu-ink);
+}
+
+.ghost-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ui-copy {
+  color: var(--yoobu-muted);
+  line-height: 1.45;
+  font-size: 0.95rem;
+}
+
+.ui-status-card {
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--yoobu-border);
+}
+
+.ui-status-card.error {
+  border-color: rgba(165, 42, 42, 0.2);
+  background: rgba(255, 246, 244, 0.95);
+}
+
+::selection {
+  background: rgba(255, 107, 53, 0.18);
+}

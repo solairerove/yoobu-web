@@ -4,8 +4,12 @@ export interface TenantConfig {
   slug: string;
   name: string;
   type: TenantType;
+  currency?: string | null;
+  paymentQrUrl?: string | null;
   primaryColor: string | null;
   logoUrl: string | null;
   welcomeMessage: string | null;
+  checkoutNameHint?: string | null;
+  checkoutPhoneHint?: string | null;
+  checkoutNoteHint?: string | null;
 }
-

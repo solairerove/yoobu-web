@@ -5,11 +5,10 @@ import { TenantConfig } from '../../core/models/tenant-config.model';
   selector: 'app-unsupported-flow',
   template: `
     <section class="unsupported">
-      <p class="label">Planned module</p>
+      <p class="label">Unavailable</p>
       <h2>{{ config().type }}</h2>
       <p>
-        Backend support for this tenant type is not ready yet. The frontend shell already knows
-        which module should be loaded here.
+        This section is not available yet.
       </p>
     </section>
   `,
@@ -18,7 +17,7 @@ import { TenantConfig } from '../../core/models/tenant-config.model';
       padding: 1.5rem;
       border-radius: 24px;
       border: 1px dashed var(--yoobu-border);
-      background: rgba(255, 255, 255, 0.75);
+      background: var(--yoobu-surface-card-soft);
     }
 
     .label {
@@ -44,4 +43,3 @@ import { TenantConfig } from '../../core/models/tenant-config.model';
 export class UnsupportedFlowComponent {
   readonly config = input.required<TenantConfig>();
 }
-
