@@ -118,7 +118,6 @@ import { FoodOrderStore } from './food-order.store';
 
           <div class="product-copy">
             <div class="product-topline">
-              <span class="product-index">{{ service.id }}</span>
               <p class="unit">{{ service.unit || defaultUnit }}</p>
             </div>
 
@@ -451,21 +450,6 @@ import { FoodOrderStore } from './food-order.store';
       flex-wrap: wrap;
       gap: 0.55rem;
       align-items: baseline;
-    }
-
-    .product-index {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 1.9rem;
-      height: 1.9rem;
-      padding: 0 0.45rem;
-      border-radius: 999px;
-      background: var(--yoobu-surface-muted);
-      color: var(--yoobu-muted);
-      font-size: 0.78rem;
-      font-weight: 800;
-      line-height: 1;
     }
 
     .product-meta {
