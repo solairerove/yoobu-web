@@ -160,6 +160,8 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.checkoutOpen()).toBeTrue();
     expect(facade.store.quantityFor(service.id)).toBe(2);
     expect(facade.store.quantityFor(teaService.id)).toBe(1);
+    expect(facade.checkoutForm.getRawValue().customerName).toBe(completedBooking.customerName);
+    expect(facade.checkoutForm.getRawValue().customerPhone).toBe(completedBooking.customerPhone);
     expect(facade.checkoutForm.getRawValue().deliveryAddress).toBe('456 Side St');
     expect(facade.checkoutForm.getRawValue().note).toBe('ring bell');
     expect(telegram.alert).not.toHaveBeenCalledWith('None of the items from this order are available now.');
@@ -181,6 +183,55 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.store.selectedCount()).toBe(0);
     expect(facade.checkoutOpen()).toBeFalse();
     expect(telegram.alert).toHaveBeenCalledWith('None of the items from this order are available now.');
+  });
+
+  it('shows and dismisses repeat banner after restoring an order', async () => {
+    const repeated: BookingResponse = {
+      ...createBookingResponse(15),
+      status: 'DONE',
+      items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000, currency: 'VND' }]
+    };
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.selectedBookingId.set(repeated.id);
+    facade.selectedBooking.set(repeated);
+
+    await facade.repeatBooking(repeated.id);
+    expect(facade.repeatOrderBanner()).toContain(`#${repeated.id}`);
+
+    facade.dismissRepeatOrderBanner();
+    expect(facade.repeatOrderBanner()).toBeNull();
+  });
+
+  it('does not replace an existing cart on repeat when confirmation is declined', async () => {
+    const repeatBooking: BookingResponse = {
+      ...createBookingResponse(11),
+      status: 'DONE',
+      customerName: 'Repeat User',
+      items: [{ serviceName: 'Coffee', quantity: 3, unitPrice: 30000, currency: 'VND' }]
+    };
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.increase(service.id);
+    telegram.confirm.and.resolveTo(false);
+    facade.selectedBookingId.set(repeatBooking.id);
+    facade.selectedBooking.set(repeatBooking);
+
+    await facade.repeatBooking(repeatBooking.id);
+
+    expect(facade.store.quantityFor(service.id)).toBe(1);
+    expect(facade.checkoutForm.getRawValue().customerName).toBe('');
+    expect(telegram.confirm).toHaveBeenCalledWith('Replace your current cart with items from order #11?');
+  });
+
+  it('shows an alert when trying to repeat while menu is loading', async () => {
+    const loadingServices$ = new Subject<ServiceItem[]>();
+    api.getServices.and.returnValue(loadingServices$.asObservable());
+    facade.setConfig(tenantConfig);
+
+    await facade.repeatBooking(1);
+
+    expect(telegram.alert).toHaveBeenCalledWith('Menu is still loading. Please wait a moment and try again.');
   });
 
   it('does not submit an order when confirmation is declined', async () => {

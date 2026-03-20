@@ -108,6 +108,7 @@ import { FoodOrderStore } from './food-order.store';
         [localMode]="showLocalCheckoutButtons"
         [submitting]="submitting()"
         [submitError]="submitError()"
+        [repeatOrderBanner]="repeatOrderBanner()"
         [form]="checkoutForm"
         [isFirstOrder]="isFirstOrder()"
         [customerNameHint]="config().checkoutNameHint || null"
@@ -118,6 +119,7 @@ import { FoodOrderStore } from './food-order.store';
         [selectedCount]="store.selectedCount()"
         [selectedTotal]="store.selectedTotal()"
         (closeRequested)="closeCheckout()"
+        (repeatOrderBannerDismissed)="dismissRepeatOrderBanner()"
         (submitRequested)="submitOrder()"
       />
 
@@ -253,6 +255,7 @@ export class FoodOrderHomeComponent {
   protected readonly checkoutOpen = this.facade.checkoutOpen;
   protected readonly submitting = this.facade.submitting;
   protected readonly submitError = this.facade.submitError;
+  protected readonly repeatOrderBanner = this.facade.repeatOrderBanner;
   protected readonly submittedBooking = this.facade.submittedBooking;
   protected readonly confirmingPaymentBookingId = this.facade.confirmingPaymentBookingId;
   protected readonly paymentError = this.facade.paymentError;
@@ -290,6 +293,10 @@ export class FoodOrderHomeComponent {
 
   protected closeCheckout(): void {
     this.facade.closeCheckout();
+  }
+
+  protected dismissRepeatOrderBanner(): void {
+    this.facade.dismissRepeatOrderBanner();
   }
 
   protected startNewOrder(): void {

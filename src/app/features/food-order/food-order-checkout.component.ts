@@ -53,6 +53,11 @@ interface CheckoutSelection {
 
       <div class="checkout-grid">
         <form class="checkout-form" [formGroup]="form()" (ngSubmit)="submitRequested.emit()">
+          <section class="repeat-banner" *ngIf="repeatOrderBanner() as repeatOrderBanner">
+            <p>{{ repeatOrderBanner }}</p>
+            <button type="button" class="ghost-button" (click)="repeatOrderBannerDismissed.emit()">Dismiss</button>
+          </section>
+
           <label>
             <span>Name</span>
             <input type="text" formControlName="customerName" />
@@ -194,6 +199,22 @@ interface CheckoutSelection {
       gap: 0.9rem;
     }
 
+    .repeat-banner {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.75rem 0.85rem;
+      border-radius: 12px;
+      border: 1px solid var(--yoobu-border-accent);
+      background: var(--yoobu-primary-soft);
+    }
+
+    .repeat-banner p {
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
+
     .checkout-form label {
       display: grid;
       gap: 0.45rem;
@@ -320,7 +341,8 @@ interface CheckoutSelection {
       .checkout-head,
       .review-row,
       .review-head,
-      .review-total {
+      .review-total,
+      .repeat-banner {
         flex-direction: column;
         align-items: flex-start;
       }
@@ -332,6 +354,7 @@ export class FoodOrderCheckoutComponent {
   readonly localMode = input.required<boolean>();
   readonly submitting = input.required<boolean>();
   readonly submitError = input.required<string | null>();
+  readonly repeatOrderBanner = input<string | null>(null);
   readonly form = input.required<FormGroup>();
   readonly isFirstOrder = input<boolean>(false);
   readonly customerNameHint = input<string | null>(null);
@@ -343,5 +366,6 @@ export class FoodOrderCheckoutComponent {
   readonly selectedTotal = input.required<number>();
 
   readonly closeRequested = output<void>();
+  readonly repeatOrderBannerDismissed = output<void>();
   readonly submitRequested = output<void>();
 }

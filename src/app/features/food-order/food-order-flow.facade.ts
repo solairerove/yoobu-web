@@ -52,6 +52,7 @@ export class FoodOrderFlowFacade {
   readonly checkoutOpen = signal(false);
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
+  readonly repeatOrderBanner = signal<string | null>(null);
   readonly submittedBooking = signal<BookingResponse | null>(null);
   readonly confirmingPaymentBookingId = signal<number | null>(null);
   readonly paymentError = signal<string | null>(null);
@@ -186,11 +187,13 @@ export class FoodOrderFlowFacade {
 
   increase(serviceId: number): void {
     this.submitError.set(null);
+    this.repeatOrderBanner.set(null);
     this.store.increase(serviceId);
   }
 
   decrease(serviceId: number): void {
     this.submitError.set(null);
+    this.repeatOrderBanner.set(null);
     this.store.decrease(serviceId);
     if (this.store.selectedCount() === 0) {
       this.checkoutOpen.set(false);
@@ -211,6 +214,7 @@ export class FoodOrderFlowFacade {
     this.activeView.set('menu');
     this.submittedBooking.set(null);
     this.submitError.set(null);
+    this.repeatOrderBanner.set(null);
     this.checkoutOpen.set(false);
     this.store.clearCart();
     this.checkoutForm.patchValue({
@@ -320,6 +324,21 @@ export class FoodOrderFlowFacade {
   }
 
   async repeatBooking(bookingId: number): Promise<void> {
+    if (this.vm().loading) {
+      await this.telegram.alert('Menu is still loading. Please wait a moment and try again.');
+      return;
+    }
+
+    if (this.store.selectedCount() > 0) {
+      const replaceConfirmed = await this.telegram.confirm(
+        `Replace your current cart with items from order #${bookingId}?`
+      );
+
+      if (!replaceConfirmed) {
+        return;
+      }
+    }
+
     const sourceBooking =
       this.selectedBooking()?.id === bookingId
         ? this.selectedBooking()
@@ -358,14 +377,21 @@ export class FoodOrderFlowFacade {
     this.checkoutOpen.set(true);
     this.store.setQuantities(nextQuantities);
     this.checkoutForm.patchValue({
+      customerName: sourceBooking.customerName.trim(),
+      customerPhone: sourceBooking.customerPhone.trim(),
       deliveryAddress: sourceBooking.deliveryAddress?.trim() ?? '',
       deliveryDate: this.defaultDeliveryDate(),
       note: sourceBooking.note?.trim() ?? ''
     });
+    this.repeatOrderBanner.set(`Cart prefilled from order #${sourceBooking.id}. Review details before placing.`);
 
     if (missingItemsCount > 0) {
       await this.telegram.alert('Some items from this order are no longer available and were skipped.');
     }
+  }
+
+  dismissRepeatOrderBanner(): void {
+    this.repeatOrderBanner.set(null);
   }
 
   async submitOrder(): Promise<void> {
@@ -410,6 +436,7 @@ export class FoodOrderFlowFacade {
       this.selectedBooking.set(booking);
       this.store.clearCart();
       this.checkoutOpen.set(false);
+      this.repeatOrderBanner.set(null);
       this.resetCheckoutForm();
       this.refreshBookings();
     } catch {
@@ -430,6 +457,7 @@ export class FoodOrderFlowFacade {
     this.checkoutOpen.set(false);
     this.submitting.set(false);
     this.submitError.set(null);
+    this.repeatOrderBanner.set(null);
     this.submittedBooking.set(null);
     this.confirmingPaymentBookingId.set(null);
     this.paymentError.set(null);

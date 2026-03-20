@@ -17,6 +17,7 @@ describe('FoodOrderHomeComponent', () => {
     decrease: jasmine.Spy;
     openCheckout: jasmine.Spy;
     closeCheckout: jasmine.Spy;
+    dismissRepeatOrderBanner: jasmine.Spy;
     startNewOrder: jasmine.Spy;
     refreshBookings: jasmine.Spy;
     selectBooking: jasmine.Spy;
@@ -34,6 +35,7 @@ describe('FoodOrderHomeComponent', () => {
     checkoutOpen: ReturnType<typeof signal<boolean>>;
     submitting: ReturnType<typeof signal<boolean>>;
     submitError: ReturnType<typeof signal<string | null>>;
+    repeatOrderBanner: ReturnType<typeof signal<string | null>>;
     submittedBooking: ReturnType<typeof signal<BookingResponse | null>>;
     confirmingPaymentBookingId: ReturnType<typeof signal<number | null>>;
     paymentError: ReturnType<typeof signal<string | null>>;
@@ -75,6 +77,7 @@ describe('FoodOrderHomeComponent', () => {
       decrease: jasmine.createSpy('decrease'),
       openCheckout: jasmine.createSpy('openCheckout'),
       closeCheckout: jasmine.createSpy('closeCheckout'),
+      dismissRepeatOrderBanner: jasmine.createSpy('dismissRepeatOrderBanner'),
       startNewOrder: jasmine.createSpy('startNewOrder'),
       refreshBookings: jasmine.createSpy('refreshBookings'),
       selectBooking: jasmine.createSpy('selectBooking'),
@@ -98,6 +101,7 @@ describe('FoodOrderHomeComponent', () => {
       checkoutOpen: signal(false),
       submitting: signal(false),
       submitError: signal<string | null>(null),
+      repeatOrderBanner: signal<string | null>(null),
       submittedBooking: signal<BookingResponse | null>(null),
       confirmingPaymentBookingId: signal<number | null>(null),
       paymentError: signal<string | null>(null),
