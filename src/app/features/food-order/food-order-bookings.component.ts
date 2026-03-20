@@ -634,19 +634,26 @@ export class FoodOrderBookingsComponent {
   }
 
   private isCurrentBooking(booking: BookingResponse): boolean {
-    return booking.status === 'NEW' || booking.status === 'PAYMENT_PENDING' || booking.status === 'CONFIRMED';
+    const status = this.normalizeStatus(booking.status);
+    return status === 'NEW' || status === 'PAYMENT_PENDING' || status === 'CONFIRMED';
   }
 
   protected canCancel(booking: BookingResponse): boolean {
-    return booking.status === 'NEW' || booking.status === 'PAYMENT_PENDING' || booking.status === 'CONFIRMED';
+    const status = this.normalizeStatus(booking.status);
+    return status === 'NEW' || status === 'PAYMENT_PENDING' || status === 'CONFIRMED';
   }
 
   protected canConfirmPayment(booking: BookingResponse): boolean {
-    return booking.status === 'NEW';
+    return this.normalizeStatus(booking.status) === 'NEW';
   }
 
   protected shouldShowPaymentQr(booking: BookingResponse): boolean {
-    return !!this.paymentQrUrl() && (booking.status === 'NEW' || booking.status === 'PAYMENT_PENDING');
+    const status = this.normalizeStatus(booking.status);
+    return !!this.paymentQrUrl() && (status === 'NEW' || status === 'PAYMENT_PENDING');
+  }
+
+  private normalizeStatus(status: string): string {
+    return status.trim().replace(/-/g, '_').toUpperCase();
   }
 
   protected bookingStatusLabel(status: BookingResponse['status']): string {
