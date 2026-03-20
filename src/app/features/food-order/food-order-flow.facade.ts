@@ -39,6 +39,7 @@ export class FoodOrderFlowFacade {
   readonly checkoutForm = this.fb.nonNullable.group({
     customerName: ['', [Validators.required]],
     customerPhone: ['', [Validators.required]],
+    deliveryAddress: ['', [Validators.required, Validators.pattern(/\S/)]],
     deliveryDate: [this.defaultDeliveryDate(), [Validators.required]],
     note: ['']
   });
@@ -215,6 +216,7 @@ export class FoodOrderFlowFacade {
     this.checkoutOpen.set(false);
     this.store.clearCart();
     this.checkoutForm.patchValue({
+      deliveryAddress: '',
       deliveryDate: this.defaultDeliveryDate(),
       note: ''
     });
@@ -301,8 +303,10 @@ export class FoodOrderFlowFacade {
     if (this.checkoutForm.invalid) {
       this.checkoutOpen.set(true);
       this.checkoutForm.markAllAsTouched();
-      this.submitError.set('Enter your name, phone number, and delivery date before placing the order.');
-      await this.telegram.alert('Enter your name, phone number, and delivery date before placing the order.');
+      this.submitError.set('Enter your name, phone number, delivery address, and delivery date before placing the order.');
+      await this.telegram.alert(
+        'Enter your name, phone number, delivery address, and delivery date before placing the order.'
+      );
       return;
     }
 
@@ -415,6 +419,7 @@ export class FoodOrderFlowFacade {
     return {
       customerName: formValue.customerName.trim(),
       customerPhone: formValue.customerPhone.trim(),
+      deliveryAddress: formValue.deliveryAddress.trim(),
       deliveryDate: formValue.deliveryDate,
       note: formValue.note.trim() || null,
       items: this.store.selectedItems().map((entry) => ({
@@ -439,6 +444,7 @@ export class FoodOrderFlowFacade {
     this.checkoutForm.reset({
       customerName: customerDetails.customerName,
       customerPhone: customerDetails.customerPhone,
+      deliveryAddress: '',
       deliveryDate: this.defaultDeliveryDate(),
       note: ''
     });

@@ -144,6 +144,7 @@ function createBookingResponse(id: number): BookingResponse {
     status: 'NEW',
     customerName: 'Test User',
     customerPhone: '0123456789',
+    deliveryAddress: '123 Main St',
     totalPrice: 30000,
     currency: 'VND',
     deliveryDate: '2026-03-19',

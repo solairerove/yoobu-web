@@ -6,6 +6,7 @@ export interface CreateBookingItem {
 export interface CreateBookingRequest {
   customerName: string;
   customerPhone: string;
+  deliveryAddress: string;
   deliveryDate: string;
   note: string | null;
   items: CreateBookingItem[];
@@ -24,6 +25,7 @@ export interface BookingResponse {
   status: 'NEW' | 'CONFIRMED' | 'DONE' | 'CANCELLED' | string;
   customerName: string;
   customerPhone: string;
+  deliveryAddress: string | null;
   totalPrice: number;
   currency: string;
   deliveryDate: string;

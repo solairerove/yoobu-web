@@ -21,6 +21,7 @@ describe('FoodOrderCheckoutComponent', () => {
     return fb.nonNullable.group({
       customerName: ['Alice'],
       customerPhone: ['0123456789'],
+      deliveryAddress: ['123 Main St'],
       deliveryDate: ['2026-03-19'],
       note: ['']
     });

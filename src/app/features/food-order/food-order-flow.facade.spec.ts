@@ -135,6 +135,7 @@ describe('FoodOrderFlowFacade', () => {
     facade.checkoutForm.setValue({
       customerName: 'Alice',
       customerPhone: '0123456789',
+      deliveryAddress: '123 Main St',
       deliveryDate: '2026-03-19',
       note: ''
     });
@@ -158,6 +159,7 @@ describe('FoodOrderFlowFacade', () => {
     facade.checkoutForm.setValue({
       customerName: ' Alice ',
       customerPhone: ' 0123456789 ',
+      deliveryAddress: ' 123 Main St ',
       deliveryDate: '2026-03-19',
       note: ' no sugar '
     });
@@ -169,6 +171,7 @@ describe('FoodOrderFlowFacade', () => {
     expect(api.createBooking).toHaveBeenCalledWith('demo', {
       customerName: 'Alice',
       customerPhone: '0123456789',
+      deliveryAddress: '123 Main St',
       deliveryDate: '2026-03-19',
       note: 'no sugar',
       items: [{ serviceId: service.id, quantity: 1 }]
@@ -194,9 +197,33 @@ describe('FoodOrderFlowFacade', () => {
 
     expect(api.createBooking).not.toHaveBeenCalled();
     expect(facade.checkoutOpen()).toBeTrue();
-    expect(facade.submitError()).toBe('Enter your name, phone number, and delivery date before placing the order.');
+    expect(facade.submitError()).toBe(
+      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
+    );
     expect(telegram.alert).toHaveBeenCalledWith(
-      'Enter your name, phone number, and delivery date before placing the order.'
+      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
+    );
+  });
+
+  it('blocks submit when delivery address is blank', async () => {
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(tenantConfig);
+    facade.increase(service.id);
+    facade.openCheckout();
+    facade.checkoutForm.setValue({
+      customerName: 'Alice',
+      customerPhone: '0123456789',
+      deliveryAddress: '   ',
+      deliveryDate: '2026-03-19',
+      note: ''
+    });
+
+    await facade.submitOrder();
+
+    expect(api.createBooking).not.toHaveBeenCalled();
+    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.submitError()).toBe(
+      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
     );
   });
 
@@ -258,6 +285,7 @@ function createBookingResponse(id: number): BookingResponse {
     status: 'NEW',
     customerName: 'Test User',
     customerPhone: '0123456789',
+    deliveryAddress: '123 Main St',
     totalPrice: 30000,
     currency: 'VND',
     deliveryDate: '2026-03-18',

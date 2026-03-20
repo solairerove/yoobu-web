@@ -70,6 +70,11 @@ interface CheckoutSelection {
           </label>
 
           <label>
+            <span>Delivery address</span>
+            <input type="text" formControlName="deliveryAddress" placeholder="Delivery address" />
+          </label>
+
+          <label>
             <span>Delivery date</span>
             <input type="date" formControlName="deliveryDate" />
           </label>

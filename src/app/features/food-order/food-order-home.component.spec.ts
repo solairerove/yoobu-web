@@ -82,6 +82,7 @@ describe('FoodOrderHomeComponent', () => {
       checkoutForm: fb.nonNullable.group({
         customerName: [''],
         customerPhone: [''],
+        deliveryAddress: [''],
         deliveryDate: ['2026-03-19'],
         note: ['']
       }),

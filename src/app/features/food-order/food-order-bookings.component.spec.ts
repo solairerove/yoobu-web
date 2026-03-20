@@ -13,6 +13,7 @@ describe('FoodOrderBookingsComponent', () => {
     status: 'NEW',
     customerName: 'Alice',
     customerPhone: '0123456789',
+    deliveryAddress: '123 Main St',
     totalPrice: 30000,
     currency: 'VND',
     deliveryDate: '2026-03-19',
@@ -72,5 +73,22 @@ describe('FoodOrderBookingsComponent', () => {
     cancelButton.nativeElement.click();
 
     expect(cancelSpy).toHaveBeenCalledWith(booking.id);
+  });
+
+  it('renders delivery address and falls back to N/A when missing', () => {
+    const bookingWithoutAddress: BookingResponse = { ...booking, deliveryAddress: null };
+    fixture.componentRef.setInput('bookings', [bookingWithoutAddress]);
+    fixture.componentRef.setInput('loading', false);
+    fixture.componentRef.setInput('error', null);
+    fixture.componentRef.setInput('selectedBookingId', bookingWithoutAddress.id);
+    fixture.componentRef.setInput('selectedBooking', bookingWithoutAddress);
+    fixture.componentRef.setInput('cancellingBookingId', null);
+    fixture.componentRef.setInput('cancelError', null);
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('.booking-address')).nativeElement.textContent).toContain('N/A');
+    const allMetaRows = fixture.debugElement.queryAll(By.css('.receipt-row'));
+    expect(allMetaRows.map((row) => row.nativeElement.textContent).join(' ')).toContain('Delivery address');
+    expect(allMetaRows.map((row) => row.nativeElement.textContent).join(' ')).toContain('N/A');
   });
 });

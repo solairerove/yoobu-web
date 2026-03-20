@@ -56,6 +56,9 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
               </span>
             </div>
             <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
+            <p class="booking-address" [title]="displayAddress(booking.deliveryAddress)">
+              {{ displayAddress(booking.deliveryAddress) }}
+            </p>
             <p>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
           </button>
         </div>
@@ -124,6 +127,10 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
               <div class="receipt-row">
                 <span>Phone</span>
                 <strong>{{ booking.customerPhone }}</strong>
+              </div>
+              <div class="receipt-row">
+                <span>Delivery address</span>
+                <strong>{{ displayAddress(booking.deliveryAddress) }}</strong>
               </div>
               <div class="receipt-row">
                 <span>Items</span>
@@ -241,6 +248,12 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     .booking-item p {
       color: var(--yoobu-muted);
       font-size: 0.92rem;
+    }
+
+    .booking-address {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .booking-status {
@@ -533,5 +546,10 @@ export class FoodOrderBookingsComponent {
 
   protected itemCurrency(item: BookingResponse['items'][number], booking: BookingResponse): string {
     return normalizeCurrencyCode(item.currency || booking.currency || this.currencyCode());
+  }
+
+  protected displayAddress(address: string | null): string {
+    const normalizedAddress = address?.trim();
+    return normalizedAddress ? normalizedAddress : 'N/A';
   }
 }
