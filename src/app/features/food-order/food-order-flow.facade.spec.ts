@@ -397,6 +397,15 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.bookingsReloadKey()).toBe(reloadBefore + 1);
   });
 
+  it('refreshes bookings when switching back to menu view', () => {
+    const reloadBefore = facade.bookingsReloadKey();
+
+    facade.setActiveView('menu');
+
+    expect(facade.activeView()).toBe('menu');
+    expect(facade.bookingsReloadKey()).toBe(reloadBefore + 1);
+  });
+
   it('does not call cancel API when cancellation is not confirmed', async () => {
     telegram.confirm.and.resolveTo(false);
     facade.setConfig(tenantConfig);

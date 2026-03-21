@@ -10,7 +10,9 @@
     "lint": "ng lint",
     "lint:fix": "ng lint --fix",
     "test": "ng test",
-    "test:watch": "ng test --watch"
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
+    "test:watch": "ng test --watch",
+    "verify": "npm run typecheck && npm run lint && npm run test:ci"
   },
   "dependencies": {
     "@angular/animations": "^19.0.0",

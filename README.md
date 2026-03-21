@@ -33,7 +33,8 @@ On localhost, the checkout and submit page buttons remain visible for manual tes
 ```bash
 npm run typecheck
 npm run lint
-npm test
+npm run test:ci
+npm run verify
 ```
 
 Useful options:
@@ -41,6 +42,12 @@ Useful options:
 ```bash
 npm run lint:fix
 npm run test:watch
+```
+
+Recommended for CI and AI agents:
+
+```bash
+npm run verify
 ```
 
 ## Test structure
