@@ -56,11 +56,12 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
                   <strong>#{{ booking.id }}</strong>
                   <span
                     class="booking-status"
-                    [class.status-new]="booking.status === 'NEW'"
-                    [class.status-payment-pending]="booking.status === 'PAYMENT_PENDING'"
-                    [class.status-confirmed]="booking.status === 'CONFIRMED'"
-                    [class.status-done]="booking.status === 'DONE'"
-                    [class.status-cancelled]="booking.status === 'CANCELLED'"
+                    [class.status-new]="isStatus(booking.status, 'NEW')"
+                    [class.status-payment-pending]="isStatus(booking.status, 'PAYMENT_PENDING')"
+                    [class.status-confirmed]="isStatus(booking.status, 'CONFIRMED')"
+                    [class.status-delivering]="isStatus(booking.status, 'DELIVERING')"
+                    [class.status-done]="isStatus(booking.status, 'DONE')"
+                    [class.status-cancelled]="isStatus(booking.status, 'CANCELLED')"
                   >
                     {{ bookingStatusLabel(booking.status) }}
                   </span>
@@ -100,11 +101,12 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
                   <strong>#{{ booking.id }}</strong>
                   <span
                     class="booking-status"
-                    [class.status-new]="booking.status === 'NEW'"
-                    [class.status-payment-pending]="booking.status === 'PAYMENT_PENDING'"
-                    [class.status-confirmed]="booking.status === 'CONFIRMED'"
-                    [class.status-done]="booking.status === 'DONE'"
-                    [class.status-cancelled]="booking.status === 'CANCELLED'"
+                    [class.status-new]="isStatus(booking.status, 'NEW')"
+                    [class.status-payment-pending]="isStatus(booking.status, 'PAYMENT_PENDING')"
+                    [class.status-confirmed]="isStatus(booking.status, 'CONFIRMED')"
+                    [class.status-delivering]="isStatus(booking.status, 'DELIVERING')"
+                    [class.status-done]="isStatus(booking.status, 'DONE')"
+                    [class.status-cancelled]="isStatus(booking.status, 'CANCELLED')"
                   >
                     {{ bookingStatusLabel(booking.status) }}
                   </span>
@@ -133,11 +135,12 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
                 <h4>{{ bookingStatusTitle(booking.status) }}</h4>
                 <span
                   class="booking-status large"
-                  [class.status-new]="booking.status === 'NEW'"
-                  [class.status-payment-pending]="booking.status === 'PAYMENT_PENDING'"
-                  [class.status-confirmed]="booking.status === 'CONFIRMED'"
-                  [class.status-done]="booking.status === 'DONE'"
-                  [class.status-cancelled]="booking.status === 'CANCELLED'"
+                  [class.status-new]="isStatus(booking.status, 'NEW')"
+                  [class.status-payment-pending]="isStatus(booking.status, 'PAYMENT_PENDING')"
+                  [class.status-confirmed]="isStatus(booking.status, 'CONFIRMED')"
+                  [class.status-delivering]="isStatus(booking.status, 'DELIVERING')"
+                  [class.status-done]="isStatus(booking.status, 'DONE')"
+                  [class.status-cancelled]="isStatus(booking.status, 'CANCELLED')"
                 >
                   {{ bookingStatusLabel(booking.status) }}
                 </span>
@@ -146,6 +149,16 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
             </div>
 
             <div class="booking-actions">
+              <a
+                class="ghost-button tracking-link"
+                *ngIf="deliveryTrackingUrl(booking) as trackingUrl"
+                [href]="trackingUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Track delivery
+              </a>
+
               <button
                 type="button"
                 class="ghost-button"
@@ -407,6 +420,11 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       color: #9a6800;
     }
 
+    .booking-status.status-delivering {
+      background: rgba(126, 87, 194, 0.16);
+      color: #5e35b1;
+    }
+
     .booking-status.status-done {
       background: rgba(46, 125, 50, 0.14);
       color: #2e7d32;
@@ -541,6 +559,13 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     .booking-actions .ghost-button {
       max-width: 100%;
       white-space: normal;
+    }
+
+    .tracking-link {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .receipt-card {
@@ -681,7 +706,7 @@ export class FoodOrderBookingsComponent {
 
   private isCurrentBooking(booking: BookingResponse): boolean {
     const status = this.normalizeStatus(booking.status);
-    return status === 'NEW' || status === 'PAYMENT_PENDING' || status === 'CONFIRMED';
+    return status === 'NEW' || status === 'PAYMENT_PENDING' || status === 'CONFIRMED' || status === 'DELIVERING';
   }
 
   protected canCancel(booking: BookingResponse): boolean {
@@ -698,18 +723,24 @@ export class FoodOrderBookingsComponent {
     return !!this.paymentQrUrl() && (status === 'NEW' || status === 'PAYMENT_PENDING');
   }
 
+  protected isStatus(status: string, expected: string): boolean {
+    return this.normalizeStatus(status) === expected;
+  }
+
   private normalizeStatus(status: string): string {
     return status.trim().replace(/-/g, '_').toUpperCase();
   }
 
   protected bookingStatusLabel(status: BookingResponse['status']): string {
-    switch (status) {
+    switch (this.normalizeStatus(status)) {
       case 'NEW':
         return 'New';
       case 'PAYMENT_PENDING':
         return 'Awaiting verification';
       case 'CONFIRMED':
         return 'Confirmed';
+      case 'DELIVERING':
+        return 'Out for delivery';
       case 'DONE':
         return 'Delivered';
       case 'CANCELLED':
@@ -720,13 +751,15 @@ export class FoodOrderBookingsComponent {
   }
 
   protected bookingStatusTitle(status: BookingResponse['status']): string {
-    switch (status) {
+    switch (this.normalizeStatus(status)) {
       case 'NEW':
         return 'Waiting for confirmation';
       case 'PAYMENT_PENDING':
         return 'Awaiting admin verification';
       case 'CONFIRMED':
         return 'Order confirmed';
+      case 'DELIVERING':
+        return 'Out for delivery';
       case 'DONE':
         return 'Order completed';
       case 'CANCELLED':
@@ -737,13 +770,15 @@ export class FoodOrderBookingsComponent {
   }
 
   protected bookingStatusDescription(status: BookingResponse['status']): string {
-    switch (status) {
+    switch (this.normalizeStatus(status)) {
       case 'NEW':
         return 'Your order has been received and is waiting for confirmation.';
       case 'PAYMENT_PENDING':
         return 'Payment was submitted and is waiting for admin verification.';
       case 'CONFIRMED':
         return 'Your order has been confirmed and is being prepared.';
+      case 'DELIVERING':
+        return 'Your order is on the way. Use tracking to follow delivery updates.';
       case 'DONE':
         return 'This order has been completed.';
       case 'CANCELLED':
@@ -758,7 +793,9 @@ export class FoodOrderBookingsComponent {
     description: string;
     state: 'pending' | 'complete' | 'current' | 'cancelled';
   }> {
-    if (status === 'CANCELLED') {
+    const normalizedStatus = this.normalizeStatus(status);
+
+    if (normalizedStatus === 'CANCELLED') {
       return [
         {
           label: 'Order placed',
@@ -777,24 +814,48 @@ export class FoodOrderBookingsComponent {
       {
         label: 'Order placed',
         description: 'Your order has been received.',
-        state: status === 'NEW' ? 'current' : 'complete'
+        state: normalizedStatus === 'NEW' ? 'current' : 'complete'
       },
       {
         label: 'Payment verification',
         description: 'Admin verifies your payment after you tap "I paid".',
-        state: status === 'PAYMENT_PENDING' ? 'current' : status === 'CONFIRMED' || status === 'DONE' ? 'complete' : 'pending'
+        state:
+          normalizedStatus === 'PAYMENT_PENDING'
+            ? 'current'
+            : normalizedStatus === 'CONFIRMED' || normalizedStatus === 'DELIVERING' || normalizedStatus === 'DONE'
+              ? 'complete'
+              : 'pending'
       },
       {
         label: 'Confirmed',
         description: 'Your order has been confirmed.',
-        state: status === 'CONFIRMED' ? 'current' : status === 'DONE' ? 'complete' : 'pending'
+        state:
+          normalizedStatus === 'CONFIRMED'
+            ? 'current'
+            : normalizedStatus === 'DELIVERING' || normalizedStatus === 'DONE'
+              ? 'complete'
+              : 'pending'
+      },
+      {
+        label: 'Delivering',
+        description: 'Your order is currently on the way.',
+        state: normalizedStatus === 'DELIVERING' ? 'current' : normalizedStatus === 'DONE' ? 'complete' : 'pending'
       },
       {
         label: 'Delivered',
         description: 'The order has been completed.',
-        state: status === 'DONE' ? 'current' : 'pending'
+        state: normalizedStatus === 'DONE' ? 'current' : 'pending'
       }
     ];
+  }
+
+  protected deliveryTrackingUrl(booking: BookingResponse): string | null {
+    const trackingUrl = booking.trackingUrl?.trim();
+    if (!trackingUrl || !/^https?:\/\//i.test(trackingUrl)) {
+      return null;
+    }
+
+    return trackingUrl;
   }
 
   protected bookingCurrency(booking: BookingResponse): string {

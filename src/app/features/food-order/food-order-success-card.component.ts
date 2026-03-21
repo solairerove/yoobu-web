@@ -46,6 +46,16 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
         {{ confirmingPaymentBookingId() === booking().id ? 'Confirming...' : 'I paid' }}
       </button>
 
+      <a
+        *ngIf="shouldShowTrackingLink()"
+        class="ghost-button tracking-link"
+        [href]="deliveryTrackingUrl()"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Track delivery
+      </a>
+
       <div class="success-actions">
         <button type="button" class="ghost-button" (click)="newOrderRequested.emit()">New order</button>
         <button type="button" class="ghost-button" (click)="ordersRequested.emit()">My orders</button>
@@ -135,6 +145,14 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       white-space: normal;
     }
 
+    .tracking-link {
+      margin-top: 1rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .form-error {
       margin-top: 0.8rem;
       color: brown;
@@ -169,8 +187,12 @@ export class FoodOrderSuccessCardComponent {
   }
 
   protected statusLabel(status: BookingResponse['status']): string {
-    if (status === 'PAYMENT_PENDING') {
+    const normalizedStatus = this.normalizeStatus(status);
+    if (normalizedStatus === 'PAYMENT_PENDING') {
       return 'Awaiting admin verification';
+    }
+    if (normalizedStatus === 'DELIVERING') {
+      return 'Out for delivery';
     }
 
     return status;
@@ -181,7 +203,24 @@ export class FoodOrderSuccessCardComponent {
   }
 
   protected shouldShowPaymentQr(): boolean {
-    const status = this.booking().status;
+    const status = this.normalizeStatus(this.booking().status);
     return !!this.paymentQrUrl() && (status === 'NEW' || status === 'PAYMENT_PENDING');
+  }
+
+  protected shouldShowTrackingLink(): boolean {
+    return this.normalizeStatus(this.booking().status) === 'DELIVERING' && !!this.deliveryTrackingUrl();
+  }
+
+  protected deliveryTrackingUrl(): string | null {
+    const trackingUrl = this.booking().trackingUrl?.trim();
+    if (!trackingUrl || !/^https?:\/\//i.test(trackingUrl)) {
+      return null;
+    }
+
+    return trackingUrl;
+  }
+
+  private normalizeStatus(status: string): string {
+    return status.trim().replace(/-/g, '_').toUpperCase();
   }
 }

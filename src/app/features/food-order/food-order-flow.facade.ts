@@ -104,9 +104,21 @@ export class FoodOrderFlowFacade {
                 ? this.selectedBookingId()
                 : bookings[0]?.id ?? null;
             const latestBooking = this.findLatestBooking(bookings);
+            const latestActiveBooking = this.findLatestActiveBooking(bookings);
+            const currentSubmittedBooking = this.submittedBooking();
+            const submittedBookingFromList = currentSubmittedBooking
+              ? bookings.find((booking) => booking.id === currentSubmittedBooking.id) ?? null
+              : null;
 
             this.selectedBookingId.set(nextSelectedId);
             this.selectedBooking.set(bookings.find((booking) => booking.id === nextSelectedId) ?? null);
+            if (submittedBookingFromList) {
+              this.submittedBooking.set(this.isActiveBooking(submittedBookingFromList) ? submittedBookingFromList : null);
+            } else if (!currentSubmittedBooking) {
+              this.submittedBooking.set(latestActiveBooking);
+            } else if (!this.isActiveBooking(currentSubmittedBooking)) {
+              this.submittedBooking.set(null);
+            }
             this.hydrateCustomerDetails(latestBooking);
           }),
           map((bookings) => ({
@@ -150,6 +162,12 @@ export class FoodOrderFlowFacade {
   };
 
   constructor() {
+    // Keep bookings stream hot so booking-derived UI state (submitted booking, selection) stays in sync
+    // even before any component explicitly reads bookingsVm().
+    effect(() => {
+      void this.bookingsVmSignal();
+    });
+
     effect(() => {
       const booking = this.submittedBooking();
       const itemCount = this.store.selectedCount();
@@ -452,7 +470,7 @@ export class FoodOrderFlowFacade {
 
   setActiveView(view: 'menu' | 'orders'): void {
     this.activeView.set(view);
-    if (view === 'orders') {
+    if (view === 'orders' || view === 'menu') {
       this.refreshBookings();
     }
   }
@@ -593,6 +611,25 @@ export class FoodOrderFlowFacade {
 
     return bookings.reduce((latest, booking) =>
       new Date(booking.createdAt).getTime() > new Date(latest.createdAt).getTime() ? booking : latest
+    );
+  }
+
+  private findLatestActiveBooking(bookings: BookingResponse[]): BookingResponse | null {
+    const activeBookings = bookings.filter((booking) => this.isActiveBooking(booking));
+    if (activeBookings.length === 0) {
+      return null;
+    }
+
+    return this.findLatestBooking(activeBookings);
+  }
+
+  private isActiveBooking(booking: BookingResponse): boolean {
+    const normalizedStatus = booking.status.trim().replace(/-/g, '_').toUpperCase();
+    return (
+      normalizedStatus === 'NEW' ||
+      normalizedStatus === 'PAYMENT_PENDING' ||
+      normalizedStatus === 'CONFIRMED' ||
+      normalizedStatus === 'DELIVERING'
     );
   }
 

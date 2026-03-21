@@ -397,6 +397,15 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.bookingsReloadKey()).toBe(reloadBefore + 1);
   });
 
+  it('refreshes bookings when switching back to menu view', () => {
+    const reloadBefore = facade.bookingsReloadKey();
+
+    facade.setActiveView('menu');
+
+    expect(facade.activeView()).toBe('menu');
+    expect(facade.bookingsReloadKey()).toBe(reloadBefore + 1);
+  });
+
   it('does not call cancel API when cancellation is not confirmed', async () => {
     telegram.confirm.and.resolveTo(false);
     facade.setConfig(tenantConfig);
@@ -496,6 +505,7 @@ function createBookingResponse(id: number): BookingResponse {
     currency: 'VND',
     deliveryDate: '2026-03-18',
     note: null,
+    trackingUrl: null,
     items: [
       {
         serviceName: 'Coffee',

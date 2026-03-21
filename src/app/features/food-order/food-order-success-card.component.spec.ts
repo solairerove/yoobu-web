@@ -18,6 +18,7 @@ describe('FoodOrderSuccessCardComponent', () => {
     currency: 'VND',
     deliveryDate: '2026-03-19',
     note: null,
+    trackingUrl: null,
     items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000, currency: 'VND' }],
     createdAt: '2026-03-19T10:00:00.000Z'
   };
@@ -99,5 +100,23 @@ describe('FoodOrderSuccessCardComponent', () => {
     paymentButton.nativeElement.click();
 
     expect(confirmSpy).toHaveBeenCalledWith(booking.id);
+  });
+
+  it('shows track delivery link for delivering booking with trackingUrl', () => {
+    fixture.componentRef.setInput('booking', {
+      ...booking,
+      status: 'DELIVERING',
+      trackingUrl: 'https://tracking.example.com/42'
+    });
+    fixture.componentRef.setInput('fallbackCurrency', 'VND');
+    fixture.componentRef.setInput('paymentQrUrl', null);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.detectChanges();
+
+    const trackingLink = fixture.debugElement.query(By.css('.tracking-link'));
+    expect(trackingLink).not.toBeNull();
+    expect(trackingLink.nativeElement.getAttribute('href')).toBe('https://tracking.example.com/42');
+    expect(trackingLink.nativeElement.textContent).toContain('Track delivery');
   });
 });

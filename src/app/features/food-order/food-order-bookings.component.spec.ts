@@ -18,6 +18,7 @@ describe('FoodOrderBookingsComponent', () => {
     currency: 'VND',
     deliveryDate: '2026-03-19',
     note: 'No sugar',
+    trackingUrl: null,
     items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000, currency: 'VND' }],
     createdAt: '2026-03-19T10:00:00.000Z'
   };
@@ -265,5 +266,56 @@ describe('FoodOrderBookingsComponent', () => {
     const historyItems = fixture.debugElement.queryAll(By.css('.orders-section:nth-of-type(2) .booking-item'));
     expect(historyItems.length).toBe(1);
     expect(historyItems[0].nativeElement.textContent).toContain('#8');
+  });
+
+  it('treats delivering status as open order', () => {
+    const deliveringBooking: BookingResponse = {
+      ...booking,
+      id: 9,
+      status: 'DELIVERING',
+      createdAt: '2026-03-23T10:00:00.000Z'
+    };
+
+    fixture.componentRef.setInput('bookings', [deliveringBooking]);
+    fixture.componentRef.setInput('loading', false);
+    fixture.componentRef.setInput('error', null);
+    fixture.componentRef.setInput('paymentQrUrl', null);
+    fixture.componentRef.setInput('selectedBookingId', deliveringBooking.id);
+    fixture.componentRef.setInput('selectedBooking', deliveringBooking);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.componentRef.setInput('cancellingBookingId', null);
+    fixture.componentRef.setInput('cancelError', null);
+    fixture.detectChanges();
+
+    const openItems = fixture.debugElement.queryAll(By.css('.orders-section:first-of-type .booking-item'));
+    expect(openItems.length).toBe(1);
+    expect(openItems[0].nativeElement.textContent).toContain('#9');
+  });
+
+  it('shows tracking link when trackingUrl is present', () => {
+    const deliveringBooking: BookingResponse = {
+      ...booking,
+      id: 10,
+      status: 'DELIVERING',
+      trackingUrl: 'https://tracking.example.com/123'
+    };
+
+    fixture.componentRef.setInput('bookings', [deliveringBooking]);
+    fixture.componentRef.setInput('loading', false);
+    fixture.componentRef.setInput('error', null);
+    fixture.componentRef.setInput('paymentQrUrl', null);
+    fixture.componentRef.setInput('selectedBookingId', deliveringBooking.id);
+    fixture.componentRef.setInput('selectedBooking', deliveringBooking);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.componentRef.setInput('cancellingBookingId', null);
+    fixture.componentRef.setInput('cancelError', null);
+    fixture.detectChanges();
+
+    const trackingLink = fixture.debugElement.query(By.css('.booking-actions .tracking-link'));
+    expect(trackingLink).not.toBeNull();
+    expect(trackingLink.nativeElement.getAttribute('href')).toBe('https://tracking.example.com/123');
+    expect(trackingLink.nativeElement.textContent).toContain('Track delivery');
   });
 });
