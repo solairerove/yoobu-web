@@ -496,6 +496,7 @@ function createBookingResponse(id: number): BookingResponse {
     currency: 'VND',
     deliveryDate: '2026-03-18',
     note: null,
+    trackingUrl: null,
     items: [
       {
         serviceName: 'Coffee',
