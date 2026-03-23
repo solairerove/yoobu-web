@@ -62,7 +62,8 @@ describe('FoodOrderFlowFacade', () => {
       'setMainButton',
       'onMainButtonClick',
       'confirm',
-      'alert'
+      'alert',
+      'hapticLight'
     ]);
 
     api.getServices.and.returnValue(of([]));

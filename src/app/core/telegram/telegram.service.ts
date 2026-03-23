@@ -17,6 +17,11 @@ interface TelegramWebApp {
     onClick?(callback: () => void): void;
     offClick?(callback: () => void): void;
   };
+  HapticFeedback?: {
+    impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): void;
+    notificationOccurred(type: 'error' | 'success' | 'warning'): void;
+    selectionChanged(): void;
+  };
 }
 
 interface TelegramWindow extends Window {
@@ -118,6 +123,14 @@ export class TelegramService {
 
   onMainButtonClick(handler: (() => void) | null): void {
     this.mainButtonHandler.set(handler);
+  }
+
+  hapticLight(): void {
+    this.resolveWebApp()?.HapticFeedback?.impactOccurred('light');
+  }
+
+  hapticSelection(): void {
+    this.resolveWebApp()?.HapticFeedback?.selectionChanged();
   }
 
   alert(message: string): Promise<void> {

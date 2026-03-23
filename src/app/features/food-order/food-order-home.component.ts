@@ -34,8 +34,6 @@ import { FoodOrderStore } from './food-order.store';
         </div>
       </header>
 
-      <p class="copy ui-copy">Choose your items, add delivery details, and track your order.</p>
-
       <nav class="view-switch" aria-label="Order sections">
         <button
           type="button"
@@ -156,7 +154,7 @@ import { FoodOrderStore } from './food-order.store';
     }
 
     .panel.has-cart {
-      padding-bottom: 6.5rem;
+      padding-bottom: 5.5rem;
     }
 
     .panel-header {
@@ -242,7 +240,7 @@ import { FoodOrderStore } from './food-order.store';
       }
 
       .panel.has-cart {
-        padding-bottom: 9.5rem;
+        padding-bottom: 5.5rem;
       }
     }
   `

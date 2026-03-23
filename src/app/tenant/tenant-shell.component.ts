@@ -21,17 +21,8 @@ import { TelegramService } from '../core/telegram/telegram.service';
           </div>
 
           <div class="hero-content">
-            <div>
-              <h1>{{ vm.config.name }}</h1>
-              <p class="welcome">{{ vm.config.welcomeMessage || defaultWelcome }}</p>
-            </div>
-
-            <div class="hero-aside">
-              <div class="hero-chip">
-                <strong>{{ vm.config.slug }}</strong>
-                <span>store</span>
-              </div>
-            </div>
+            <h1>{{ vm.config.name }}</h1>
+            <p class="welcome">{{ vm.config.welcomeMessage || defaultWelcome }}</p>
           </div>
         </header>
 
@@ -122,46 +113,10 @@ import { TelegramService } from '../core/telegram/telegram.service';
     }
 
     .hero-content {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: end;
+      display: grid;
+      gap: 0.4rem;
       position: relative;
       z-index: 1;
-    }
-
-    .hero-aside {
-      display: flex;
-      align-items: center;
-    }
-
-    .hero-chip {
-      min-width: 6rem;
-      padding: 0.7rem 0.85rem;
-      border-radius: 18px;
-      background: var(--yoobu-surface-card);
-      border: 1px solid var(--yoobu-border-soft);
-      box-shadow: var(--yoobu-shadow-soft);
-      backdrop-filter: blur(10px);
-    }
-
-    .hero-chip strong,
-    .hero-chip span {
-      display: block;
-    }
-
-    .hero-chip strong {
-      font-size: 0.96rem;
-      line-height: 1.1;
-      word-break: break-word;
-    }
-
-    .hero-chip span {
-      margin-top: 0.18rem;
-      color: var(--yoobu-muted);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
     }
 
     h1,
@@ -186,16 +141,6 @@ import { TelegramService } from '../core/telegram/telegram.service';
       max-width: 38rem;
     }
 
-    @media (max-width: 640px) {
-      .hero-content {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .hero-aside {
-        width: 100%;
-      }
-    }
   `
 })
 export class TenantShellComponent {

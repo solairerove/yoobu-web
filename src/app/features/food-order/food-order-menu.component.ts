@@ -19,9 +19,9 @@ import { ServiceItem } from '../../core/models/service.model';
         </div>
       </div>
 
-      <div class="catalog-note">
+      <div class="catalog-note" *ngIf="selectedCount() === 0">
         <span class="catalog-dot"></span>
-        <p>Add items to your cart to continue.</p>
+        <p>Tap + on any item to add it to your cart.</p>
       </div>
 
       <div class="catalog">
