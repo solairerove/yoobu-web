@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input, output } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, output } from '@angular/core';
 import { BookingResponse } from '../../core/models/booking.model';
 import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 
@@ -43,14 +43,14 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
             <p>Active orders will appear here.</p>
           </section>
 
-          <div class="bookings-grid" *ngIf="currentBookings().length">
+          <div class="bookings-grid bookings-grid--current" *ngIf="currentBookings().length">
             <div class="booking-list">
               <button
                 type="button"
                 class="booking-item"
                 *ngFor="let booking of currentBookings()"
                 [class.active]="selectedBookingId() === booking.id"
-                (click)="bookingSelected.emit(booking.id)"
+                (click)="selectAndScroll(booking.id)"
               >
                 <div class="booking-item-top">
                   <strong>#{{ booking.id }}</strong>
@@ -88,14 +88,14 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
             <p>Completed and cancelled orders will appear here.</p>
           </section>
 
-          <div class="bookings-grid" *ngIf="previousBookings().length">
+          <div class="bookings-grid bookings-grid--history" *ngIf="previousBookings().length">
             <div class="booking-list">
               <button
                 type="button"
                 class="booking-item"
                 *ngFor="let booking of previousBookings()"
                 [class.active]="selectedBookingId() === booking.id"
-                (click)="bookingSelected.emit(booking.id)"
+                (click)="selectAndScroll(booking.id)"
               >
                 <div class="booking-item-top">
                   <strong>#{{ booking.id }}</strong>
@@ -651,6 +651,8 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
   `
 })
 export class FoodOrderBookingsComponent {
+  private readonly el = inject(ElementRef);
+
   readonly bookings = input.required<BookingResponse[]>();
   readonly loading = input.required<boolean>();
   readonly error = input.required<string | null>();
@@ -686,6 +688,16 @@ export class FoodOrderBookingsComponent {
 
     return this.previousBookings()[0] ?? null;
   });
+
+  protected selectAndScroll(bookingId: number): void {
+    this.bookingSelected.emit(bookingId);
+    setTimeout(() => {
+      const isCurrent = this.currentBookings().some((b) => b.id === bookingId);
+      const gridSelector = isCurrent ? '.bookings-grid--current' : '.bookings-grid--history';
+      const detail = this.el.nativeElement.querySelector(`${gridSelector} .booking-detail`);
+      detail?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+  }
 
   protected canRepeat(booking: BookingResponse): boolean {
     return booking.items.length > 0;

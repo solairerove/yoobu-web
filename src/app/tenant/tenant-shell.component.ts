@@ -192,8 +192,7 @@ import { TelegramService } from '../core/telegram/telegram.service';
         align-items: flex-start;
       }
 
-      .hero-aside,
-      .hero-chip {
+      .hero-aside {
         width: 100%;
       }
     }

@@ -50,6 +50,7 @@ describe('FoodOrderHomeComponent', () => {
     id: 10,
     name: 'Coffee',
     description: null,
+    imageUrl: null,
     price: 30000,
     unit: 'cup',
     durationMinutes: null,

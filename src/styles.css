@@ -44,6 +44,7 @@ body {
 
 body {
   min-height: 100vh;
+  overflow-x: hidden;
   color: var(--yoobu-ink);
   background:
     radial-gradient(circle at top left, rgba(255, 107, 53, 0.16), transparent 24%),
@@ -60,6 +61,7 @@ textarea {
 }
 
 button {
+  touch-action: manipulation;
   transition:
     transform 180ms ease,
     box-shadow 180ms ease,

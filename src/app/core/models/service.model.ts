@@ -2,6 +2,7 @@ export interface ServiceItem {
   id: number;
   name: string;
   description: string | null;
+  imageUrl: string | null;
   price: number;
   unit: string | null;
   durationMinutes: number | null;

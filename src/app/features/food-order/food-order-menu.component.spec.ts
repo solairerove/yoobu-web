@@ -12,6 +12,7 @@ describe('FoodOrderMenuComponent', () => {
       id: 10,
       name: 'Coffee',
       description: null,
+      imageUrl: 'https://media.yoobu.app/42/services/10-1719312000000.webp',
       price: 30000,
       unit: 'cup',
       durationMinutes: null,
@@ -22,6 +23,7 @@ describe('FoodOrderMenuComponent', () => {
       id: 20,
       name: 'Tea',
       description: 'Hot tea',
+      imageUrl: null,
       price: 20000,
       unit: 'glass',
       durationMinutes: null,
@@ -87,5 +89,28 @@ describe('FoodOrderMenuComponent', () => {
 
     expect(cards[0].nativeElement.classList.contains('selected')).toBeTrue();
     expect(cards[1].nativeElement.classList.contains('selected')).toBeFalse();
+  });
+
+  it('renders product image when imageUrl exists', () => {
+    setRequiredInputs();
+
+    const image = fixture.debugElement.query(By.css('.product-card:first-child .product-image'))?.nativeElement as
+      | HTMLImageElement
+      | undefined;
+
+    expect(image).toBeDefined();
+    expect(image?.src).toContain('https://media.yoobu.app/42/services/10-1719312000000.webp');
+    expect(image?.loading).toBe('lazy');
+  });
+
+  it('renders placeholder when imageUrl is missing', () => {
+    setRequiredInputs();
+
+    const placeholder = fixture.debugElement.query(
+      By.css('.product-card:nth-child(2) .product-image-placeholder')
+    )?.nativeElement as HTMLElement | undefined;
+
+    expect(placeholder).toBeDefined();
+    expect(placeholder?.textContent?.trim()).toBe('T');
   });
 });

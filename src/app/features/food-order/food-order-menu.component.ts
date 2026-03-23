@@ -32,6 +32,21 @@ import { ServiceItem } from '../../core/models/service.model';
         >
           <div class="product-accent"></div>
 
+          <figure class="product-image-shell">
+            <img
+              *ngIf="service.imageUrl; else productImagePlaceholder"
+              class="product-image"
+              [src]="service.imageUrl"
+              [alt]="service.name"
+              loading="lazy"
+            />
+            <ng-template #productImagePlaceholder>
+              <div class="product-image-placeholder" aria-hidden="true">
+                <span>{{ serviceInitial(service.name) }}</span>
+              </div>
+            </ng-template>
+          </figure>
+
           <div class="product-copy">
             <div class="product-topline">
               <p class="unit">{{ service.unit || defaultUnit() }}</p>
@@ -42,7 +57,7 @@ import { ServiceItem } from '../../core/models/service.model';
             </div>
 
             <p class="description" *ngIf="service.description">{{ service.description }}</p>
-            <p class="selection-copy" *ngIf="quantityFor(service.id) > 0">
+            <p class="selection-copy" [class.selection-copy--visible]="quantityFor(service.id) > 0">
               {{ quantityFor(service.id) }} selected
             </p>
           </div>
@@ -149,7 +164,7 @@ import { ServiceItem } from '../../core/models/service.model';
 
     .product-card {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: 5.6rem minmax(0, 1fr) auto;
       gap: 0.9rem;
       padding: 0.9rem;
       border-radius: 16px;
@@ -181,6 +196,39 @@ import { ServiceItem } from '../../core/models/service.model';
 
     .product-card.selected .product-accent {
       opacity: 1;
+    }
+
+    .product-image-shell {
+      margin: 0;
+      width: 5.6rem;
+      height: 4.2rem;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--yoobu-border-soft);
+      box-shadow: var(--yoobu-shadow-sm);
+      background: var(--yoobu-surface-card);
+      flex-shrink: 0;
+    }
+
+    .product-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .product-image-placeholder {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      color: var(--yoobu-primary);
+      background: linear-gradient(135deg, rgba(255, 246, 240, 0.95), rgba(255, 253, 249, 0.98));
+      font-size: 1.4rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
     }
 
     .product-copy {
@@ -249,9 +297,14 @@ import { ServiceItem } from '../../core/models/service.model';
     }
 
     .selection-copy {
-      color: var(--yoobu-primary);
+      visibility: hidden;
       font-size: 0.84rem;
       font-weight: 700;
+    }
+
+    .selection-copy--visible {
+      visibility: visible;
+      color: var(--yoobu-primary);
     }
 
     .quantity {
@@ -273,8 +326,8 @@ import { ServiceItem } from '../../core/models/service.model';
     }
 
     .quantity-button {
-      width: 2.05rem;
-      height: 2.05rem;
+      width: 2.75rem;
+      height: 2.75rem;
       border: 1px solid transparent;
       border-radius: 999px;
       display: inline-flex;
@@ -341,7 +394,13 @@ import { ServiceItem } from '../../core/models/service.model';
 
     @media (max-width: 640px) {
       .product-card {
-        grid-template-columns: 1fr;
+        grid-template-columns: 4.8rem minmax(0, 1fr);
+      }
+
+      .product-image-shell {
+        width: 4.8rem;
+        height: 4.8rem;
+        grid-row: span 2;
       }
 
       .catalog-head,
@@ -357,6 +416,7 @@ import { ServiceItem } from '../../core/models/service.model';
       .product-side {
         width: 100%;
         grid-template-columns: minmax(0, 1fr) auto;
+        grid-column: 1 / -1;
         align-items: center;
       }
 
@@ -381,5 +441,10 @@ export class FoodOrderMenuComponent {
 
   protected quantityFor(serviceId: number): number {
     return this.quantities()[serviceId] ?? 0;
+  }
+
+  protected serviceInitial(name: string): string {
+    const trimmedName = name.trim();
+    return trimmedName ? trimmedName.charAt(0).toUpperCase() : '?';
   }
 }

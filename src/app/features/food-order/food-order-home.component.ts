@@ -240,6 +240,10 @@ import { FoodOrderStore } from './food-order.store';
       .view-switch {
         width: 100%;
       }
+
+      .panel.has-cart {
+        padding-bottom: 9.5rem;
+      }
     }
   `
 })
