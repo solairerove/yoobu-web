@@ -106,8 +106,8 @@ import { ServiceItem } from '../../core/models/service.model';
     .catalog-head {
       display: flex;
       justify-content: space-between;
-      gap: 1rem;
-      align-items: end;
+      gap: 0.75rem;
+      align-items: center;
     }
 
     .catalog-head h3 {
@@ -118,16 +118,16 @@ import { ServiceItem } from '../../core/models/service.model';
     .catalog-meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.45rem;
+      gap: 0.4rem;
       justify-content: flex-end;
     }
 
     .catalog-pill {
-      padding: 0.35rem 0.6rem;
+      padding: 0.28rem 0.55rem;
       border-radius: 999px;
       background: var(--yoobu-surface-muted);
       color: var(--yoobu-muted);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
       white-space: nowrap;
     }
@@ -136,15 +136,15 @@ import { ServiceItem } from '../../core/models/service.model';
       display: flex;
       gap: 0.55rem;
       align-items: center;
-      padding: 0.8rem 0.9rem;
-      border-radius: 16px;
+      padding: 0.65rem 0.85rem;
+      border-radius: 14px;
       background: var(--yoobu-surface-tint);
       border: 1px solid var(--yoobu-border-accent-soft);
     }
 
     .catalog-dot {
-      width: 0.6rem;
-      height: 0.6rem;
+      width: 0.5rem;
+      height: 0.5rem;
       border-radius: 999px;
       background: var(--yoobu-primary);
       flex-shrink: 0;
@@ -153,28 +153,27 @@ import { ServiceItem } from '../../core/models/service.model';
 
     .catalog-note p {
       color: var(--yoobu-muted);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       line-height: 1.4;
     }
 
+    /* ── 2-column grid ── */
     .catalog {
       display: grid;
-      gap: 0.6rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.65rem;
     }
 
+    /* ── Vertical card ── */
     .product-card {
-      display: grid;
-      grid-template-columns: 5.6rem minmax(0, 1fr) auto;
-      gap: 0.9rem;
-      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
       border-radius: 16px;
       background: var(--yoobu-surface-tint);
       border: 1px solid var(--yoobu-border-soft);
-      align-items: center;
       position: relative;
       overflow: hidden;
       transition:
-        transform 180ms ease,
         border-color 180ms ease,
         background 180ms ease,
         box-shadow 180ms ease;
@@ -182,32 +181,36 @@ import { ServiceItem } from '../../core/models/service.model';
 
     .product-card.selected {
       border-color: var(--yoobu-border-accent);
-      background: linear-gradient(135deg, rgba(255, 246, 240, 0.98), rgba(255, 252, 249, 0.92));
+      background: linear-gradient(160deg, rgba(255, 246, 240, 0.98), rgba(255, 252, 249, 0.95));
       box-shadow: var(--yoobu-shadow-accent);
     }
 
+    /* Top accent stripe */
     .product-accent {
       position: absolute;
-      inset: 0 auto 0 0;
-      width: 0.3rem;
-      background: linear-gradient(180deg, rgba(255, 107, 53, 0.85), rgba(255, 160, 122, 0.45));
-      opacity: 0.55;
+      inset: 0 0 auto 0;
+      height: 0.2rem;
+      background: linear-gradient(90deg, var(--yoobu-primary), rgba(255, 160, 122, 0.4));
+      opacity: 0.28;
+      z-index: 1;
     }
 
     .product-card.selected .product-accent {
       opacity: 1;
     }
 
+    /* ── Image ── */
     .product-image-shell {
       margin: 0;
-      width: 5.6rem;
-      height: 4.2rem;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid var(--yoobu-border-soft);
-      box-shadow: var(--yoobu-shadow-sm);
-      background: var(--yoobu-surface-card);
+      width: 100%;
+      aspect-ratio: 16 / 9;
       flex-shrink: 0;
+      border-radius: 0;
+      overflow: hidden;
+      border: none;
+      border-bottom: 1px solid var(--yoobu-border-soft);
+      box-shadow: none;
+      background: var(--yoobu-surface-card);
     }
 
     .product-image {
@@ -225,94 +228,97 @@ import { ServiceItem } from '../../core/models/service.model';
       place-items: center;
       color: var(--yoobu-primary);
       background: linear-gradient(135deg, rgba(255, 246, 240, 0.95), rgba(255, 253, 249, 0.98));
-      font-size: 1.4rem;
+      font-size: 1.75rem;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.02em;
     }
 
+    /* ── Body ── */
     .product-copy {
+      flex: 1;
+      padding: 0.6rem 0.7rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
       min-width: 0;
-      display: grid;
-      gap: 0.34rem;
     }
 
     .product-topline {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.55rem;
+      gap: 0.3rem;
       align-items: baseline;
+    }
+
+    .unit {
+      padding: 0.1rem 0.38rem;
+      border-radius: 999px;
+      background: var(--yoobu-surface-muted);
+      color: var(--yoobu-muted);
+      font-size: 0.7rem;
     }
 
     .product-meta {
       display: grid;
-      gap: 0.18rem;
     }
 
     .product-meta h3 {
-      font-size: 1.04rem;
-      line-height: 1.2;
+      font-size: 0.88rem;
+      line-height: 1.25;
       letter-spacing: -0.01em;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
+    .description {
+      color: var(--yoobu-muted);
+      font-size: 0.76rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Hidden, reserves no space — qty control shows the count */
+    .selection-copy {
+      display: none;
+    }
+
+    /* ── Footer: price + full-width qty row ── */
     .product-side {
+      padding: 0.5rem 0.7rem 0.6rem;
       display: grid;
-      justify-items: end;
-      gap: 0.6rem;
+      gap: 0.4rem;
+      border-top: 1px solid var(--yoobu-border-soft);
     }
 
     .price-block {
-      display: grid;
-      gap: 0.08rem;
-      justify-items: end;
+      display: flex;
+      align-items: baseline;
+      gap: 0.25rem;
     }
 
     .price-label {
-      color: var(--yoobu-muted);
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
+      display: none;
     }
 
     .price {
       color: var(--yoobu-primary);
       font-weight: 800;
       white-space: nowrap;
-      font-size: 1.02rem;
+      font-size: 0.9rem;
     }
 
-    .unit {
-      padding: 0.15rem 0.45rem;
-      border-radius: 999px;
-      background: var(--yoobu-surface-muted);
-      color: var(--yoobu-muted);
-      font-size: 0.82rem;
-    }
-
-    .description {
-      margin-top: 0.45rem;
-      color: var(--yoobu-muted);
-      line-height: 1.5;
-    }
-
-    .selection-copy {
-      visibility: hidden;
-      font-size: 0.84rem;
-      font-weight: 700;
-    }
-
-    .selection-copy--visible {
-      visibility: visible;
-      color: var(--yoobu-primary);
-    }
-
+    /* Full-width row: [–] [  n  ] [+] */
     .quantity {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 0.32rem;
-      padding: 0.24rem;
-      border-radius: 999px;
+      padding: 0.2rem;
+      border-radius: 12px;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 240, 0.94));
       border: 1px solid var(--yoobu-border-accent-soft);
       box-shadow:
@@ -326,10 +332,11 @@ import { ServiceItem } from '../../core/models/service.model';
     }
 
     .quantity-button {
+      flex-shrink: 0;
       width: 2.75rem;
       height: 2.75rem;
       border: 1px solid transparent;
-      border-radius: 999px;
+      border-radius: 9px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -359,15 +366,11 @@ import { ServiceItem } from '../../core/models/service.model';
     .quantity-button-increase {
       background: linear-gradient(135deg, var(--yoobu-primary), #ff8753);
       color: white;
-      box-shadow: 0 8px 16px rgba(255, 107, 53, 0.22);
-    }
-
-    .quantity-button:not(:disabled):hover {
-      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(255, 107, 53, 0.22);
     }
 
     .quantity-button:not(:disabled):active {
-      transform: translateY(0) scale(0.96);
+      transform: scale(0.94);
       box-shadow: inset 0 2px 5px rgba(36, 22, 15, 0.14);
     }
 
@@ -377,52 +380,18 @@ import { ServiceItem } from '../../core/models/service.model';
     }
 
     .quantity-button:disabled {
-      opacity: 0.45;
+      opacity: 0.35;
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
     }
 
     .quantity-value {
-      min-width: 2rem;
-      padding: 0 0.2rem;
+      flex: 1;
       text-align: center;
       font-weight: 700;
-      font-size: 0.96rem;
+      font-size: 0.94rem;
       color: var(--yoobu-ink);
-    }
-
-    @media (max-width: 640px) {
-      .product-card {
-        grid-template-columns: 4.8rem minmax(0, 1fr);
-      }
-
-      .product-image-shell {
-        width: 4.8rem;
-        height: 4.8rem;
-        grid-row: span 2;
-      }
-
-      .catalog-head,
-      .catalog-meta {
-        align-items: flex-start;
-        justify-content: flex-start;
-      }
-
-      .catalog-note {
-        align-items: flex-start;
-      }
-
-      .product-side {
-        width: 100%;
-        grid-template-columns: minmax(0, 1fr) auto;
-        grid-column: 1 / -1;
-        align-items: center;
-      }
-
-      .quantity {
-        justify-self: end;
-      }
     }
   `
 })
