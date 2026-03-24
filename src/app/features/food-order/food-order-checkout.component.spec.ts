@@ -40,6 +40,7 @@ describe('FoodOrderCheckoutComponent', () => {
           id: 1,
           name: 'Coffee',
           description: null,
+          imageUrl: null,
           price: 30000,
           unit: 'cup',
           durationMinutes: null,

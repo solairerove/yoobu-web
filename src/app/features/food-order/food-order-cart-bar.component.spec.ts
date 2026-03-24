@@ -39,7 +39,7 @@ describe('FoodOrderCartBarComponent', () => {
 
     const cartAction = fixture.debugElement.query(By.css('.cart-action')).nativeElement as HTMLElement;
 
-    expect(cartAction.textContent).toContain('Open checkout');
+    expect(cartAction.textContent).toContain('Checkout');
   });
 
   it('renders review action when checkout is already open', () => {
@@ -47,6 +47,6 @@ describe('FoodOrderCartBarComponent', () => {
 
     const cartAction = fixture.debugElement.query(By.css('.cart-action')).nativeElement as HTMLElement;
 
-    expect(cartAction.textContent).toContain('Review order');
+    expect(cartAction.textContent).toContain('Review');
   });
 });

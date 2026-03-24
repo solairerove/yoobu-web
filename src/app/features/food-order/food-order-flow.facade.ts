@@ -209,12 +209,14 @@ export class FoodOrderFlowFacade {
     this.submitError.set(null);
     this.repeatOrderBanner.set(null);
     this.store.increase(serviceId);
+    this.telegram.hapticLight();
   }
 
   decrease(serviceId: number): void {
     this.submitError.set(null);
     this.repeatOrderBanner.set(null);
     this.store.decrease(serviceId);
+    this.telegram.hapticLight();
     if (this.store.selectedCount() === 0) {
       this.checkoutOpen.set(false);
     }

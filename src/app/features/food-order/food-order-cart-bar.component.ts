@@ -7,85 +7,67 @@ import { Component, input, output } from '@angular/core';
   template: `
     <button type="button" class="cart-bar" (click)="openRequested.emit()">
       <div class="cart-copy">
-        <p class="summary-label">Cart</p>
-        <strong>
+        <strong class="cart-count">
           {{ checkoutOpen() ? 'Checkout is open' : selectedCount() + ' item' + (selectedCount() > 1 ? 's' : '') }}
         </strong>
-        <p class="summary-total">{{ selectedTotal() | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
+        <span class="cart-total">{{ selectedTotal() | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
       </div>
 
       <span class="cart-action">
-        {{ checkoutOpen() ? 'Review order' : 'Open checkout' }}
+        {{ checkoutOpen() ? 'Review' : 'Checkout' }} ›
       </span>
     </button>
   `,
   styles: `
-    p {
-      margin: 0;
-    }
-
     .cart-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 1rem;
-      width: min(688px, calc(100% - 2rem));
+      width: min(688px, calc(100% - 1.5rem));
       position: fixed;
       left: 50%;
-      bottom: max(0.85rem, env(safe-area-inset-bottom));
+      bottom: max(0.75rem, env(safe-area-inset-bottom));
       transform: translateX(-50%);
       z-index: 5;
-      padding: 0.9rem 1rem;
-      border: 1px solid var(--yoobu-border-accent);
+      padding: 0.75rem 0.75rem 0.75rem 1.1rem;
+      border: none;
       border-radius: 18px;
-      background: linear-gradient(135deg, rgba(255, 107, 53, 0.96), rgba(255, 131, 84, 0.96));
+      background: linear-gradient(135deg, var(--yoobu-primary), #ff8c5a);
       color: white;
-      box-shadow: 0 18px 40px rgba(255, 107, 53, 0.24);
+      box-shadow: 0 8px 28px rgba(255, 107, 53, 0.38);
       text-align: left;
       cursor: pointer;
       font: inherit;
     }
 
-    .summary-label {
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-    }
-
     .cart-copy {
-      display: grid;
-      gap: 0.12rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      min-width: 0;
     }
 
-    .summary-total {
-      margin-top: 0.2rem;
-      font-weight: 700;
-      color: white;
+    .cart-count {
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+
+    .cart-total {
+      font-size: 0.88rem;
+      color: rgba(255, 255, 255, 0.82);
+      white-space: nowrap;
     }
 
     .cart-action {
       flex-shrink: 0;
-      padding: 0.45rem 0.75rem;
+      padding: 0.5rem 0.9rem;
       border-radius: 999px;
-      background: var(--yoobu-overlay-light);
+      background: rgba(255, 255, 255, 0.22);
       color: white;
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       font-weight: 700;
-    }
-
-    @media (max-width: 640px) {
-      .cart-bar {
-        width: calc(100% - 1.5rem);
-        bottom: max(0.75rem, env(safe-area-inset-bottom));
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .cart-action {
-        width: 100%;
-        text-align: center;
-      }
+      letter-spacing: 0.01em;
     }
   `
 })

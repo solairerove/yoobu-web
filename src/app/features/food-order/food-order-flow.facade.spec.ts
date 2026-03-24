@@ -19,6 +19,7 @@ describe('FoodOrderFlowFacade', () => {
     id: 1,
     name: 'Coffee',
     description: null,
+    imageUrl: null,
     price: 30000,
     unit: 'cup',
     durationMinutes: null,
@@ -29,6 +30,7 @@ describe('FoodOrderFlowFacade', () => {
     id: 2,
     name: 'Tea',
     description: null,
+    imageUrl: null,
     price: 20000,
     unit: 'cup',
     durationMinutes: null,
@@ -60,7 +62,8 @@ describe('FoodOrderFlowFacade', () => {
       'setMainButton',
       'onMainButtonClick',
       'confirm',
-      'alert'
+      'alert',
+      'hapticLight'
     ]);
 
     api.getServices.and.returnValue(of([]));
