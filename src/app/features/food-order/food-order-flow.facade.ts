@@ -46,6 +46,8 @@ export class FoodOrderFlowFacade {
     note: ['']
   });
 
+  readonly earliestDeliveryDate = computed<string>(() => this.configSignal()?.earliestDeliveryDate ?? this.todayIso());
+
   readonly bookingsReloadKey = signal(0);
   readonly selectedBookingId = signal<number | null>(null);
   readonly selectedBooking = signal<BookingResponse | null>(null);
@@ -636,11 +638,14 @@ export class FoodOrderFlowFacade {
   }
 
   private defaultDeliveryDate(): string {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // configSignal may not be initialized yet when checkoutForm fields are set up;
+    // use optional chaining so the initial form value always falls back to today.
+    return this.configSignal?.()?.earliestDeliveryDate ?? this.todayIso();
+  }
+
+  private todayIso(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   private normalizeServiceName(name: string): string {

@@ -89,6 +89,18 @@ describe('FoodOrderFlowFacade', () => {
     facade = TestBed.inject(FoodOrderFlowFacade);
   });
 
+  it('uses earliestDeliveryDate from config as default delivery date when set', fakeAsync(() => {
+    const configWithCutoff: TenantConfig = {
+      ...tenantConfig,
+      earliestDeliveryDate: '2026-03-25'
+    };
+    facade.setConfig(configWithCutoff);
+    tick();
+
+    expect(facade.checkoutForm.getRawValue().deliveryDate).toBe('2026-03-25');
+    expect(facade.earliestDeliveryDate()).toBe('2026-03-25');
+  }));
+
   it('loads services for the active tenant config', fakeAsync(() => {
     api.getServices.and.returnValue(of([service]));
 

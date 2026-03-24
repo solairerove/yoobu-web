@@ -1,5 +1,5 @@
 import { CurrencyPipe, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ServiceItem } from '../../core/models/service.model';
 
@@ -81,7 +81,10 @@ interface CheckoutSelection {
 
           <label>
             <span>Delivery date</span>
-            <input type="date" formControlName="deliveryDate" />
+            <input type="date" formControlName="deliveryDate" [min]="earliestDeliveryDate() ?? ''" />
+            <small class="field-hint cutoff-hint" *ngIf="isCutoffActive()">
+              Orders for today are closed. Earliest delivery: {{ earliestDeliveryDate() }}
+            </small>
           </label>
 
           <label>
@@ -383,6 +386,15 @@ export class FoodOrderCheckoutComponent {
   readonly selectedItems = input.required<CheckoutSelection[]>();
   readonly selectedCount = input.required<number>();
   readonly selectedTotal = input.required<number>();
+
+  readonly earliestDeliveryDate = input<string | null>(null);
+  protected readonly isCutoffActive = computed(() => {
+    const earliest = this.earliestDeliveryDate();
+    if (!earliest) return false;
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return earliest > today;
+  });
 
   readonly closeRequested = output<void>();
   readonly repeatOrderBannerDismissed = output<void>();

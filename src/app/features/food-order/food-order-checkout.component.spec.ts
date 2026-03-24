@@ -106,6 +106,33 @@ describe('FoodOrderCheckoutComponent', () => {
     expect(fixture.debugElement.queryAll(By.css('.field-hint')).length).toBe(0);
   });
 
+  it('sets min attribute on date input from earliestDeliveryDate', () => {
+    setRequiredInputs(true);
+    fixture.componentRef.setInput('earliestDeliveryDate', '2026-03-25');
+    fixture.detectChanges();
+
+    const dateInput = fixture.debugElement.query(By.css('input[type="date"]')).nativeElement as HTMLInputElement;
+    expect(dateInput.min).toBe('2026-03-25');
+  });
+
+  it('shows cutoff hint when earliestDeliveryDate is in the future', () => {
+    setRequiredInputs(true);
+    fixture.componentRef.setInput('earliestDeliveryDate', '9999-12-31');
+    fixture.detectChanges();
+
+    const hint = fixture.debugElement.query(By.css('.cutoff-hint'));
+    expect(hint).not.toBeNull();
+    expect(hint.nativeElement.textContent).toContain('9999-12-31');
+  });
+
+  it('does not show cutoff hint when earliestDeliveryDate is null', () => {
+    setRequiredInputs(true);
+    fixture.componentRef.setInput('earliestDeliveryDate', null);
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('.cutoff-hint'))).toBeNull();
+  });
+
   it('renders and dismisses repeat-order banner', () => {
     setRequiredInputs(true);
     fixture.componentRef.setInput('repeatOrderBanner', 'Cart prefilled from order #12.');
