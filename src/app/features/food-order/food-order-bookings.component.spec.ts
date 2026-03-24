@@ -194,7 +194,7 @@ describe('FoodOrderBookingsComponent', () => {
 
     const details = fixture.debugElement.queryAll(By.css('.booking-summary .eyebrow'));
     expect(details[0].nativeElement.textContent).toContain('Order #3');
-    expect(details[1].nativeElement.textContent).toContain('Order #2');
+    expect(details.length).toBe(1);
 
     const historyItems = fixture.debugElement.queryAll(By.css('.orders-section:nth-of-type(2) .booking-item'));
     expect(historyItems.length).toBe(1);

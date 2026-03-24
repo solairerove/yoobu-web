@@ -43,6 +43,7 @@ describe('FoodOrderFlowFacade', () => {
     name: 'Demo Store',
     type: 'FOOD_ORDER',
     primaryColor: '#ff6b35',
+    earliestDeliveryDate: '2026-03-01',
     logoUrl: null,
     welcomeMessage: null
   };

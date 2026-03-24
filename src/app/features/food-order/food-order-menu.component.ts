@@ -7,7 +7,7 @@ import { ServiceItem } from '../../core/models/service.model';
   imports: [CurrencyPipe, NgFor, NgIf],
   template: `
     <section class="catalog-shell">
-      <div class="catalog-note" *ngIf="selectedCount() === 0">
+      <div class="catalog-note">
         <span class="catalog-dot"></span>
         <p>Tap + on any item to add it to your cart.</p>
       </div>
@@ -304,12 +304,14 @@ import { ServiceItem } from '../../core/models/service.model';
       box-shadow: inset 0 2px 4px rgba(36, 22, 15, 0.18);
     }
 
-    /* Stepper row: [–] [  n  ] [+] */
+    /* Stepper row: [–] [ n ] [+] */
     .quantity {
       display: flex;
       align-items: center;
-      padding: 0.2rem;
-      border-radius: 12px;
+      justify-content: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.28rem;
+      border-radius: 999px;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 240, 0.94));
       border: 1px solid var(--yoobu-border-accent-soft);
       box-shadow:
@@ -324,15 +326,15 @@ import { ServiceItem } from '../../core/models/service.model';
 
     .quantity-button {
       flex-shrink: 0;
-      width: 2.75rem;
-      height: 2.75rem;
+      width: 1.95rem;
+      height: 1.95rem;
       border: 1px solid transparent;
-      border-radius: 9px;
+      border-radius: 999px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 800;
       transition:
         transform 140ms ease,
@@ -351,7 +353,7 @@ import { ServiceItem } from '../../core/models/service.model';
       background: var(--yoobu-surface-card);
       border-color: var(--yoobu-border-soft);
       color: var(--yoobu-ink);
-      box-shadow: var(--yoobu-shadow-sm);
+      box-shadow: var(--yoobu-shadow-xs);
     }
 
     .quantity-button-increase {
@@ -378,10 +380,10 @@ import { ServiceItem } from '../../core/models/service.model';
     }
 
     .quantity-value {
-      flex: 1;
+      min-width: 1.6rem;
       text-align: center;
       font-weight: 700;
-      font-size: 0.94rem;
+      font-size: 0.9rem;
       color: var(--yoobu-ink);
     }
   `
