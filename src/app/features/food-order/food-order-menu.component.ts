@@ -53,34 +53,30 @@ import { ServiceItem } from '../../core/models/service.model';
           <div class="product-side">
             <div class="price-row">
               <p class="price">{{ service.price | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
-              <button
-                *ngIf="quantityFor(service.id) === 0"
-                type="button"
-                class="add-button"
-                (click)="increaseRequested.emit(service.id)"
-                [attr.aria-label]="'Add ' + service.name"
-              >
-                <span aria-hidden="true">+</span>
-              </button>
-            </div>
-            <div class="quantity" *ngIf="quantityFor(service.id) > 0">
-              <button
-                type="button"
-                class="quantity-button quantity-button-decrease"
-                (click)="decreaseRequested.emit(service.id)"
-                [attr.aria-label]="'Decrease quantity for ' + service.name"
-              >
-                <span aria-hidden="true">−</span>
-              </button>
-              <span class="quantity-value" aria-live="polite">{{ quantityFor(service.id) }}</span>
-              <button
-                type="button"
-                class="quantity-button quantity-button-increase"
-                (click)="increaseRequested.emit(service.id)"
-                [attr.aria-label]="'Increase quantity for ' + service.name"
-              >
-                <span aria-hidden="true">+</span>
-              </button>
+              <div class="quantity-shell">
+                <div class="quantity" [class.quantity-empty]="quantityFor(service.id) === 0">
+                  <button
+                    type="button"
+                    class="quantity-button quantity-button-decrease"
+                    (click)="decreaseRequested.emit(service.id)"
+                    [attr.aria-label]="'Decrease quantity for ' + service.name"
+                    [disabled]="quantityFor(service.id) === 0"
+                  >
+                    <span aria-hidden="true">−</span>
+                  </button>
+                  <span class="quantity-value" aria-live="polite">
+                    {{ quantityFor(service.id) > 0 ? quantityFor(service.id) : '' }}
+                  </span>
+                  <button
+                    type="button"
+                    class="quantity-button quantity-button-increase"
+                    (click)="increaseRequested.emit(service.id)"
+                    [attr.aria-label]="'Increase quantity for ' + service.name"
+                  >
+                    <span aria-hidden="true">+</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </article>
@@ -257,8 +253,6 @@ import { ServiceItem } from '../../core/models/service.model';
     /* ── Footer: price row + stepper ── */
     .product-side {
       padding: 0.5rem 0.7rem 0.6rem;
-      display: grid;
-      gap: 0.4rem;
       border-top: 1px solid var(--yoobu-border-soft);
     }
 
@@ -266,7 +260,9 @@ import { ServiceItem } from '../../core/models/service.model';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.25rem;
+      gap: 0.5rem;
+      min-height: 2.35rem;
+      min-width: 0;
     }
 
     .price {
@@ -274,34 +270,22 @@ import { ServiceItem } from '../../core/models/service.model';
       font-weight: 800;
       white-space: nowrap;
       font-size: 0.9rem;
+      min-width: 0;
     }
 
-    .add-button {
-      flex-shrink: 0;
-      width: 2rem;
-      height: 2rem;
-      border: 0;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--yoobu-primary), #ff8753);
-      color: white;
-      font-size: 1.15rem;
-      font-weight: 700;
-      line-height: 1;
-      display: inline-flex;
+    .quantity-shell {
+      width: clamp(4.9rem, 40%, 5.5rem);
+      display: flex;
+      justify-content: flex-end;
       align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 3px 10px rgba(255, 107, 53, 0.28);
-      transition: transform 120ms ease, box-shadow 120ms ease;
-    }
-
-    .add-button span {
-      transform: translateY(-0.05em);
-    }
-
-    .add-button:active {
-      transform: scale(0.92);
-      box-shadow: inset 0 2px 4px rgba(36, 22, 15, 0.18);
+      padding: 0.18rem 0.22rem;
+      border-radius: 999px;
+      border: 1px solid var(--yoobu-border-accent-soft);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 240, 0.94));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        var(--yoobu-shadow-sm);
+      flex-shrink: 0;
     }
 
     /* Stepper row: [–] [ n ] [+] */
@@ -310,13 +294,13 @@ import { ServiceItem } from '../../core/models/service.model';
       align-items: center;
       justify-content: center;
       gap: 0.3rem;
-      padding: 0.2rem 0.28rem;
-      border-radius: 999px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 240, 0.94));
-      border: 1px solid var(--yoobu-border-accent-soft);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.8),
-        var(--yoobu-shadow-sm);
+      width: 100%;
+    }
+
+    .quantity-empty .quantity-button-decrease {
+      visibility: hidden;
+      pointer-events: none;
+      box-shadow: none;
     }
 
     .quantity button {
@@ -380,11 +364,42 @@ import { ServiceItem } from '../../core/models/service.model';
     }
 
     .quantity-value {
-      min-width: 1.6rem;
+      min-width: 1.15rem;
       text-align: center;
       font-weight: 700;
       font-size: 0.9rem;
+      font-variant-numeric: tabular-nums;
       color: var(--yoobu-ink);
+    }
+
+    @media (max-width: 430px) {
+      .catalog {
+        grid-template-columns: 1fr;
+      }
+
+      .quantity-shell {
+        width: 4.75rem;
+        padding: 0.12rem 0.15rem;
+      }
+
+      .quantity {
+        gap: 0.2rem;
+      }
+
+      .quantity-button {
+        width: 1.7rem;
+        height: 1.7rem;
+        font-size: 0.9rem;
+      }
+
+      .quantity-value {
+        min-width: 0.95rem;
+        font-size: 0.82rem;
+      }
+
+      .price {
+        font-size: 0.84rem;
+      }
     }
   `
 })
