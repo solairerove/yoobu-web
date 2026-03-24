@@ -283,7 +283,7 @@ describe('FoodOrderFlowFacade', () => {
       customerName: ' Alice ',
       customerPhone: ' 0123456789 ',
       deliveryAddress: ' 123 Main St ',
-      deliveryDate: '2026-03-19',
+      deliveryDate: '2026-03-24',
       note: ' no sugar '
     });
 
@@ -295,7 +295,7 @@ describe('FoodOrderFlowFacade', () => {
       customerName: 'Alice',
       customerPhone: '0123456789',
       deliveryAddress: '123 Main St',
-      deliveryDate: '2026-03-19',
+      deliveryDate: '2026-03-24',
       note: 'no sugar',
       items: [{ serviceId: service.id, quantity: 1 }]
     });
@@ -321,11 +321,9 @@ describe('FoodOrderFlowFacade', () => {
 
     expect(api.createBooking).not.toHaveBeenCalled();
     expect(facade.checkoutOpen()).toBeTrue();
-    expect(facade.submitError()).toBe(
-      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
-    );
+    expect(facade.submitError()).toBe('Enter your name, phone number, and delivery date before placing the order.');
     expect(telegram.alert).toHaveBeenCalledWith(
-      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
+      'Enter your name, phone number, and delivery date before placing the order.'
     );
   });
 
@@ -338,7 +336,7 @@ describe('FoodOrderFlowFacade', () => {
       customerName: 'Alice',
       customerPhone: '0123456789',
       deliveryAddress: '123 Main St',
-      deliveryDate: '2026-03-19',
+      deliveryDate: '2026-03-24',
       note: ''
     });
 
@@ -351,15 +349,15 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.checkoutForm.getRawValue().note).toBe('');
   });
 
-  it('blocks submit when delivery address is blank', async () => {
+  it('blocks submit when phone number has an invalid format', async () => {
     api.getServices.and.returnValue(of([service]));
     facade.setConfig(tenantConfig);
     facade.increase(service.id);
     facade.openCheckout();
     facade.checkoutForm.setValue({
       customerName: 'Alice',
-      customerPhone: '0123456789',
-      deliveryAddress: '   ',
+      customerPhone: 'not-a-phone',
+      deliveryAddress: '',
       deliveryDate: '2026-03-19',
       note: ''
     });
@@ -368,9 +366,28 @@ describe('FoodOrderFlowFacade', () => {
 
     expect(api.createBooking).not.toHaveBeenCalled();
     expect(facade.checkoutOpen()).toBeTrue();
-    expect(facade.submitError()).toBe(
-      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
-    );
+    expect(facade.submitError()).toBe('Enter your name, phone number, and delivery date before placing the order.');
+  });
+
+  it('blocks submit when delivery date is before the earliest allowed date', async () => {
+    const configWithCutoff: TenantConfig = { ...tenantConfig, earliestDeliveryDate: '2026-03-25' };
+    api.getServices.and.returnValue(of([service]));
+    facade.setConfig(configWithCutoff);
+    facade.increase(service.id);
+    facade.openCheckout();
+    facade.checkoutForm.setValue({
+      customerName: 'Alice',
+      customerPhone: '0123456789',
+      deliveryAddress: '',
+      deliveryDate: '2026-03-20',
+      note: ''
+    });
+
+    await facade.submitOrder();
+
+    expect(api.createBooking).not.toHaveBeenCalled();
+    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.submitError()).toContain('2026-03-25');
   });
 
   it('keeps telegram main button clickable and shows validation error on invalid checkout form', async () => {
@@ -385,11 +402,9 @@ describe('FoodOrderFlowFacade', () => {
 
     expect(facade.checkoutOpen()).toBeTrue();
     expect(api.createBooking).not.toHaveBeenCalled();
-    expect(facade.submitError()).toBe(
-      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
-    );
+    expect(facade.submitError()).toBe('Enter your name, phone number, and delivery date before placing the order.');
     expect(telegram.alert).toHaveBeenCalledWith(
-      'Enter your name, phone number, delivery address, and delivery date before placing the order.'
+      'Enter your name, phone number, and delivery date before placing the order.'
     );
   });
 

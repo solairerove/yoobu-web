@@ -24,10 +24,7 @@ import { FoodOrderStore } from './food-order.store';
   template: `
     <section class="panel" [class.has-cart]="store.selectedCount() > 0 && !submittedBooking()">
       <header class="panel-header">
-        <div>
-          <p class="eyebrow">Menu</p>
-          <h2>Place your order</h2>
-        </div>
+        <h2>Place your order</h2>
         <div class="header-stat" *ngIf="vm().services.length && !vm().loading && !vm().error">
           <strong>{{ vm().services.length }}</strong>
           <span>items</span>

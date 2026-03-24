@@ -7,18 +7,6 @@ import { ServiceItem } from '../../core/models/service.model';
   imports: [CurrencyPipe, NgFor, NgIf],
   template: `
     <section class="catalog-shell">
-      <div class="catalog-head">
-        <div>
-          <p class="eyebrow">Menu</p>
-          <h3>Items</h3>
-        </div>
-
-        <div class="catalog-meta">
-          <span class="catalog-pill">{{ services().length }} items</span>
-          <span class="catalog-pill" *ngIf="selectedCount() > 0">{{ selectedCount() }} in cart</span>
-        </div>
-      </div>
-
       <div class="catalog-note" *ngIf="selectedCount() === 0">
         <span class="catalog-dot"></span>
         <p>Tap + on any item to add it to your cart.</p>
@@ -63,19 +51,26 @@ import { ServiceItem } from '../../core/models/service.model';
           </div>
 
           <div class="product-side">
-            <div class="price-block">
-              <p class="price-label">Price</p>
+            <div class="price-row">
               <p class="price">{{ service.price | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
+              <button
+                *ngIf="quantityFor(service.id) === 0"
+                type="button"
+                class="add-button"
+                (click)="increaseRequested.emit(service.id)"
+                [attr.aria-label]="'Add ' + service.name"
+              >
+                <span aria-hidden="true">+</span>
+              </button>
             </div>
-            <div class="quantity">
+            <div class="quantity" *ngIf="quantityFor(service.id) > 0">
               <button
                 type="button"
                 class="quantity-button quantity-button-decrease"
                 (click)="decreaseRequested.emit(service.id)"
-                [disabled]="quantityFor(service.id) === 0"
                 [attr.aria-label]="'Decrease quantity for ' + service.name"
               >
-                <span aria-hidden="true">-</span>
+                <span aria-hidden="true">−</span>
               </button>
               <span class="quantity-value" aria-live="polite">{{ quantityFor(service.id) }}</span>
               <button
@@ -101,35 +96,6 @@ import { ServiceItem } from '../../core/models/service.model';
     .catalog-shell {
       display: grid;
       gap: 0.8rem;
-    }
-
-    .catalog-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.75rem;
-      align-items: center;
-    }
-
-    .catalog-head h3 {
-      margin-top: 0.2rem;
-      font-size: 1.02rem;
-    }
-
-    .catalog-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      justify-content: flex-end;
-    }
-
-    .catalog-pill {
-      padding: 0.28rem 0.55rem;
-      border-radius: 999px;
-      background: var(--yoobu-surface-muted);
-      color: var(--yoobu-muted);
-      font-size: 0.78rem;
-      font-weight: 700;
-      white-space: nowrap;
     }
 
     .catalog-note {
@@ -288,7 +254,7 @@ import { ServiceItem } from '../../core/models/service.model';
       display: none;
     }
 
-    /* ── Footer: price + full-width qty row ── */
+    /* ── Footer: price row + stepper ── */
     .product-side {
       padding: 0.5rem 0.7rem 0.6rem;
       display: grid;
@@ -296,14 +262,11 @@ import { ServiceItem } from '../../core/models/service.model';
       border-top: 1px solid var(--yoobu-border-soft);
     }
 
-    .price-block {
+    .price-row {
       display: flex;
-      align-items: baseline;
+      align-items: center;
+      justify-content: space-between;
       gap: 0.25rem;
-    }
-
-    .price-label {
-      display: none;
     }
 
     .price {
@@ -313,7 +276,35 @@ import { ServiceItem } from '../../core/models/service.model';
       font-size: 0.9rem;
     }
 
-    /* Full-width row: [–] [  n  ] [+] */
+    .add-button {
+      flex-shrink: 0;
+      width: 2rem;
+      height: 2rem;
+      border: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--yoobu-primary), #ff8753);
+      color: white;
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(255, 107, 53, 0.28);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .add-button span {
+      transform: translateY(-0.05em);
+    }
+
+    .add-button:active {
+      transform: scale(0.92);
+      box-shadow: inset 0 2px 4px rgba(36, 22, 15, 0.18);
+    }
+
+    /* Stepper row: [–] [  n  ] [+] */
     .quantity {
       display: flex;
       align-items: center;

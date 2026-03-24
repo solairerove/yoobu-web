@@ -40,8 +40,8 @@ export class FoodOrderFlowFacade {
 
   readonly checkoutForm = this.fb.nonNullable.group({
     customerName: ['', [Validators.required]],
-    customerPhone: ['', [Validators.required]],
-    deliveryAddress: ['', [Validators.required, Validators.pattern(/\S/)]],
+    customerPhone: ['', [Validators.required, Validators.pattern(/^[+]?[\d\s\-\(\)\.]{6,20}$/)]],
+    deliveryAddress: [''],
     deliveryDate: [this.defaultDeliveryDate(), [Validators.required]],
     note: ['']
   });
@@ -433,10 +433,18 @@ export class FoodOrderFlowFacade {
     if (this.checkoutForm.invalid) {
       this.checkoutOpen.set(true);
       this.checkoutForm.markAllAsTouched();
-      this.submitError.set('Enter your name, phone number, delivery address, and delivery date before placing the order.');
-      await this.telegram.alert(
-        'Enter your name, phone number, delivery address, and delivery date before placing the order.'
-      );
+      this.submitError.set('Enter your name, phone number, and delivery date before placing the order.');
+      await this.telegram.alert('Enter your name, phone number, and delivery date before placing the order.');
+      return;
+    }
+
+    const formValue = this.checkoutForm.getRawValue();
+    const earliest = this.earliestDeliveryDate();
+    if (formValue.deliveryDate < earliest) {
+      this.checkoutOpen.set(true);
+      this.checkoutForm.markAllAsTouched();
+      this.submitError.set(`Earliest delivery is ${earliest}. Please select a valid date.`);
+      await this.telegram.alert(`Please choose ${earliest} or a later date for delivery.`);
       return;
     }
 

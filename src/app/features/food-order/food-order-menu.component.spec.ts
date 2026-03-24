@@ -73,13 +73,12 @@ describe('FoodOrderMenuComponent', () => {
     expect(decreaseSpy).toHaveBeenCalledWith(10);
   });
 
-  it('disables decrease button when quantity is zero', () => {
+  it('does not render a decrease button when quantity is zero', () => {
     setRequiredInputs({ quantities: { 10: 0, 20: 0 } });
 
     const buttons = fixture.debugElement.queryAll(By.css('.quantity-button-decrease'));
-    const firstDecreaseButton = buttons[0].nativeElement as HTMLButtonElement;
 
-    expect(firstDecreaseButton.disabled).toBeTrue();
+    expect(buttons.length).toBe(0);
   });
 
   it('marks selected product rows when quantity is greater than zero', () => {
