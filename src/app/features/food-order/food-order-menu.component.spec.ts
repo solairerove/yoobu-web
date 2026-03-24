@@ -73,12 +73,22 @@ describe('FoodOrderMenuComponent', () => {
     expect(decreaseSpy).toHaveBeenCalledWith(10);
   });
 
-  it('does not render a decrease button when quantity is zero', () => {
+  it('keeps decrease button disabled when quantity is zero', () => {
     setRequiredInputs({ quantities: { 10: 0, 20: 0 } });
 
     const buttons = fixture.debugElement.queryAll(By.css('.quantity-button-decrease'));
 
-    expect(buttons.length).toBe(0);
+    expect(buttons.length).toBe(2);
+    expect(buttons.every((button) => button.nativeElement.disabled)).toBeTrue();
+  });
+
+  it('disables increase button when item quantity reaches cap', () => {
+    setRequiredInputs({ quantities: { 10: 9, 20: 0 } });
+
+    const buttons = fixture.debugElement.queryAll(By.css('.quantity-button-increase'));
+
+    expect(buttons[0].nativeElement.disabled).toBeTrue();
+    expect(buttons[1].nativeElement.disabled).toBeFalse();
   });
 
   it('marks selected product rows when quantity is greater than zero', () => {

@@ -72,6 +72,7 @@ import { ServiceItem } from '../../core/models/service.model';
                     class="quantity-button quantity-button-increase"
                     (click)="increaseRequested.emit(service.id)"
                     [attr.aria-label]="'Increase quantity for ' + service.name"
+                    [disabled]="maxed(service.id)"
                   >
                     <span aria-hidden="true">+</span>
                   </button>
@@ -378,7 +379,7 @@ import { ServiceItem } from '../../core/models/service.model';
       }
 
       .quantity-shell {
-        width: 4.75rem;
+        width: 5rem;
         padding: 0.12rem 0.15rem;
       }
 
@@ -387,9 +388,9 @@ import { ServiceItem } from '../../core/models/service.model';
       }
 
       .quantity-button {
-        width: 1.7rem;
-        height: 1.7rem;
-        font-size: 0.9rem;
+        width: 1.8rem;
+        height: 1.8rem;
+        font-size: 0.95rem;
       }
 
       .quantity-value {
@@ -398,12 +399,13 @@ import { ServiceItem } from '../../core/models/service.model';
       }
 
       .price {
-        font-size: 0.84rem;
+        font-size: 0.92rem;
       }
     }
   `
 })
 export class FoodOrderMenuComponent {
+  private static readonly MAX_ITEM_QUANTITY = 9;
   readonly services = input.required<ServiceItem[]>();
   readonly selectedCount = input.required<number>();
   readonly currencyCode = input.required<string>();
@@ -418,6 +420,10 @@ export class FoodOrderMenuComponent {
 
   protected quantityFor(serviceId: number): number {
     return this.quantities()[serviceId] ?? 0;
+  }
+
+  protected maxed(serviceId: number): boolean {
+    return this.quantityFor(serviceId) >= FoodOrderMenuComponent.MAX_ITEM_QUANTITY;
   }
 
   protected serviceInitial(name: string): string {

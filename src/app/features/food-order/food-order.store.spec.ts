@@ -75,4 +75,22 @@ describe('FoodOrderStore', () => {
     expect(store.selectedCount()).toBe(0);
     expect(store.services()).toEqual([]);
   });
+
+  it('caps item quantity at 9 when increasing repeatedly', () => {
+    for (let i = 0; i < 20; i += 1) {
+      store.increase(serviceA.id);
+    }
+
+    expect(store.quantityFor(serviceA.id)).toBe(9);
+  });
+
+  it('caps prepared snapshot quantities at 9', () => {
+    store.setQuantities({
+      [serviceA.id]: 12,
+      [serviceB.id]: 10
+    });
+
+    expect(store.quantityFor(serviceA.id)).toBe(9);
+    expect(store.quantityFor(serviceB.id)).toBe(9);
+  });
 });
