@@ -1,6 +1,6 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { from, switchMap } from 'rxjs';
+import { from, switchMap, throwError } from 'rxjs';
 import { TelegramService } from '../telegram/telegram.service';
 
 const TELEGRAM_INIT_DATA_WAIT_TIMEOUT_MS = 1500;
@@ -18,6 +18,9 @@ export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) =>
     switchMap((initData) => {
       if (!initData) {
         if (!devTelegramUserId) {
+          if (request.url.includes('/bookings')) {
+            return throwError(() => new Error('Telegram session unavailable. Please reopen the app.'));
+          }
           return next(request);
         }
 
