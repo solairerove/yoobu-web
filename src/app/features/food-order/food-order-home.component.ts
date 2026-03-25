@@ -24,11 +24,13 @@ import { FoodOrderStore } from './food-order.store';
   template: `
     <section class="panel" [class.has-cart]="store.selectedCount() > 0 && !submittedBooking()">
       <header class="panel-header">
-        <h2>Place your order</h2>
-        <div class="header-stat" *ngIf="vm().services.length && !vm().loading && !vm().error">
-          <strong>{{ vm().services.length }}</strong>
-          <span>items</span>
+        <div class="header-name-row">
+          <h2>{{ config().name }}</h2>
+          <span class="header-badge">Ordering</span>
         </div>
+        @if (config().welcomeMessage) {
+          <p class="header-welcome">{{ config().welcomeMessage }}</p>
+        }
       </header>
 
       <nav class="view-switch" aria-label="Order sections">
@@ -157,33 +159,32 @@ import { FoodOrderStore } from './food-order.store';
 
     .panel-header {
       display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: start;
+      flex-direction: column;
+      gap: 0.3rem;
     }
 
-    .header-stat {
-      min-width: 4.75rem;
-      padding: 0.55rem 0.7rem;
-      border-radius: 16px;
+    .header-name-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .header-badge {
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
       background: var(--yoobu-primary-soft);
-      text-align: center;
+      color: var(--yoobu-primary);
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
-    .header-stat strong,
-    .header-stat span {
-      display: block;
-    }
-
-    .header-stat strong {
-      font-size: 1.05rem;
-    }
-
-    .header-stat span {
+    .header-welcome {
+      font-size: 0.88rem;
       color: var(--yoobu-muted);
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      margin: 0;
+      line-height: 1.45;
     }
 
     h2,

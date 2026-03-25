@@ -90,12 +90,12 @@ describe('TenantShellComponent', () => {
     const fixture = TestBed.createComponent(TenantShellComponent);
     const component = fixture.componentInstance as unknown as {
       vm$: {
-        subscribe: (next: (value: { config: TenantConfig | null; error: string | null }) => void) => {
+        subscribe: (next: (value: { config: TenantConfig | null; component: unknown; error: string | null }) => void) => {
           unsubscribe(): void;
         };
       };
     };
-    const emissions: Array<{ config: TenantConfig | null; error: string | null }> = [];
+    const emissions: Array<{ config: TenantConfig | null; component: unknown; error: string | null }> = [];
 
     const subscription = component.vm$.subscribe((vm) => emissions.push(vm));
     fixture.detectChanges();
@@ -103,6 +103,7 @@ describe('TenantShellComponent', () => {
 
     expect(emissions.at(-1)).toEqual({
       config: null,
+      component: null,
       error: 'This page is unavailable right now. Please try again later.'
     });
 

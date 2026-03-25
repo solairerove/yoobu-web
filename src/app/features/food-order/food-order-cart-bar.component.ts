@@ -7,14 +7,17 @@ import { Component, input, output } from '@angular/core';
   template: `
     <button type="button" class="cart-bar" (click)="openRequested.emit()">
       <div class="cart-copy">
-        <strong class="cart-count">
-          {{ checkoutOpen() ? 'Checkout is open' : selectedCount() + ' item' + (selectedCount() > 1 ? 's' : '') }}
-        </strong>
-        <span class="cart-total">{{ selectedTotal() | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
+        @if (checkoutOpen()) {
+          <strong class="cart-count">Your order</strong>
+        } @else {
+          <strong class="cart-count">{{ selectedCount() }} {{ selectedCount() === 1 ? 'item' : 'items' }}</strong>
+          <span class="cart-sep">·</span>
+          <span class="cart-total">{{ selectedTotal() | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
+        }
       </div>
 
       <span class="cart-action">
-        {{ checkoutOpen() ? 'Review' : 'Checkout' }} ›
+        {{ checkoutOpen() ? 'Review ›' : 'Checkout ›' }}
       </span>
     </button>
   `,
@@ -44,7 +47,7 @@ import { Component, input, output } from '@angular/core';
     .cart-copy {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.45rem;
       min-width: 0;
     }
 
@@ -53,9 +56,14 @@ import { Component, input, output } from '@angular/core';
       white-space: nowrap;
     }
 
-    .cart-total {
+    .cart-sep {
       font-size: 0.88rem;
-      color: rgba(255, 255, 255, 0.82);
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .cart-total {
+      font-size: 0.95rem;
+      font-weight: 700;
       white-space: nowrap;
     }
 

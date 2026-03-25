@@ -8,8 +8,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
   imports: [CurrencyPipe, DatePipe, NgIf],
   template: `
     <section class="success-card">
-      <p class="eyebrow">Order sent</p>
-      <h3>Order #{{ booking().id }}</h3>
+      <p class="eyebrow">Order #{{ booking().id }} sent</p>
       <p class="copy ui-copy">
         {{ booking().customerName }}, your order for {{ booking().deliveryDate | date: 'mediumDate' }} is now in status
         <strong>{{ statusLabel(booking().status) }}</strong>.
@@ -77,7 +76,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       border: 1px solid rgba(255, 107, 53, 0.22);
     }
 
-    .success-card p {
+    .success-card p:not(.eyebrow) {
       margin-top: 0.45rem;
       color: var(--yoobu-muted);
       line-height: 1.5;
