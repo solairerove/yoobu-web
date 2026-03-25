@@ -12,4 +12,7 @@ export interface TenantConfig {
   checkoutNameHint?: string | null;
   checkoutPhoneHint?: string | null;
   checkoutNoteHint?: string | null;
+  cutoffHour?: number | null;
+  cutoffMinute?: number | null;
+  earliestDeliveryDate?: string | null;
 }

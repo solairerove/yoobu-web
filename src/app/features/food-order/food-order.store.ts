@@ -3,6 +3,7 @@ import { ServiceItem } from '../../core/models/service.model';
 
 @Injectable({ providedIn: 'root' })
 export class FoodOrderStore {
+  static readonly MAX_ITEM_QUANTITY = 9;
   private readonly slugSignal = signal<string | null>(null);
   private readonly servicesSignal = signal<ServiceItem[]>([]);
   private readonly quantitiesSignal = signal<Record<number, number>>({});
@@ -52,9 +53,10 @@ export class FoodOrderStore {
   }
 
   increase(serviceId: number): void {
+    const max = FoodOrderStore.MAX_ITEM_QUANTITY;
     this.quantitiesSignal.update((current) => ({
       ...current,
-      [serviceId]: (current[serviceId] ?? 0) + 1
+      [serviceId]: Math.min((current[serviceId] ?? 0) + 1, max)
     }));
   }
 
@@ -77,11 +79,14 @@ export class FoodOrderStore {
 
   setQuantities(quantities: Record<number, number>): void {
     const allowedIds = new Set(this.servicesSignal().map((service) => service.id));
+    const max = FoodOrderStore.MAX_ITEM_QUANTITY;
     this.quantitiesSignal.set(
       Object.fromEntries(
-        Object.entries(quantities).filter(([serviceId, quantity]) => {
-          return allowedIds.has(Number(serviceId)) && Number.isFinite(quantity) && quantity > 0;
-        })
+        Object.entries(quantities)
+          .map(([serviceId, quantity]) => [serviceId, Math.min(Math.floor(quantity), max)] as const)
+          .filter(([serviceId, quantity]) => {
+            return allowedIds.has(Number(serviceId)) && Number.isFinite(quantity) && quantity > 0;
+          })
       )
     );
   }

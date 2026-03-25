@@ -24,10 +24,7 @@ import { FoodOrderStore } from './food-order.store';
   template: `
     <section class="panel" [class.has-cart]="store.selectedCount() > 0 && !submittedBooking()">
       <header class="panel-header">
-        <div>
-          <p class="eyebrow">Menu</p>
-          <h2>Place your order</h2>
-        </div>
+        <h2>Place your order</h2>
         <div class="header-stat" *ngIf="vm().services.length && !vm().loading && !vm().error">
           <strong>{{ vm().services.length }}</strong>
           <span>items</span>
@@ -113,6 +110,7 @@ import { FoodOrderStore } from './food-order.store';
         [customerPhoneHint]="config().checkoutPhoneHint || null"
         [customerNoteHint]="config().checkoutNoteHint || null"
         [currencyCode]="currencyCode()"
+        [earliestDeliveryDate]="earliestDeliveryDate()"
         [selectedItems]="store.selectedItems()"
         [selectedCount]="store.selectedCount()"
         [selectedTotal]="store.selectedTotal()"
@@ -266,6 +264,7 @@ export class FoodOrderHomeComponent {
   protected readonly vm = this.facade.vm;
   protected readonly bookingsVm = this.facade.bookingsVm;
   protected readonly isFirstOrder = this.facade.isFirstOrder;
+  protected readonly earliestDeliveryDate = this.facade.earliestDeliveryDate;
   protected readonly currencyCode = computed(() => normalizeCurrencyCode(this.config().currency));
   protected readonly selectedQuantities = computed<Record<number, number>>(() => {
     const quantities: Record<number, number> = {};

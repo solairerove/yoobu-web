@@ -40,11 +40,13 @@ export class FoodOrderFlowFacade {
 
   readonly checkoutForm = this.fb.nonNullable.group({
     customerName: ['', [Validators.required]],
-    customerPhone: ['', [Validators.required]],
-    deliveryAddress: ['', [Validators.required, Validators.pattern(/\S/)]],
+    customerPhone: ['', [Validators.required, Validators.pattern(/^[+]?[\d\s\-\(\)\.]{6,20}$/)]],
+    deliveryAddress: [''],
     deliveryDate: [this.defaultDeliveryDate(), [Validators.required]],
     note: ['']
   });
+
+  readonly earliestDeliveryDate = computed<string>(() => this.configSignal()?.earliestDeliveryDate ?? this.todayIso());
 
   readonly bookingsReloadKey = signal(0);
   readonly selectedBookingId = signal<number | null>(null);
@@ -431,10 +433,18 @@ export class FoodOrderFlowFacade {
     if (this.checkoutForm.invalid) {
       this.checkoutOpen.set(true);
       this.checkoutForm.markAllAsTouched();
-      this.submitError.set('Enter your name, phone number, delivery address, and delivery date before placing the order.');
-      await this.telegram.alert(
-        'Enter your name, phone number, delivery address, and delivery date before placing the order.'
-      );
+      this.submitError.set('Enter your name, phone number, and delivery date before placing the order.');
+      await this.telegram.alert('Enter your name, phone number, and delivery date before placing the order.');
+      return;
+    }
+
+    const formValue = this.checkoutForm.getRawValue();
+    const earliest = this.earliestDeliveryDate();
+    if (formValue.deliveryDate < earliest) {
+      this.checkoutOpen.set(true);
+      this.checkoutForm.markAllAsTouched();
+      this.submitError.set(`Earliest delivery is ${earliest}. Please select a valid date.`);
+      await this.telegram.alert(`Please choose ${earliest} or a later date for delivery.`);
       return;
     }
 
@@ -636,11 +646,14 @@ export class FoodOrderFlowFacade {
   }
 
   private defaultDeliveryDate(): string {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // configSignal may not be initialized yet when checkoutForm fields are set up;
+    // use optional chaining so the initial form value always falls back to today.
+    return this.configSignal?.()?.earliestDeliveryDate ?? this.todayIso();
+  }
+
+  private todayIso(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   private normalizeServiceName(name: string): string {

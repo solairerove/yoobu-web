@@ -43,40 +43,37 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
             <p>Active orders will appear here.</p>
           </section>
 
-          <div class="bookings-grid bookings-grid--current" *ngIf="currentBookings().length">
-            <div class="booking-list">
-              <button
-                type="button"
-                class="booking-item"
-                *ngFor="let booking of currentBookings()"
-                [class.active]="selectedBookingId() === booking.id"
-                (click)="selectAndScroll(booking.id)"
-              >
-                <div class="booking-item-top">
-                  <strong>#{{ booking.id }}</strong>
-                  <span
-                    class="booking-status"
-                    [class.status-new]="isStatus(booking.status, 'NEW')"
-                    [class.status-payment-pending]="isStatus(booking.status, 'PAYMENT_PENDING')"
-                    [class.status-confirmed]="isStatus(booking.status, 'CONFIRMED')"
-                    [class.status-delivering]="isStatus(booking.status, 'DELIVERING')"
-                    [class.status-done]="isStatus(booking.status, 'DONE')"
-                    [class.status-cancelled]="isStatus(booking.status, 'CANCELLED')"
-                  >
-                    {{ bookingStatusLabel(booking.status) }}
-                  </span>
-                </div>
-                <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
-                <p class="booking-address" [title]="displayAddress(booking.deliveryAddress)">
-                  {{ displayAddress(booking.deliveryAddress) }}
-                </p>
-                <p>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
-              </button>
-            </div>
-
-            <ng-container *ngIf="selectedOpenBooking() as booking; else chooseOpenBooking">
-              <ng-container *ngTemplateOutlet="bookingDetailTemplate; context: { $implicit: booking }" />
-            </ng-container>
+          <div class="booking-list" *ngIf="currentBookings().length">
+            <button
+              type="button"
+              class="booking-item"
+              *ngFor="let booking of currentBookings()"
+              [class.active]="selectedBookingId() === booking.id"
+              (click)="selectAndScroll(booking.id)"
+            >
+              <div class="booking-item-top">
+                <strong>#{{ booking.id }}</strong>
+                <span
+                  class="booking-status"
+                  [class.status-new]="isStatus(booking.status, 'NEW')"
+                  [class.status-payment-pending]="isStatus(booking.status, 'PAYMENT_PENDING')"
+                  [class.status-confirmed]="isStatus(booking.status, 'CONFIRMED')"
+                  [class.status-delivering]="isStatus(booking.status, 'DELIVERING')"
+                  [class.status-done]="isStatus(booking.status, 'DONE')"
+                  [class.status-cancelled]="isStatus(booking.status, 'CANCELLED')"
+                >
+                  {{ bookingStatusLabel(booking.status) }}
+                </span>
+              </div>
+              <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
+              <p class="booking-address" [title]="displayAddress(booking.deliveryAddress)">
+                {{ displayAddress(booking.deliveryAddress) }}
+              </p>
+              <p class="booking-items" [title]="bookingItemsPreview(booking)">
+                {{ bookingItemsPreview(booking) }}
+              </p>
+              <p>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
+            </button>
           </div>
         </section>
 
@@ -88,41 +85,44 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
             <p>Completed and cancelled orders will appear here.</p>
           </section>
 
-          <div class="bookings-grid bookings-grid--history" *ngIf="previousBookings().length">
-            <div class="booking-list">
-              <button
-                type="button"
-                class="booking-item"
-                *ngFor="let booking of previousBookings()"
-                [class.active]="selectedBookingId() === booking.id"
-                (click)="selectAndScroll(booking.id)"
-              >
-                <div class="booking-item-top">
-                  <strong>#{{ booking.id }}</strong>
-                  <span
-                    class="booking-status"
-                    [class.status-new]="isStatus(booking.status, 'NEW')"
-                    [class.status-payment-pending]="isStatus(booking.status, 'PAYMENT_PENDING')"
-                    [class.status-confirmed]="isStatus(booking.status, 'CONFIRMED')"
-                    [class.status-delivering]="isStatus(booking.status, 'DELIVERING')"
-                    [class.status-done]="isStatus(booking.status, 'DONE')"
-                    [class.status-cancelled]="isStatus(booking.status, 'CANCELLED')"
-                  >
-                    {{ bookingStatusLabel(booking.status) }}
-                  </span>
-                </div>
-                <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
-                <p class="booking-address" [title]="displayAddress(booking.deliveryAddress)">
-                  {{ displayAddress(booking.deliveryAddress) }}
-                </p>
-                <p>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
-              </button>
-            </div>
-
-            <ng-container *ngIf="selectedHistoryBooking() as booking; else chooseHistoryBooking">
-              <ng-container *ngTemplateOutlet="bookingDetailTemplate; context: { $implicit: booking }" />
-            </ng-container>
+          <div class="booking-list" *ngIf="previousBookings().length">
+            <button
+              type="button"
+              class="booking-item"
+              *ngFor="let booking of previousBookings()"
+              [class.active]="selectedBookingId() === booking.id"
+              (click)="selectAndScroll(booking.id)"
+            >
+              <div class="booking-item-top">
+                <strong>#{{ booking.id }}</strong>
+                <span
+                  class="booking-status"
+                  [class.status-new]="isStatus(booking.status, 'NEW')"
+                  [class.status-payment-pending]="isStatus(booking.status, 'PAYMENT_PENDING')"
+                  [class.status-confirmed]="isStatus(booking.status, 'CONFIRMED')"
+                  [class.status-delivering]="isStatus(booking.status, 'DELIVERING')"
+                  [class.status-done]="isStatus(booking.status, 'DONE')"
+                  [class.status-cancelled]="isStatus(booking.status, 'CANCELLED')"
+                >
+                  {{ bookingStatusLabel(booking.status) }}
+                </span>
+              </div>
+              <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
+              <p class="booking-address" [title]="displayAddress(booking.deliveryAddress)">
+                {{ displayAddress(booking.deliveryAddress) }}
+              </p>
+              <p class="booking-items" [title]="bookingItemsPreview(booking)">
+                {{ bookingItemsPreview(booking) }}
+              </p>
+              <p>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
+            </button>
           </div>
+        </section>
+
+        <section class="booking-detail-anchor booking-detail-panel">
+          <ng-container *ngIf="selectedDisplayBooking() as booking; else chooseBooking">
+            <ng-container *ngTemplateOutlet="bookingDetailTemplate; context: { $implicit: booking }" />
+          </ng-container>
         </section>
       </ng-container>
 
@@ -233,33 +233,28 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
                 <strong>{{ booking.deliveryDate | date: 'mediumDate' }}</strong>
               </div>
               <div class="receipt-row">
-                <span>Customer</span>
-                <strong>{{ booking.customerName }}</strong>
-              </div>
-              <div class="receipt-row">
-                <span>Phone</span>
-                <strong>{{ booking.customerPhone }}</strong>
+                <span>Contact</span>
+                <strong>{{ booking.customerName }} · {{ booking.customerPhone }}</strong>
               </div>
               <div class="receipt-row">
                 <span>Delivery address</span>
                 <strong>{{ displayAddress(booking.deliveryAddress) }}</strong>
-              </div>
-              <div class="receipt-row">
-                <span>Items</span>
-                <strong>{{ booking.items.length }}</strong>
               </div>
             </div>
 
             <p class="receipt-note" *ngIf="booking.note">{{ booking.note }}</p>
 
             <div class="review-list">
-              <div class="review-row" *ngFor="let item of booking.items">
+              <div class="review-row" *ngFor="let item of receiptItems(booking)">
                 <div>
                   <strong>{{ item.serviceName }}</strong>
                   <p>{{ item.quantity }} × {{ item.unitPrice | currency: itemCurrency(item, booking) : 'symbol-narrow' : '1.0-0' }}</p>
                 </div>
                 <span>{{ item.unitPrice * item.quantity | currency: itemCurrency(item, booking) : 'symbol-narrow' : '1.0-0' }}</span>
               </div>
+              <p class="review-more" *ngIf="booking.items.length > receiptItemsLimit">
+                +{{ booking.items.length - receiptItemsLimit }} more item{{ booking.items.length - receiptItemsLimit > 1 ? 's' : '' }}
+              </p>
             </div>
 
             <div class="review-total">
@@ -273,18 +268,11 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
         </section>
       </ng-template>
 
-      <ng-template #chooseOpenBooking>
+      <ng-template #chooseBooking>
         <section class="status-card ui-status-card">
           <h4>Select an order</h4>
-          <p>Choose an open order to view the details.</p>
+          <p>Choose any order to view full details.</p>
         </section>
-      </ng-template>
-
-      <ng-template #chooseHistoryBooking>
-          <section class="status-card ui-status-card">
-            <h4>Select an order</h4>
-            <p>Choose a previous order to view the details.</p>
-          </section>
       </ng-template>
     </section>
   `,
@@ -325,15 +313,9 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       gap: 0.75rem;
     }
 
-    .bookings-grid {
-      display: grid;
-      grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
-      gap: 1rem;
-    }
-
     .booking-list {
       display: grid;
-      gap: 0.9rem;
+      gap: 0.65rem;
     }
 
     .booking-item {
@@ -343,14 +325,18 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 
     .booking-item {
       display: grid;
-      gap: 0.35rem;
+      gap: 0.28rem;
       width: 100%;
-      padding: 0.95rem 1rem;
+      padding: 0.78rem 0.85rem;
       border-radius: 16px;
       border: 1px solid var(--yoobu-border);
       background: var(--yoobu-surface-card-strong);
       text-align: left;
       color: inherit;
+      transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        box-shadow 160ms ease;
     }
 
     .booking-item:disabled {
@@ -361,6 +347,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     .booking-item.active {
       border-color: var(--yoobu-border-accent);
       background: var(--yoobu-surface-tint);
+      box-shadow: var(--yoobu-shadow-xs);
     }
 
     .booking-item-top {
@@ -373,7 +360,11 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 
     .booking-item p {
       color: var(--yoobu-muted);
-      font-size: 0.92rem;
+      font-size: 0.88rem;
+    }
+
+    .booking-detail-panel {
+      margin-top: 1rem;
     }
 
     .booking-group-title {
@@ -386,6 +377,13 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     }
 
     .booking-address {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .booking-items {
+      font-size: 0.82rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -611,6 +609,12 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
       font-size: 0.9rem;
     }
 
+    .review-more {
+      margin: 0;
+      color: var(--yoobu-muted);
+      font-size: 0.86rem;
+    }
+
     .review-total {
       align-items: center;
       padding-top: 0.85rem;
@@ -623,10 +627,6 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     }
 
     @media (max-width: 640px) {
-      .bookings-grid {
-        grid-template-columns: 1fr;
-      }
-
       .bookings-head,
       .booking-detail-head,
       .review-row,
@@ -652,6 +652,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 })
 export class FoodOrderBookingsComponent {
   private readonly el = inject(ElementRef);
+  protected readonly receiptItemsLimit = 3;
 
   readonly bookings = input.required<BookingResponse[]>();
   readonly loading = input.required<boolean>();
@@ -672,29 +673,19 @@ export class FoodOrderBookingsComponent {
   readonly cancelRequested = output<number>();
   readonly currentBookings = computed(() => this.sortedBookings().filter((booking) => this.isCurrentBooking(booking)));
   readonly previousBookings = computed(() => this.sortedBookings().filter((booking) => !this.isCurrentBooking(booking)));
-  readonly selectedOpenBooking = computed<BookingResponse | null>(() => {
+  readonly selectedDisplayBooking = computed<BookingResponse | null>(() => {
     const selected = this.selectedBooking();
-    if (selected && this.isCurrentBooking(selected)) {
+    if (selected) {
       return selected;
     }
 
-    return this.currentBookings()[0] ?? null;
-  });
-  readonly selectedHistoryBooking = computed<BookingResponse | null>(() => {
-    const selected = this.selectedBooking();
-    if (selected && !this.isCurrentBooking(selected)) {
-      return selected;
-    }
-
-    return this.previousBookings()[0] ?? null;
+    return this.currentBookings()[0] ?? this.previousBookings()[0] ?? null;
   });
 
   protected selectAndScroll(bookingId: number): void {
     this.bookingSelected.emit(bookingId);
     setTimeout(() => {
-      const isCurrent = this.currentBookings().some((b) => b.id === bookingId);
-      const gridSelector = isCurrent ? '.bookings-grid--current' : '.bookings-grid--history';
-      const detail = this.el.nativeElement.querySelector(`${gridSelector} .booking-detail`);
+      const detail = this.el.nativeElement.querySelector('.booking-detail-anchor .booking-detail');
       detail?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 50);
   }
@@ -881,5 +872,20 @@ export class FoodOrderBookingsComponent {
   protected displayAddress(address: string | null): string {
     const normalizedAddress = address?.trim();
     return normalizedAddress ? normalizedAddress : 'N/A';
+  }
+
+  protected bookingItemsPreview(booking: BookingResponse): string {
+    if (!booking.items.length) {
+      return 'No items';
+    }
+
+    return booking.items
+      .slice(0, 2)
+      .map((item) => `${item.quantity}× ${item.serviceName}`)
+      .join(', ');
+  }
+
+  protected receiptItems(booking: BookingResponse): BookingResponse['items'] {
+    return booking.items.slice(0, this.receiptItemsLimit);
   }
 }

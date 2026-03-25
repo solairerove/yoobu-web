@@ -15,14 +15,9 @@ import { TelegramService } from '../core/telegram/telegram.service';
     <ng-container *ngIf="vm$ | async as vm">
       <main class="shell" [style.--yoobu-primary]="vm.config?.primaryColor || '#ff6b35'">
         <header class="hero" *ngIf="vm.config; else loadingOrError">
-          <div class="hero-top">
-            <p class="kicker">Yoobu</p>
-            <span class="hero-badge">{{ vm.config.type === 'FOOD_ORDER' ? 'Ordering' : vm.config.type }}</span>
-          </div>
-
-          <div class="hero-content">
+          <div class="hero-bar">
             <h1>{{ vm.config.name }}</h1>
-            <p class="welcome">{{ vm.config.welcomeMessage || defaultWelcome }}</p>
+            <span class="hero-badge">{{ vm.config.type === 'FOOD_ORDER' ? 'Ordering' : vm.config.type }}</span>
           </div>
         </header>
 
@@ -58,65 +53,39 @@ import { TelegramService } from '../core/telegram/telegram.service';
 
     .hero,
     .status-card {
-      padding: 1rem 1rem 1.1rem;
-      border-radius: 22px;
+      padding: 0.65rem 0.9rem;
+      border-radius: 16px;
       background: linear-gradient(145deg, var(--yoobu-surface-card-strong), var(--yoobu-surface-tint));
       border: 1px solid var(--yoobu-border);
       box-shadow: var(--yoobu-shadow);
     }
 
     .hero {
-      display: grid;
-      gap: 0.8rem;
       position: relative;
       overflow: hidden;
       background:
-        radial-gradient(circle at top right, color-mix(in srgb, var(--yoobu-primary) 18%, transparent), transparent 34%),
+        radial-gradient(circle at top right, color-mix(in srgb, var(--yoobu-primary) 14%, transparent), transparent 40%),
         linear-gradient(145deg, var(--yoobu-surface-card-strong), var(--yoobu-surface-tint));
     }
 
-    .hero::after {
-      content: '';
-      position: absolute;
-      inset: auto -3rem -3rem auto;
-      width: 10rem;
-      height: 10rem;
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--yoobu-primary) 10%, transparent);
-      filter: blur(2px);
-      pointer-events: none;
-    }
-
-    .hero-top {
+    .hero-bar {
       display: flex;
       justify-content: space-between;
-      gap: 0.75rem;
       align-items: center;
-    }
-
-    .kicker {
-      margin: 0;
-      color: var(--yoobu-primary);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      font-size: 0.72rem;
+      gap: 0.75rem;
+      position: relative;
+      z-index: 1;
     }
 
     .hero-badge {
-      padding: 0.32rem 0.68rem;
+      padding: 0.28rem 0.6rem;
       border-radius: 999px;
       background: color-mix(in srgb, var(--yoobu-primary) 12%, white);
       color: var(--yoobu-primary);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 700;
-    }
-
-    .hero-content {
-      display: grid;
-      gap: 0.4rem;
-      position: relative;
-      z-index: 1;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     h1,
@@ -125,20 +94,15 @@ import { TelegramService } from '../core/telegram/telegram.service';
     }
 
     h1 {
-      font-size: clamp(1.4rem, 4vw, 2rem);
-      line-height: 1.08;
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.2;
     }
 
-    .welcome,
     .status-card p {
       color: var(--yoobu-muted);
       line-height: 1.45;
       font-size: 0.95rem;
-    }
-
-    .welcome {
-      margin-top: 0.45rem;
-      max-width: 38rem;
     }
 
   `

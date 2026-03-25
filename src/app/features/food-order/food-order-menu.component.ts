@@ -7,19 +7,7 @@ import { ServiceItem } from '../../core/models/service.model';
   imports: [CurrencyPipe, NgFor, NgIf],
   template: `
     <section class="catalog-shell">
-      <div class="catalog-head">
-        <div>
-          <p class="eyebrow">Menu</p>
-          <h3>Items</h3>
-        </div>
-
-        <div class="catalog-meta">
-          <span class="catalog-pill">{{ services().length }} items</span>
-          <span class="catalog-pill" *ngIf="selectedCount() > 0">{{ selectedCount() }} in cart</span>
-        </div>
-      </div>
-
-      <div class="catalog-note" *ngIf="selectedCount() === 0">
+      <div class="catalog-note">
         <span class="catalog-dot"></span>
         <p>Tap + on any item to add it to your cart.</p>
       </div>
@@ -63,29 +51,33 @@ import { ServiceItem } from '../../core/models/service.model';
           </div>
 
           <div class="product-side">
-            <div class="price-block">
-              <p class="price-label">Price</p>
+            <div class="price-row">
               <p class="price">{{ service.price | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
-            </div>
-            <div class="quantity">
-              <button
-                type="button"
-                class="quantity-button quantity-button-decrease"
-                (click)="decreaseRequested.emit(service.id)"
-                [disabled]="quantityFor(service.id) === 0"
-                [attr.aria-label]="'Decrease quantity for ' + service.name"
-              >
-                <span aria-hidden="true">-</span>
-              </button>
-              <span class="quantity-value" aria-live="polite">{{ quantityFor(service.id) }}</span>
-              <button
-                type="button"
-                class="quantity-button quantity-button-increase"
-                (click)="increaseRequested.emit(service.id)"
-                [attr.aria-label]="'Increase quantity for ' + service.name"
-              >
-                <span aria-hidden="true">+</span>
-              </button>
+              <div class="quantity-shell">
+                <div class="quantity" [class.quantity-empty]="quantityFor(service.id) === 0">
+                  <button
+                    type="button"
+                    class="quantity-button quantity-button-decrease"
+                    (click)="decreaseRequested.emit(service.id)"
+                    [attr.aria-label]="'Decrease quantity for ' + service.name"
+                    [disabled]="quantityFor(service.id) === 0"
+                  >
+                    <span aria-hidden="true">−</span>
+                  </button>
+                  <span class="quantity-value" aria-live="polite">
+                    {{ quantityFor(service.id) > 0 ? quantityFor(service.id) : '' }}
+                  </span>
+                  <button
+                    type="button"
+                    class="quantity-button quantity-button-increase"
+                    (click)="increaseRequested.emit(service.id)"
+                    [attr.aria-label]="'Increase quantity for ' + service.name"
+                    [disabled]="maxed(service.id)"
+                  >
+                    <span aria-hidden="true">+</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </article>
@@ -101,35 +93,6 @@ import { ServiceItem } from '../../core/models/service.model';
     .catalog-shell {
       display: grid;
       gap: 0.8rem;
-    }
-
-    .catalog-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.75rem;
-      align-items: center;
-    }
-
-    .catalog-head h3 {
-      margin-top: 0.2rem;
-      font-size: 1.02rem;
-    }
-
-    .catalog-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      justify-content: flex-end;
-    }
-
-    .catalog-pill {
-      padding: 0.28rem 0.55rem;
-      border-radius: 999px;
-      background: var(--yoobu-surface-muted);
-      color: var(--yoobu-muted);
-      font-size: 0.78rem;
-      font-weight: 700;
-      white-space: nowrap;
     }
 
     .catalog-note {
@@ -288,22 +251,19 @@ import { ServiceItem } from '../../core/models/service.model';
       display: none;
     }
 
-    /* ── Footer: price + full-width qty row ── */
+    /* ── Footer: price row + stepper ── */
     .product-side {
       padding: 0.5rem 0.7rem 0.6rem;
-      display: grid;
-      gap: 0.4rem;
       border-top: 1px solid var(--yoobu-border-soft);
     }
 
-    .price-block {
+    .price-row {
       display: flex;
-      align-items: baseline;
-      gap: 0.25rem;
-    }
-
-    .price-label {
-      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      min-height: 2.35rem;
+      min-width: 0;
     }
 
     .price {
@@ -311,19 +271,37 @@ import { ServiceItem } from '../../core/models/service.model';
       font-weight: 800;
       white-space: nowrap;
       font-size: 0.9rem;
+      min-width: 0;
     }
 
-    /* Full-width row: [–] [  n  ] [+] */
-    .quantity {
+    .quantity-shell {
+      width: clamp(4.9rem, 40%, 5.5rem);
       display: flex;
+      justify-content: flex-end;
       align-items: center;
-      padding: 0.2rem;
-      border-radius: 12px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 240, 0.94));
+      padding: 0.18rem 0.22rem;
+      border-radius: 999px;
       border: 1px solid var(--yoobu-border-accent-soft);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 240, 0.94));
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.8),
         var(--yoobu-shadow-sm);
+      flex-shrink: 0;
+    }
+
+    /* Stepper row: [–] [ n ] [+] */
+    .quantity {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      width: 100%;
+    }
+
+    .quantity-empty .quantity-button-decrease {
+      visibility: hidden;
+      pointer-events: none;
+      box-shadow: none;
     }
 
     .quantity button {
@@ -333,15 +311,15 @@ import { ServiceItem } from '../../core/models/service.model';
 
     .quantity-button {
       flex-shrink: 0;
-      width: 2.75rem;
-      height: 2.75rem;
+      width: 1.95rem;
+      height: 1.95rem;
       border: 1px solid transparent;
-      border-radius: 9px;
+      border-radius: 999px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 800;
       transition:
         transform 140ms ease,
@@ -360,7 +338,7 @@ import { ServiceItem } from '../../core/models/service.model';
       background: var(--yoobu-surface-card);
       border-color: var(--yoobu-border-soft);
       color: var(--yoobu-ink);
-      box-shadow: var(--yoobu-shadow-sm);
+      box-shadow: var(--yoobu-shadow-xs);
     }
 
     .quantity-button-increase {
@@ -387,15 +365,47 @@ import { ServiceItem } from '../../core/models/service.model';
     }
 
     .quantity-value {
-      flex: 1;
+      min-width: 1.15rem;
       text-align: center;
       font-weight: 700;
-      font-size: 0.94rem;
+      font-size: 0.9rem;
+      font-variant-numeric: tabular-nums;
       color: var(--yoobu-ink);
+    }
+
+    @media (max-width: 430px) {
+      .catalog {
+        grid-template-columns: 1fr;
+      }
+
+      .quantity-shell {
+        width: 5rem;
+        padding: 0.12rem 0.15rem;
+      }
+
+      .quantity {
+        gap: 0.2rem;
+      }
+
+      .quantity-button {
+        width: 1.8rem;
+        height: 1.8rem;
+        font-size: 0.95rem;
+      }
+
+      .quantity-value {
+        min-width: 0.95rem;
+        font-size: 0.82rem;
+      }
+
+      .price {
+        font-size: 0.92rem;
+      }
     }
   `
 })
 export class FoodOrderMenuComponent {
+  private static readonly MAX_ITEM_QUANTITY = 9;
   readonly services = input.required<ServiceItem[]>();
   readonly selectedCount = input.required<number>();
   readonly currencyCode = input.required<string>();
@@ -410,6 +420,10 @@ export class FoodOrderMenuComponent {
 
   protected quantityFor(serviceId: number): number {
     return this.quantities()[serviceId] ?? 0;
+  }
+
+  protected maxed(serviceId: number): boolean {
+    return this.quantityFor(serviceId) >= FoodOrderMenuComponent.MAX_ITEM_QUANTITY;
   }
 
   protected serviceInitial(name: string): string {

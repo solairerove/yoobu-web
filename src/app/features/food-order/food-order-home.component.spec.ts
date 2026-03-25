@@ -149,11 +149,11 @@ describe('FoodOrderHomeComponent', () => {
 
   it('routes quantity controls to facade methods', () => {
     const increaseButton = fixture.debugElement.query(By.css('.quantity-button-increase')).nativeElement as HTMLButtonElement;
-    const decreaseButtonSelector = '.quantity-button-decrease';
 
     increaseButton.click();
     fixture.detectChanges();
-    const decreaseButton = fixture.debugElement.query(By.css(decreaseButtonSelector)).nativeElement as HTMLButtonElement;
+
+    const decreaseButton = fixture.debugElement.query(By.css('.quantity-button-decrease')).nativeElement as HTMLButtonElement;
     decreaseButton.click();
 
     expect(facade.increase).toHaveBeenCalledWith(service.id);
