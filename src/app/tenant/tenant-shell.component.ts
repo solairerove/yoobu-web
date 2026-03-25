@@ -14,26 +14,15 @@ import { TelegramService } from '../core/telegram/telegram.service';
   template: `
     <ng-container *ngIf="vm$ | async as vm">
       <main class="shell" [style.--yoobu-primary]="vm.config?.primaryColor || '#ff6b35'">
-        <header class="hero" *ngIf="vm.config; else loadingOrError">
-          <div class="hero-bar">
-            <h1>{{ vm.config.name }}</h1>
-            <span class="hero-badge">{{ vm.config.type === 'FOOD_ORDER' ? 'Ordering' : vm.config.type }}</span>
-          </div>
-        </header>
+        <section class="status-card" *ngIf="!vm.config && vm.error">
+          <h1>Tenant unavailable</h1>
+          <p>{{ vm.error }}</p>
+        </section>
 
-        <ng-template #loadingOrError>
-          <section class="status-card" *ngIf="vm.error; else loading">
-            <h1>Tenant unavailable</h1>
-            <p>{{ vm.error }}</p>
-          </section>
-        </ng-template>
-
-        <ng-template #loading>
-          <section class="status-card">
-            <h1>Loading</h1>
-            <p>Please wait while the page loads.</p>
-          </section>
-        </ng-template>
+        <section class="status-card" *ngIf="!vm.config && !vm.error">
+          <h1>Loading</h1>
+          <p>Please wait while the page loads.</p>
+        </section>
 
         <ng-container *ngIf="vm.config as config">
           <ng-container *ngComponentOutlet="resolveFeatureComponent(config.type); inputs: { config }" />
@@ -51,41 +40,12 @@ import { TelegramService } from '../core/telegram/telegram.service';
       margin: 0 auto;
     }
 
-    .hero,
     .status-card {
-      padding: 0.65rem 0.9rem;
+      padding: 0.75rem 1rem;
       border-radius: 16px;
       background: linear-gradient(145deg, var(--yoobu-surface-card-strong), var(--yoobu-surface-tint));
       border: 1px solid var(--yoobu-border);
       box-shadow: var(--yoobu-shadow);
-    }
-
-    .hero {
-      position: relative;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at top right, color-mix(in srgb, var(--yoobu-primary) 14%, transparent), transparent 40%),
-        linear-gradient(145deg, var(--yoobu-surface-card-strong), var(--yoobu-surface-tint));
-    }
-
-    .hero-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.75rem;
-      position: relative;
-      z-index: 1;
-    }
-
-    .hero-badge {
-      padding: 0.28rem 0.6rem;
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--yoobu-primary) 12%, white);
-      color: var(--yoobu-primary);
-      font-size: 0.75rem;
-      font-weight: 700;
-      white-space: nowrap;
-      flex-shrink: 0;
     }
 
     h1,
@@ -100,11 +60,11 @@ import { TelegramService } from '../core/telegram/telegram.service';
     }
 
     .status-card p {
+      margin-top: 0.3rem;
       color: var(--yoobu-muted);
       line-height: 1.45;
       font-size: 0.95rem;
     }
-
   `
 })
 export class TenantShellComponent {
@@ -112,8 +72,6 @@ export class TenantShellComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly tenantApi = inject(TenantApiService);
   private readonly telegram = inject(TelegramService);
-
-  protected readonly defaultWelcome = 'Browse the menu and place your order here.';
 
   protected readonly vm$ = this.route.paramMap.pipe(
     map((params) => params.get('slug')?.trim() ?? ''),
