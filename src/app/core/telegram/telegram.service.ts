@@ -33,6 +33,7 @@ interface TelegramWindow extends Window {
 @Injectable({ providedIn: 'root' })
 export class TelegramService {
   private static readonly POPUP_API_MIN_VERSION = '6.2';
+  private static readonly INIT_DATA_SESSION_KEY = 'tg_init_data';
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly webAppSignal = signal<TelegramWebApp | null>(null);
@@ -81,10 +82,17 @@ export class TelegramService {
   getInitData(): string | null {
     const webAppInitData = this.resolveWebApp()?.initData?.trim();
     if (webAppInitData) {
+      this.cacheInitData(webAppInitData);
       return webAppInitData;
     }
 
-    return this.getInitDataFromLaunchParams();
+    const fromLaunchParams = this.getInitDataFromLaunchParams();
+    if (fromLaunchParams) {
+      this.cacheInitData(fromLaunchParams);
+      return fromLaunchParams;
+    }
+
+    return this.readCachedInitData();
   }
 
   getDevTelegramUserId(): string | null {
@@ -208,6 +216,20 @@ export class TelegramService {
       .split('.')
       .map((part) => Number.parseInt(part, 10))
       .filter((part) => Number.isFinite(part));
+  }
+
+  private cacheInitData(initData: string): void {
+    this.document.defaultView?.sessionStorage?.setItem(
+      TelegramService.INIT_DATA_SESSION_KEY,
+      initData
+    );
+  }
+
+  private readCachedInitData(): string | null {
+    const cached = this.document.defaultView?.sessionStorage?.getItem(
+      TelegramService.INIT_DATA_SESSION_KEY
+    );
+    return cached?.trim() || null;
   }
 
   private getInitDataFromLaunchParams(): string | null {
