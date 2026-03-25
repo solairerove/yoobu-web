@@ -41,13 +41,9 @@ interface CheckoutSelection {
       <div class="sheet-handle" aria-hidden="true" *ngIf="showSheetHandle"></div>
 
       <div class="checkout-head">
-        <div>
-          <p class="eyebrow">Checkout</p>
-          <h3>Customer details</h3>
-        </div>
-
-        <button type="button" class="ghost-button" (click)="closeRequested.emit()" [disabled]="submitting()">
-          Back to menu
+        <p class="eyebrow">Checkout</p>
+        <button type="button" class="head-action" (click)="closeRequested.emit()" [disabled]="submitting()">
+          ← Menu
         </button>
       </div>
 
@@ -188,7 +184,7 @@ interface CheckoutSelection {
       display: flex;
       justify-content: space-between;
       gap: 1rem;
-      align-items: start;
+      align-items: center;
     }
 
     .checkout-grid {
@@ -360,7 +356,6 @@ interface CheckoutSelection {
         border-radius: 24px 24px 0 0;
       }
 
-      .checkout-head,
       .review-row,
       .review-head,
       .review-total,

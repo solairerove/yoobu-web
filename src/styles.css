@@ -96,6 +96,25 @@ button:active {
   cursor: not-allowed;
 }
 
+.head-action {
+  flex-shrink: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--yoobu-border);
+  background: var(--yoobu-surface-card-strong);
+  color: var(--yoobu-muted);
+}
+
+.head-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .ui-copy {
   color: var(--yoobu-muted);
   line-height: 1.45;

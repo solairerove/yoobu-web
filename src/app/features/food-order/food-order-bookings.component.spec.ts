@@ -51,7 +51,7 @@ describe('FoodOrderBookingsComponent', () => {
     const refreshSpy = jasmine.createSpy('refreshSpy');
     component.refreshRequested.subscribe(refreshSpy);
 
-    const refreshButton = fixture.debugElement.query(By.css('.bookings-head .ghost-button'));
+    const refreshButton = fixture.debugElement.query(By.css('.bookings-head .head-action'));
     refreshButton.nativeElement.click();
 
     expect(refreshSpy).toHaveBeenCalledTimes(1);
@@ -161,7 +161,7 @@ describe('FoodOrderBookingsComponent', () => {
     expect(allMetaRows.map((row) => row.nativeElement.textContent).join(' ')).toContain('N/A');
   });
 
-  it('renders open order section above order history', () => {
+  it('renders active bookings before historical ones in a flat list', () => {
     const doneBooking: BookingResponse = {
       ...booking,
       id: 2,
@@ -187,21 +187,16 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const headings = fixture.debugElement.queryAll(By.css('.orders-section .booking-group-title'));
-    expect(headings.length).toBe(2);
-    expect(headings[0].nativeElement.textContent).toContain('Open order');
-    expect(headings[1].nativeElement.textContent).toContain('Order history');
+    const items = fixture.debugElement.queryAll(By.css('.booking-list .booking-item'));
+    expect(items.length).toBe(2);
+    expect(items[0].nativeElement.textContent).toContain('#3');
+    expect(items[1].nativeElement.textContent).toContain('#2');
 
-    const details = fixture.debugElement.queryAll(By.css('.booking-summary .eyebrow'));
-    expect(details[0].nativeElement.textContent).toContain('Order #3');
-    expect(details.length).toBe(1);
-
-    const historyItems = fixture.debugElement.queryAll(By.css('.orders-section:nth-of-type(2) .booking-item'));
-    expect(historyItems.length).toBe(1);
-    expect(historyItems[0].nativeElement.textContent).toContain('#2');
+    const detailId = fixture.debugElement.query(By.css('.booking-summary .booking-id-row .eyebrow'));
+    expect(detailId.nativeElement.textContent).toContain('#3');
   });
 
-  it('treats payment-pending status variants as open order', () => {
+  it('treats payment-pending status variants as active bookings', () => {
     const pendingBooking: BookingResponse = {
       ...booking,
       id: 5,
@@ -221,12 +216,15 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const openHeading = fixture.debugElement.query(By.css('.orders-section .booking-group-title'));
-    expect(openHeading.nativeElement.textContent).toContain('Open order');
-    expect(fixture.debugElement.query(By.css('.booking-summary .eyebrow')).nativeElement.textContent).toContain('Order #5');
+    const items = fixture.debugElement.queryAll(By.css('.booking-list .booking-item'));
+    expect(items.length).toBe(1);
+    expect(items[0].nativeElement.textContent).toContain('#5');
+
+    const detailId = fixture.debugElement.query(By.css('.booking-summary .booking-id-row .eyebrow'));
+    expect(detailId.nativeElement.textContent).toContain('#5');
   });
 
-  it('shows all payment-pending orders in open section and keeps done orders in history', () => {
+  it('sorts active bookings before done ones in the flat list', () => {
     const pendingA: BookingResponse = {
       ...booking,
       id: 6,
@@ -258,17 +256,14 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const openItems = fixture.debugElement.queryAll(By.css('.orders-section:first-of-type .booking-item'));
-    expect(openItems.length).toBe(2);
-    expect(openItems[0].nativeElement.textContent).toContain('#6');
-    expect(openItems[1].nativeElement.textContent).toContain('#7');
-
-    const historyItems = fixture.debugElement.queryAll(By.css('.orders-section:nth-of-type(2) .booking-item'));
-    expect(historyItems.length).toBe(1);
-    expect(historyItems[0].nativeElement.textContent).toContain('#8');
+    const items = fixture.debugElement.queryAll(By.css('.booking-list .booking-item'));
+    expect(items.length).toBe(3);
+    expect(items[0].nativeElement.textContent).toContain('#6');
+    expect(items[1].nativeElement.textContent).toContain('#7');
+    expect(items[2].nativeElement.textContent).toContain('#8');
   });
 
-  it('treats delivering status as open order', () => {
+  it('treats delivering status as active booking', () => {
     const deliveringBooking: BookingResponse = {
       ...booking,
       id: 9,
@@ -288,9 +283,9 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const openItems = fixture.debugElement.queryAll(By.css('.orders-section:first-of-type .booking-item'));
-    expect(openItems.length).toBe(1);
-    expect(openItems[0].nativeElement.textContent).toContain('#9');
+    const items = fixture.debugElement.queryAll(By.css('.booking-list .booking-item'));
+    expect(items.length).toBe(1);
+    expect(items[0].nativeElement.textContent).toContain('#9');
   });
 
   it('shows tracking link when trackingUrl is present', () => {

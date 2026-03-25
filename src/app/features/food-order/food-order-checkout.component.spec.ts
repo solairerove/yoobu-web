@@ -82,7 +82,7 @@ describe('FoodOrderCheckoutComponent', () => {
     fixture.componentRef.setInput('submitting', true);
     fixture.detectChanges();
 
-    const backButton = fixture.debugElement.query(By.css('.checkout-head .ghost-button')).nativeElement as HTMLButtonElement;
+    const backButton = fixture.debugElement.query(By.css('.checkout-head .head-action')).nativeElement as HTMLButtonElement;
 
     expect(backButton.disabled).toBeTrue();
   });

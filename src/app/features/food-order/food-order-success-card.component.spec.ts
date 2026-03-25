@@ -44,7 +44,7 @@ describe('FoodOrderSuccessCardComponent', () => {
   it('renders booking id and customer name', () => {
     setRequiredInputs();
 
-    const heading = fixture.debugElement.query(By.css('h3')).nativeElement as HTMLElement;
+    const heading = fixture.debugElement.query(By.css('.eyebrow')).nativeElement as HTMLElement;
     const body = fixture.debugElement.query(By.css('.ui-copy')).nativeElement as HTMLElement;
 
     expect(heading.textContent).toContain('Order #1');
