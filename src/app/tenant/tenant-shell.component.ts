@@ -1,9 +1,7 @@
 import { AsyncPipe, DOCUMENT, NgComponentOutlet, NgIf } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, Type } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { catchError, distinctUntilChanged, map, of, shareReplay, switchMap, tap } from 'rxjs';
-import { FoodOrderHomeComponent } from '../features/food-order/food-order-home.component';
-import { UnsupportedFlowComponent } from '../features/unsupported/unsupported-flow.component';
 import { TenantConfig } from '../core/models/tenant-config.model';
 import { TenantApiService } from '../core/services/tenant-api.service';
 import { TelegramService } from '../core/telegram/telegram.service';
@@ -25,7 +23,7 @@ import { TelegramService } from '../core/telegram/telegram.service';
         </section>
 
         <ng-container *ngIf="vm.config as config">
-          <ng-container *ngComponentOutlet="resolveFeatureComponent(config.type); inputs: { config }" />
+          <ng-container *ngComponentOutlet="vm.component; inputs: { config }" />
         </ng-container>
       </main>
     </ng-container>
@@ -83,10 +81,17 @@ export class TenantShellComponent {
     switchMap((slug) =>
       this.tenantApi.getConfig(slug).pipe(
         tap((config) => this.applyTheme(config)),
-        map((config) => ({ config, error: null })),
+        switchMap((config) =>
+          this.resolveFeatureComponent(config.type).then((component) => ({
+            config,
+            component,
+            error: null
+          }))
+        ),
         catchError(() =>
           of({
             config: null,
+            component: null,
             error: 'This page is unavailable right now. Please try again later.'
           })
         )
@@ -95,12 +100,15 @@ export class TenantShellComponent {
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
-  protected resolveFeatureComponent(type: TenantConfig['type']) {
+  private resolveFeatureComponent(type: TenantConfig['type']): Promise<Type<unknown>> {
     if (type === 'FOOD_ORDER') {
-      return FoodOrderHomeComponent;
+      return import('../features/food-order/food-order-home.component').then(
+        (m) => m.FoodOrderHomeComponent
+      );
     }
-
-    return UnsupportedFlowComponent;
+    return import('../features/unsupported/unsupported-flow.component').then(
+      (m) => m.UnsupportedFlowComponent
+    );
   }
 
   private applyTheme(config: TenantConfig): void {
