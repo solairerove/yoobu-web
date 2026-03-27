@@ -98,7 +98,7 @@ describe('TelegramService', () => {
 
     service.getInitData();
 
-    expect(sessionStorageMock.setItem).toHaveBeenCalledWith('tg_init_data', 'token=abc');
+    expect(sessionStorageMock.setItem).toHaveBeenCalledWith('tg_init_data_cache', 'token=abc');
   });
 
   it('falls back to sessionStorage cache when web app init data and launch params are unavailable', () => {
