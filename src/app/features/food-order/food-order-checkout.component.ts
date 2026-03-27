@@ -57,7 +57,7 @@ interface CheckoutSelection {
           <label>
             <span>Name</span>
             <input type="text" formControlName="customerName" />
-            <small class="field-hint" *ngIf="isFirstOrder() && customerNameHint() as customerNameHint">
+            <small class="field-hint" *ngIf="customerNameHint() as customerNameHint">
               {{ customerNameHint }}
             </small>
           </label>
@@ -65,7 +65,7 @@ interface CheckoutSelection {
           <label>
             <span>Phone</span>
             <input type="tel" formControlName="customerPhone" />
-            <small class="field-hint" *ngIf="isFirstOrder() && customerPhoneHint() as customerPhoneHint">
+            <small class="field-hint" *ngIf="customerPhoneHint() as customerPhoneHint">
               {{ customerPhoneHint }}
             </small>
           </label>
@@ -73,6 +73,9 @@ interface CheckoutSelection {
           <label>
             <span>Delivery address</span>
             <input type="text" formControlName="deliveryAddress" placeholder="Delivery address" />
+            <small class="field-hint" *ngIf="deliveryAddressHint() as deliveryAddressHint">
+              {{ deliveryAddressHint }}
+            </small>
           </label>
 
           <label>
@@ -86,7 +89,7 @@ interface CheckoutSelection {
           <label>
             <span>Note</span>
             <textarea rows="4" formControlName="note"></textarea>
-            <small class="field-hint" *ngIf="isFirstOrder() && customerNoteHint() as customerNoteHint">
+            <small class="field-hint" *ngIf="customerNoteHint() as customerNoteHint">
               {{ customerNoteHint }}
             </small>
           </label>
@@ -373,9 +376,9 @@ export class FoodOrderCheckoutComponent {
   readonly submitError = input.required<string | null>();
   readonly repeatOrderBanner = input<string | null>(null);
   readonly form = input.required<FormGroup>();
-  readonly isFirstOrder = input<boolean>(false);
   readonly customerNameHint = input<string | null>(null);
   readonly customerPhoneHint = input<string | null>(null);
+  readonly deliveryAddressHint = input<string | null>(null);
   readonly customerNoteHint = input<string | null>(null);
   readonly currencyCode = input<string>('VND');
   readonly selectedItems = input.required<CheckoutSelection[]>();

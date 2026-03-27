@@ -11,6 +11,7 @@ export interface TenantConfig {
   welcomeMessage: string | null;
   checkoutNameHint?: string | null;
   checkoutPhoneHint?: string | null;
+  checkoutDeliveryHint?: string | null;
   checkoutNoteHint?: string | null;
   cutoffHour?: number | null;
   cutoffMinute?: number | null;
