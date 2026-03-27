@@ -8,8 +8,8 @@ server {
   resolver 127.0.0.11 valid=30s ipv6=off;
 
   location /api/ {
-    rewrite ^/api/(.*)$ /$1 break;
     set $backend ${BACKEND_URL};
+    rewrite ^/api/(.*)$ /$1 break;
     proxy_pass $backend;
     proxy_http_version 1.1;
     proxy_ssl_server_name on;
