@@ -72,7 +72,7 @@ interface CheckoutSelection {
 
           <label>
             <span>Delivery address</span>
-            <input type="text" formControlName="deliveryAddress" placeholder="Delivery address" />
+            <input type="text" formControlName="deliveryAddress" />
             <small class="field-hint" *ngIf="deliveryAddressHint() as deliveryAddressHint">
               {{ deliveryAddressHint }}
             </small>
