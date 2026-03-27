@@ -220,15 +220,15 @@ export class TelegramService {
 
   private cacheInitData(initData: string): void {
     try {
-      this.document.defaultView?.sessionStorage?.setItem(this.INIT_DATA_SESSION_KEY, initData);
+      this.document.defaultView?.localStorage?.setItem(this.INIT_DATA_SESSION_KEY, initData);
     } catch {
-      // sessionStorage unavailable (e.g. iOS WKWebView security restrictions)
+      // localStorage unavailable (e.g. iOS WKWebView security restrictions)
     }
   }
 
   private readCachedInitData(): string | null {
     try {
-      const cached = this.document.defaultView?.sessionStorage?.getItem(this.INIT_DATA_SESSION_KEY);
+      const cached = this.document.defaultView?.localStorage?.getItem(this.INIT_DATA_SESSION_KEY);
       return cached?.trim() || null;
     } catch {
       return null;

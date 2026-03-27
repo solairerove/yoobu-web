@@ -87,22 +87,24 @@ describe('FoodOrderCheckoutComponent', () => {
     expect(backButton.disabled).toBeTrue();
   });
 
-  it('shows tenant hints only for first order', () => {
+  it('shows tenant hints whenever provided', () => {
     setRequiredInputs(true);
-    fixture.componentRef.setInput('isFirstOrder', true);
     fixture.componentRef.setInput('customerNameHint', 'Use full name');
     fixture.componentRef.setInput('customerPhoneHint', '+84...');
+    fixture.componentRef.setInput('deliveryAddressHint', 'Street, house');
     fixture.componentRef.setInput('customerNoteHint', 'No onion');
     fixture.detectChanges();
 
     const fieldHints = fixture.debugElement.queryAll(By.css('.field-hint'));
-    expect(fieldHints.length).toBe(3);
+    expect(fieldHints.length).toBe(4);
     expect(fieldHints[0].nativeElement.textContent).toContain('Use full name');
     expect(fieldHints[1].nativeElement.textContent).toContain('+84...');
-    expect(fieldHints[2].nativeElement.textContent).toContain('No onion');
+    expect(fieldHints[2].nativeElement.textContent).toContain('Street, house');
+    expect(fieldHints[3].nativeElement.textContent).toContain('No onion');
+  });
 
-    fixture.componentRef.setInput('isFirstOrder', false);
-    fixture.detectChanges();
+  it('does not show tenant hints when not provided', () => {
+    setRequiredInputs(true);
     expect(fixture.debugElement.queryAll(By.css('.field-hint')).length).toBe(0);
   });
 

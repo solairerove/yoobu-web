@@ -4,7 +4,9 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   EUR: '€',
   VND: '₫',
   IDR: 'Rp',
-  THB: '฿'
+  THB: '฿',
+  RUB: '₽',
+  BYN: 'Br'
 };
 
 export function normalizeCurrencyCode(currency: string | null | undefined): string {

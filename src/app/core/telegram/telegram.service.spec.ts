@@ -87,27 +87,27 @@ describe('TelegramService', () => {
     expect(service.getInitData()).toBe('query_id=1&hash=a+b+c');
   });
 
-  it('caches init data in sessionStorage when reading from web app', () => {
-    const sessionStorageMock = {
+  it('caches init data in localStorage when reading from web app', () => {
+    const localStorageMock = {
       getItem: jasmine.createSpy('getItem').and.returnValue(null),
       setItem: jasmine.createSpy('setItem')
     };
     const webApp = { initData: 'token=abc', ready: jasmine.createSpy('ready'), expand: jasmine.createSpy('expand') };
-    const service = setupService(webApp, 'example.com', jasmine.createSpy('alert'), jasmine.createSpy('confirm').and.returnValue(true), sessionStorageMock);
+    const service = setupService(webApp, 'example.com', jasmine.createSpy('alert'), jasmine.createSpy('confirm').and.returnValue(true), localStorageMock);
     service.init();
 
     service.getInitData();
 
-    expect(sessionStorageMock.setItem).toHaveBeenCalledWith('tg_init_data_cache', 'token=abc');
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('tg_init_data_cache', 'token=abc');
   });
 
-  it('falls back to sessionStorage cache when web app init data and launch params are unavailable', () => {
-    const sessionStorageMock = {
+  it('falls back to localStorage cache when web app init data and launch params are unavailable', () => {
+    const localStorageMock = {
       getItem: jasmine.createSpy('getItem').and.returnValue('cached-token=123'),
       setItem: jasmine.createSpy('setItem')
     };
     const webApp = { initData: '', ready: jasmine.createSpy('ready'), expand: jasmine.createSpy('expand') };
-    const service = setupService(webApp, 'example.com', jasmine.createSpy('alert'), jasmine.createSpy('confirm').and.returnValue(true), sessionStorageMock);
+    const service = setupService(webApp, 'example.com', jasmine.createSpy('alert'), jasmine.createSpy('confirm').and.returnValue(true), localStorageMock);
     service.init();
 
     expect(service.getInitData()).toBe('cached-token=123');
@@ -258,7 +258,7 @@ function setupService(
   locationConfig: string | { hostname?: string; search?: string; hash?: string } = 'example.com',
   alertSpy = jasmine.createSpy('alert'),
   confirmSpy = jasmine.createSpy('confirm').and.returnValue(true),
-  sessionStorageMock?: { getItem: jasmine.Spy; setItem: jasmine.Spy }
+  localStorageMock?: { getItem: jasmine.Spy; setItem: jasmine.Spy }
 ): TelegramService {
   const hostname = typeof locationConfig === 'string' ? locationConfig : (locationConfig.hostname ?? 'example.com');
   const search = typeof locationConfig === 'string' ? '' : (locationConfig.search ?? '');
@@ -268,13 +268,13 @@ function setupService(
     location: { hostname: string; search: string; hash: string };
     alert: typeof alertSpy;
     confirm: typeof confirmSpy;
-    sessionStorage?: { getItem: jasmine.Spy; setItem: jasmine.Spy };
+    localStorage?: { getItem: jasmine.Spy; setItem: jasmine.Spy };
     Telegram?: { WebApp: object };
   } = {
     location: { hostname, search, hash },
     alert: alertSpy,
     confirm: confirmSpy,
-    sessionStorage: sessionStorageMock
+    localStorage: localStorageMock
   };
   if (webApp) {
     defaultView.Telegram = {

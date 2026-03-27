@@ -68,7 +68,6 @@ export class FoodOrderFlowFacade {
     customerPhone: '',
     deliveryAddress: ''
   });
-  private readonly customerDetailsHydrated = signal(false);
   private readonly configSignal = signal<TenantConfig | null>(null);
   private readonly vmSignal = signal<FoodOrderVm>({
     services: [],
@@ -105,7 +104,6 @@ export class FoodOrderFlowFacade {
               bookings.some((booking) => booking.id === this.selectedBookingId())
                 ? this.selectedBookingId()
                 : bookings[0]?.id ?? null;
-            const latestBooking = this.findLatestBooking(bookings);
             const latestActiveBooking = this.findLatestActiveBooking(bookings);
             const currentSubmittedBooking = this.submittedBooking();
             const submittedBookingFromList = currentSubmittedBooking
@@ -121,7 +119,6 @@ export class FoodOrderFlowFacade {
             } else if (!this.isActiveBooking(currentSubmittedBooking)) {
               this.submittedBooking.set(null);
             }
-            this.hydrateCustomerDetails(latestBooking);
           }),
           map((bookings) => ({
             bookings,
@@ -502,7 +499,6 @@ export class FoodOrderFlowFacade {
     this.selectedBookingId.set(null);
     this.selectedBooking.set(null);
     this.activeView.set('menu');
-    this.customerDetailsHydrated.set(false);
     this.vmSignal.set({
       services: [],
       loading: true,
@@ -594,26 +590,6 @@ export class FoodOrderFlowFacade {
       deliveryDate: this.defaultDeliveryDate(),
       note: ''
     });
-  }
-
-  private hydrateCustomerDetails(booking: BookingResponse | null): void {
-    if (this.customerDetailsHydrated()) {
-      return;
-    }
-
-    this.customerDetailsHydrated.set(true);
-
-    if (!booking) {
-      return;
-    }
-
-    this.customerDetailsDraft.set({
-      customerName: booking.customerName.trim(),
-      customerPhone: booking.customerPhone.trim(),
-      deliveryAddress: booking.deliveryAddress?.trim() ?? ''
-    });
-
-    this.resetCheckoutForm();
   }
 
   private findLatestBooking(bookings: BookingResponse[]): BookingResponse | null {
