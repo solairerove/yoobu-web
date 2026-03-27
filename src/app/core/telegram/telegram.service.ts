@@ -33,7 +33,7 @@ interface TelegramWindow extends Window {
 @Injectable({ providedIn: 'root' })
 export class TelegramService {
   private static readonly POPUP_API_MIN_VERSION = '6.2';
-  private static readonly INIT_DATA_SESSION_KEY = 'tg_init_data';
+  private readonly INIT_DATA_SESSION_KEY = 'tg_init_data_cache';
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly webAppSignal = signal<TelegramWebApp | null>(null);
@@ -220,14 +220,14 @@ export class TelegramService {
 
   private cacheInitData(initData: string): void {
     this.document.defaultView?.sessionStorage?.setItem(
-      TelegramService.INIT_DATA_SESSION_KEY,
+      this.INIT_DATA_SESSION_KEY,
       initData
     );
   }
 
   private readCachedInitData(): string | null {
     const cached = this.document.defaultView?.sessionStorage?.getItem(
-      TelegramService.INIT_DATA_SESSION_KEY
+      this.INIT_DATA_SESSION_KEY
     );
     return cached?.trim() || null;
   }
