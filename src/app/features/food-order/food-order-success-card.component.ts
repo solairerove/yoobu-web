@@ -1,11 +1,13 @@
 import { CurrencyPipe, DatePipe, NgIf } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { BookingResponse } from '../../core/models/booking.model';
 import { normalizeCurrencyCode } from '../../core/utils/currency.util';
+import { normalizeBookingStatus } from '../../core/utils/booking-status.util';
 
 @Component({
   selector: 'app-food-order-success-card',
   imports: [CurrencyPipe, DatePipe, NgIf],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="success-card">
       <p class="eyebrow">Order #{{ booking().id }} sent</p>
@@ -20,7 +22,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
         <span>{{ booking().createdAt | date: 'short' }}</span>
       </div>
 
-      <section class="payment-qr-card" *ngIf="shouldShowPaymentQr() && paymentQrUrl() as paymentQrUrl">
+      <section class="payment-qr-card" *ngIf="shouldShowPaymentQr() && effectivePaymentQrUrl() as paymentQrUrl">
         <h4>Payment QR</h4>
         <p class="copy ui-copy">Scan this QR to pay, then tap "I paid" so the admin can verify your payment.</p>
         <a
@@ -201,9 +203,13 @@ export class FoodOrderSuccessCardComponent {
     return this.booking().status === 'NEW';
   }
 
+  protected effectivePaymentQrUrl(): string | null {
+    return this.booking().paymentQrUrl ?? this.paymentQrUrl();
+  }
+
   protected shouldShowPaymentQr(): boolean {
     const status = this.normalizeStatus(this.booking().status);
-    return !!this.paymentQrUrl() && (status === 'NEW' || status === 'PAYMENT_PENDING');
+    return !!this.effectivePaymentQrUrl() && (status === 'NEW' || status === 'PAYMENT_PENDING');
   }
 
   protected shouldShowTrackingLink(): boolean {
@@ -220,6 +226,6 @@ export class FoodOrderSuccessCardComponent {
   }
 
   private normalizeStatus(status: string): string {
-    return status.trim().replace(/-/g, '_').toUpperCase();
+    return normalizeBookingStatus(status);
   }
 }

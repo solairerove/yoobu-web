@@ -31,8 +31,9 @@ export interface BookingResponse {
   deliveryDate: string;
   note: string | null;
   trackingUrl: string | null;
+  paymentQrUrl: string | null;
   items: BookingItem[];
   createdAt: string;
 }
 
-export type BookingStatus = 'NEW' | 'PAYMENT_PENDING' | 'CONFIRMED' | 'DELIVERING' | 'DONE' | 'CANCELLED' | string;
+export type BookingStatus = 'NEW' | 'PAYMENT_PENDING' | 'CONFIRMED' | 'DELIVERING' | 'DONE' | 'CANCELLED';

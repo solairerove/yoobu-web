@@ -24,6 +24,19 @@
   --yoobu-shadow-modal: 0 -10px 40px rgba(36, 22, 15, 0.18);
   --yoobu-ring-soft: 0 0 0 6px rgba(36, 22, 15, 0.04);
   --yoobu-ring-accent: 0 0 0 6px rgba(255, 107, 53, 0.12);
+
+  /* Booking status badge colours */
+  --yoobu-status-payment-pending-bg: rgba(13, 71, 161, 0.14);
+  --yoobu-status-payment-pending-color: #0d47a1;
+  --yoobu-status-confirmed-bg: rgba(181, 131, 0, 0.14);
+  --yoobu-status-confirmed-color: #9a6800;
+  --yoobu-status-delivering-bg: rgba(126, 87, 194, 0.16);
+  --yoobu-status-delivering-color: #5e35b1;
+  --yoobu-status-done-bg: rgba(46, 125, 50, 0.14);
+  --yoobu-status-done-color: #2e7d32;
+  --yoobu-status-cancelled-bg: rgba(165, 42, 42, 0.12);
+  --yoobu-status-cancelled-color: #a52a2a;
+
   font-family: "SF Pro Display", "Avenir Next", "Segoe UI", sans-serif;
   color: var(--yoobu-ink);
   background:

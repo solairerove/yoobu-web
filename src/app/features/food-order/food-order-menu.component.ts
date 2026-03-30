@@ -1,10 +1,12 @@
 import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { ServiceItem } from '../../core/models/service.model';
+import { FoodOrderStore } from './food-order.store';
 
 @Component({
   selector: 'app-food-order-menu',
   imports: [CurrencyPipe, NgFor, NgIf],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="catalog-shell">
       <div class="catalog-note">
@@ -405,7 +407,6 @@ import { ServiceItem } from '../../core/models/service.model';
   `
 })
 export class FoodOrderMenuComponent {
-  private static readonly MAX_ITEM_QUANTITY = 9;
   readonly services = input.required<ServiceItem[]>();
   readonly selectedCount = input.required<number>();
   readonly currencyCode = input.required<string>();
@@ -423,7 +424,7 @@ export class FoodOrderMenuComponent {
   }
 
   protected maxed(serviceId: number): boolean {
-    return this.quantityFor(serviceId) >= FoodOrderMenuComponent.MAX_ITEM_QUANTITY;
+    return this.quantityFor(serviceId) >= FoodOrderStore.MAX_ITEM_QUANTITY;
   }
 
   protected serviceInitial(name: string): string {
