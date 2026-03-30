@@ -1,11 +1,13 @@
 import { CurrencyPipe, DatePipe, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
-import { Component, ElementRef, computed, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output } from '@angular/core';
 import { BookingResponse } from '../../core/models/booking.model';
 import { normalizeCurrencyCode } from '../../core/utils/currency.util';
+import { normalizeBookingStatus } from '../../core/utils/booking-status.util';
 
 @Component({
   selector: 'app-food-order-bookings',
   imports: [CurrencyPipe, DatePipe, NgFor, NgIf, NgTemplateOutlet],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="bookings-card">
       <div class="bookings-head">
@@ -40,7 +42,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
           <button
             type="button"
             class="booking-item"
-            *ngFor="let booking of allBookings()"
+            *ngFor="let booking of allBookings(); trackBy: trackByBookingId"
             [class.active]="selectedBookingId() === booking.id"
             (click)="selectAndScroll(booking.id)"
           >
@@ -194,7 +196,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
             <p class="receipt-note" *ngIf="booking.note">{{ booking.note }}</p>
 
             <div class="review-list">
-              <div class="review-row" *ngFor="let item of receiptItems(booking)">
+              <div class="review-row" *ngFor="let item of receiptItems(booking); trackBy: trackByItemName">
                 <div>
                   <strong>{{ item.serviceName }}</strong>
                   <p>{{ item.quantity }} × {{ item.unitPrice | currency: itemCurrency(item, booking) : 'symbol-narrow' : '1.0-0' }}</p>
@@ -387,28 +389,28 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     }
 
     .booking-status.status-payment-pending {
-      background: rgba(13, 71, 161, 0.14);
-      color: #0d47a1;
+      background: var(--yoobu-status-payment-pending-bg);
+      color: var(--yoobu-status-payment-pending-color);
     }
 
     .booking-status.status-confirmed {
-      background: rgba(181, 131, 0, 0.14);
-      color: #9a6800;
+      background: var(--yoobu-status-confirmed-bg);
+      color: var(--yoobu-status-confirmed-color);
     }
 
     .booking-status.status-delivering {
-      background: rgba(126, 87, 194, 0.16);
-      color: #5e35b1;
+      background: var(--yoobu-status-delivering-bg);
+      color: var(--yoobu-status-delivering-color);
     }
 
     .booking-status.status-done {
-      background: rgba(46, 125, 50, 0.14);
-      color: #2e7d32;
+      background: var(--yoobu-status-done-bg);
+      color: var(--yoobu-status-done-color);
     }
 
     .booking-status.status-cancelled {
-      background: rgba(165, 42, 42, 0.12);
-      color: brown;
+      background: var(--yoobu-status-cancelled-bg);
+      color: var(--yoobu-status-cancelled-color);
     }
 
     .booking-detail {
@@ -669,6 +671,14 @@ export class FoodOrderBookingsComponent {
     return this.currentBookings()[0] ?? this.previousBookings()[0] ?? null;
   });
 
+  protected trackByBookingId(_index: number, booking: BookingResponse): number {
+    return booking.id;
+  }
+
+  protected trackByItemName(_index: number, item: BookingResponse['items'][number]): string {
+    return item.serviceName;
+  }
+
   protected selectAndScroll(bookingId: number): void {
     this.bookingSelected.emit(bookingId);
     setTimeout(() => {
@@ -722,7 +732,7 @@ export class FoodOrderBookingsComponent {
   }
 
   private normalizeStatus(status: string): string {
-    return status.trim().replace(/-/g, '_').toUpperCase();
+    return normalizeBookingStatus(status);
   }
 
   protected bookingStatusLabel(status: BookingResponse['status']): string {

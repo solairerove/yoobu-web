@@ -1,11 +1,13 @@
 import { CurrencyPipe, DatePipe, NgIf } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { BookingResponse } from '../../core/models/booking.model';
 import { normalizeCurrencyCode } from '../../core/utils/currency.util';
+import { normalizeBookingStatus } from '../../core/utils/booking-status.util';
 
 @Component({
   selector: 'app-food-order-success-card',
   imports: [CurrencyPipe, DatePipe, NgIf],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="success-card">
       <p class="eyebrow">Order #{{ booking().id }} sent</p>
@@ -224,6 +226,6 @@ export class FoodOrderSuccessCardComponent {
   }
 
   private normalizeStatus(status: string): string {
-    return status.trim().replace(/-/g, '_').toUpperCase();
+    return normalizeBookingStatus(status);
   }
 }

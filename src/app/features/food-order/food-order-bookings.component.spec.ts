@@ -197,11 +197,11 @@ describe('FoodOrderBookingsComponent', () => {
     expect(detailId.nativeElement.textContent).toContain('#3');
   });
 
-  it('treats payment-pending status variants as active bookings', () => {
+  it('treats PAYMENT_PENDING status as an active booking', () => {
     const pendingBooking: BookingResponse = {
       ...booking,
       id: 5,
-      status: 'payment-pending',
+      status: 'PAYMENT_PENDING',
       createdAt: '2026-03-21T10:00:00.000Z'
     };
 

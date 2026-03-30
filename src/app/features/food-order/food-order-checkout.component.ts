@@ -1,5 +1,5 @@
 import { CurrencyPipe, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ServiceItem } from '../../core/models/service.model';
 
@@ -11,6 +11,7 @@ interface CheckoutSelection {
 @Component({
   selector: 'app-food-order-checkout',
   imports: [CurrencyPipe, NgFor, NgIf, NgTemplateOutlet, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ng-container *ngIf="open()">
       <section class="checkout-card" *ngIf="localMode(); else telegramCheckout">
@@ -109,7 +110,7 @@ interface CheckoutSelection {
           </div>
 
           <div class="review-list">
-            <div class="review-row" *ngFor="let entry of selectedItems()">
+            <div class="review-row" *ngFor="let entry of selectedItems(); trackBy: trackByServiceId">
               <div>
                 <strong>{{ entry.service.name }}</strong>
                 <p>{{ entry.quantity }} × {{ entry.service.price | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
@@ -397,4 +398,8 @@ export class FoodOrderCheckoutComponent {
   readonly closeRequested = output<void>();
   readonly repeatOrderBannerDismissed = output<void>();
   readonly submitRequested = output<void>();
+
+  protected trackByServiceId(_index: number, entry: CheckoutSelection): number {
+    return entry.service.id;
+  }
 }

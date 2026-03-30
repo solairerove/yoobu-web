@@ -1,5 +1,5 @@
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, distinctUntilChanged, filter, firstValueFrom, map, of, startWith, switchMap, tap } from 'rxjs';
@@ -9,6 +9,7 @@ import { ServiceItem } from '../../core/models/service.model';
 import { TenantApiService } from '../../core/services/tenant-api.service';
 import { TelegramService } from '../../core/telegram/telegram.service';
 import { currencySymbolFor, normalizeCurrencyCode } from '../../core/utils/currency.util';
+import { normalizeBookingStatus } from '../../core/utils/booking-status.util';
 import { FoodOrderStore } from './food-order.store';
 
 interface FoodOrderVm {
@@ -34,6 +35,8 @@ export class FoodOrderFlowFacade {
   private readonly api = inject(TenantApiService);
   private readonly fb = inject(FormBuilder);
   private readonly telegram = inject(TelegramService);
+
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly store = inject(FoodOrderStore);
   readonly showLocalCheckoutButtons = this.telegram.isLocalhost();
@@ -517,7 +520,7 @@ export class FoodOrderFlowFacade {
       error: null
     });
 
-    this.api.getServices(slug).subscribe({
+    this.api.getServices(slug).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (services) => {
         if (this.servicesRequestVersion() !== requestVersion || this.configSignal()?.slug !== slug) {
           return;
@@ -612,7 +615,7 @@ export class FoodOrderFlowFacade {
   }
 
   private isActiveBooking(booking: BookingResponse): boolean {
-    const normalizedStatus = booking.status.trim().replace(/-/g, '_').toUpperCase();
+    const normalizedStatus = normalizeBookingStatus(booking.status);
     return (
       normalizedStatus === 'NEW' ||
       normalizedStatus === 'PAYMENT_PENDING' ||

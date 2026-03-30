@@ -1,9 +1,10 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-food-order-cart-bar',
   imports: [CurrencyPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button type="button" class="cart-bar" (click)="openRequested.emit()">
       <div class="cart-copy">

@@ -36,4 +36,4 @@ export interface BookingResponse {
   createdAt: string;
 }
 
-export type BookingStatus = 'NEW' | 'PAYMENT_PENDING' | 'CONFIRMED' | 'DELIVERING' | 'DONE' | 'CANCELLED' | string;
+export type BookingStatus = 'NEW' | 'PAYMENT_PENDING' | 'CONFIRMED' | 'DELIVERING' | 'DONE' | 'CANCELLED';
