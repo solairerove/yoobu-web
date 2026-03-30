@@ -155,7 +155,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
             </div>
           </div>
 
-          <section class="payment-qr-card" *ngIf="shouldShowPaymentQr(booking) && paymentQrUrl() as paymentQrUrl">
+          <section class="payment-qr-card" *ngIf="shouldShowPaymentQr(booking) && effectivePaymentQrUrl(booking) as paymentQrUrl">
             <h5>Payment QR</h5>
             <p class="copy ui-copy">Scan this QR to pay, then tap "I paid" so the admin can verify your payment.</p>
             <a
@@ -708,9 +708,13 @@ export class FoodOrderBookingsComponent {
     return this.normalizeStatus(booking.status) === 'NEW';
   }
 
+  protected effectivePaymentQrUrl(booking: BookingResponse): string | null {
+    return booking.paymentQrUrl ?? this.paymentQrUrl();
+  }
+
   protected shouldShowPaymentQr(booking: BookingResponse): boolean {
     const status = this.normalizeStatus(booking.status);
-    return !!this.paymentQrUrl() && (status === 'NEW' || status === 'PAYMENT_PENDING');
+    return !!this.effectivePaymentQrUrl(booking) && (status === 'NEW' || status === 'PAYMENT_PENDING');
   }
 
   protected isStatus(status: string, expected: string): boolean {

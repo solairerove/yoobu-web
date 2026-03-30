@@ -20,7 +20,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
         <span>{{ booking().createdAt | date: 'short' }}</span>
       </div>
 
-      <section class="payment-qr-card" *ngIf="shouldShowPaymentQr() && paymentQrUrl() as paymentQrUrl">
+      <section class="payment-qr-card" *ngIf="shouldShowPaymentQr() && effectivePaymentQrUrl() as paymentQrUrl">
         <h4>Payment QR</h4>
         <p class="copy ui-copy">Scan this QR to pay, then tap "I paid" so the admin can verify your payment.</p>
         <a
@@ -201,9 +201,13 @@ export class FoodOrderSuccessCardComponent {
     return this.booking().status === 'NEW';
   }
 
+  protected effectivePaymentQrUrl(): string | null {
+    return this.booking().paymentQrUrl ?? this.paymentQrUrl();
+  }
+
   protected shouldShowPaymentQr(): boolean {
     const status = this.normalizeStatus(this.booking().status);
-    return !!this.paymentQrUrl() && (status === 'NEW' || status === 'PAYMENT_PENDING');
+    return !!this.effectivePaymentQrUrl() && (status === 'NEW' || status === 'PAYMENT_PENDING');
   }
 
   protected shouldShowTrackingLink(): boolean {

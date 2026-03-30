@@ -31,6 +31,7 @@ export interface BookingResponse {
   deliveryDate: string;
   note: string | null;
   trackingUrl: string | null;
+  paymentQrUrl: string | null;
   items: BookingItem[];
   createdAt: string;
 }

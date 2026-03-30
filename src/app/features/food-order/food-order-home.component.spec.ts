@@ -203,6 +203,7 @@ describe('FoodOrderHomeComponent', () => {
       deliveryDate: '2026-03-19',
       note: null,
       trackingUrl: null,
+      paymentQrUrl: null,
       items: [{ serviceName: service.name, quantity: 1, unitPrice: service.price, currency: 'VND' }],
       createdAt: '2026-03-19T10:00:00.000Z'
     };

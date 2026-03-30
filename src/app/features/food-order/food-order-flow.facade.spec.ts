@@ -537,6 +537,7 @@ function createBookingResponse(id: number): BookingResponse {
     deliveryDate: '2026-03-18',
     note: null,
     trackingUrl: null,
+    paymentQrUrl: null,
     items: [
       {
         serviceName: 'Coffee',

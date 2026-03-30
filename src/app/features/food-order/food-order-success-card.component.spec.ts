@@ -19,6 +19,7 @@ describe('FoodOrderSuccessCardComponent', () => {
     deliveryDate: '2026-03-19',
     note: null,
     trackingUrl: null,
+    paymentQrUrl: null,
     items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000, currency: 'VND' }],
     createdAt: '2026-03-19T10:00:00.000Z'
   };
@@ -100,6 +101,58 @@ describe('FoodOrderSuccessCardComponent', () => {
     paymentButton.nativeElement.click();
 
     expect(confirmSpy).toHaveBeenCalledWith(booking.id);
+  });
+
+  it('shows QR from booking.paymentQrUrl when present, ignoring the fallback input', () => {
+    fixture.componentRef.setInput('booking', { ...booking, paymentQrUrl: 'https://dynamic.example.com/qr.png' });
+    fixture.componentRef.setInput('fallbackCurrency', 'VND');
+    fixture.componentRef.setInput('paymentQrUrl', 'https://static.example.com/fallback-qr.png');
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.detectChanges();
+
+    const qrImg = fixture.debugElement.query(By.css('.payment-qr-card img'));
+    expect(qrImg).not.toBeNull();
+    expect(qrImg.nativeElement.getAttribute('src')).toBe('https://dynamic.example.com/qr.png');
+  });
+
+  it('falls back to paymentQrUrl input when booking.paymentQrUrl is null', () => {
+    fixture.componentRef.setInput('booking', { ...booking, paymentQrUrl: null });
+    fixture.componentRef.setInput('fallbackCurrency', 'VND');
+    fixture.componentRef.setInput('paymentQrUrl', 'https://static.example.com/fallback-qr.png');
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.detectChanges();
+
+    const qrImg = fixture.debugElement.query(By.css('.payment-qr-card img'));
+    expect(qrImg).not.toBeNull();
+    expect(qrImg.nativeElement.getAttribute('src')).toBe('https://static.example.com/fallback-qr.png');
+  });
+
+  it('hides QR when both booking.paymentQrUrl and paymentQrUrl input are null', () => {
+    fixture.componentRef.setInput('booking', { ...booking, paymentQrUrl: null });
+    fixture.componentRef.setInput('fallbackCurrency', 'VND');
+    fixture.componentRef.setInput('paymentQrUrl', null);
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('.payment-qr-card'))).toBeNull();
+  });
+
+  it('hides QR for non-payable status even when booking.paymentQrUrl is set', () => {
+    fixture.componentRef.setInput('booking', {
+      ...booking,
+      status: 'CONFIRMED',
+      paymentQrUrl: 'https://dynamic.example.com/qr.png'
+    });
+    fixture.componentRef.setInput('fallbackCurrency', 'VND');
+    fixture.componentRef.setInput('paymentQrUrl', 'https://static.example.com/fallback-qr.png');
+    fixture.componentRef.setInput('confirmingPaymentBookingId', null);
+    fixture.componentRef.setInput('paymentError', null);
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('.payment-qr-card'))).toBeNull();
   });
 
   it('shows track delivery link for delivering booking with trackingUrl', () => {
