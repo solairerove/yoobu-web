@@ -199,9 +199,9 @@ import { normalizeBookingStatus } from '../../core/utils/booking-status.util';
               <div class="review-row" *ngFor="let item of receiptItems(booking); trackBy: trackByItemName">
                 <div>
                   <strong>{{ item.serviceName }}</strong>
-                  <p>{{ item.quantity }} × {{ item.unitPrice | currency: itemCurrency(item, booking) : 'symbol-narrow' : '1.0-0' }}</p>
+                  <p>{{ item.quantity }} × {{ item.unitPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
                 </div>
-                <span>{{ item.unitPrice * item.quantity | currency: itemCurrency(item, booking) : 'symbol-narrow' : '1.0-0' }}</span>
+                <span>{{ item.unitPrice * item.quantity | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</span>
               </div>
               <p class="review-more" *ngIf="booking.items.length > receiptItemsLimit">
                 +{{ booking.items.length - receiptItemsLimit }} more item{{ booking.items.length - receiptItemsLimit > 1 ? 's' : '' }}
@@ -864,10 +864,6 @@ export class FoodOrderBookingsComponent {
 
   protected bookingCurrency(booking: BookingResponse): string {
     return normalizeCurrencyCode(booking.currency || this.currencyCode());
-  }
-
-  protected itemCurrency(item: BookingResponse['items'][number], booking: BookingResponse): string {
-    return normalizeCurrencyCode(item.currency || booking.currency || this.currencyCode());
   }
 
   protected displayAddress(address: string | null): string {

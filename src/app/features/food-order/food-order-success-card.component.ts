@@ -200,7 +200,7 @@ export class FoodOrderSuccessCardComponent {
   }
 
   protected canConfirmPayment(): boolean {
-    return this.booking().status === 'NEW';
+    return this.normalizeStatus(this.booking().status) === 'NEW';
   }
 
   protected effectivePaymentQrUrl(): string | null {
