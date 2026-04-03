@@ -162,8 +162,8 @@ describe('FoodOrderFlowFacade', () => {
       deliveryAddress: ' 456 Side St ',
       note: ' ring bell ',
       items: [
-        { serviceName: 'Coffee', quantity: 2, unitPrice: 30000, currency: 'VND' },
-        { serviceName: 'Tea', quantity: 1, unitPrice: 20000, currency: 'VND' }
+        { serviceName: 'Coffee', quantity: 2, unitPrice: 30000 },
+        { serviceName: 'Tea', quantity: 1, unitPrice: 20000 }
       ]
     };
     api.getServices.and.returnValue(of([service, teaService]));
@@ -187,7 +187,7 @@ describe('FoodOrderFlowFacade', () => {
     const legacyBooking: BookingResponse = {
       ...createBookingResponse(9),
       status: 'DONE',
-      items: [{ serviceName: 'Old item', quantity: 1, unitPrice: 15000, currency: 'VND' }]
+      items: [{ serviceName: 'Old item', quantity: 1, unitPrice: 15000 }]
     };
     api.getServices.and.returnValue(of([service]));
     facade.setConfig(tenantConfig);
@@ -205,7 +205,7 @@ describe('FoodOrderFlowFacade', () => {
     const repeated: BookingResponse = {
       ...createBookingResponse(15),
       status: 'DONE',
-      items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000, currency: 'VND' }]
+      items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000 }]
     };
     api.getServices.and.returnValue(of([service]));
     facade.setConfig(tenantConfig);
@@ -224,7 +224,7 @@ describe('FoodOrderFlowFacade', () => {
       ...createBookingResponse(11),
       status: 'DONE',
       customerName: 'Repeat User',
-      items: [{ serviceName: 'Coffee', quantity: 3, unitPrice: 30000, currency: 'VND' }]
+      items: [{ serviceName: 'Coffee', quantity: 3, unitPrice: 30000 }]
     };
     api.getServices.and.returnValue(of([service]));
     facade.setConfig(tenantConfig);
@@ -542,8 +542,7 @@ function createBookingResponse(id: number): BookingResponse {
       {
         serviceName: 'Coffee',
         quantity: 1,
-        unitPrice: 30000,
-        currency: 'VND'
+        unitPrice: 30000
       }
     ],
     createdAt: '2026-03-18T10:00:00.000Z'

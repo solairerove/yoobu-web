@@ -204,7 +204,7 @@ describe('FoodOrderHomeComponent', () => {
       note: null,
       trackingUrl: null,
       paymentQrUrl: null,
-      items: [{ serviceName: service.name, quantity: 1, unitPrice: service.price, currency: 'VND' }],
+      items: [{ serviceName: service.name, quantity: 1, unitPrice: service.price }],
       createdAt: '2026-03-19T10:00:00.000Z'
     };
     facade.bookingsVm.set({

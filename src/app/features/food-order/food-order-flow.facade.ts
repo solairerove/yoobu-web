@@ -246,6 +246,7 @@ export class FoodOrderFlowFacade {
       deliveryDate: this.defaultDeliveryDate(),
       note: ''
     });
+    this.checkoutForm.markAsUntouched();
   }
 
   refreshBookings(): void {

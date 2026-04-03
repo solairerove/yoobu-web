@@ -14,9 +14,7 @@
             "outputPath": "dist/yoobu-web",
             "browser": "src/main.ts",
             "index": "src/index.html",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": [],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {

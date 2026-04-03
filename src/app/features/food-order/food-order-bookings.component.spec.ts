@@ -20,7 +20,7 @@ describe('FoodOrderBookingsComponent', () => {
     note: 'No sugar',
     trackingUrl: null,
     paymentQrUrl: null,
-    items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000, currency: 'VND' }],
+    items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000 }],
     createdAt: '2026-03-19T10:00:00.000Z'
   };
 

@@ -16,7 +16,6 @@ export interface BookingItem {
   serviceName: string;
   quantity: number;
   unitPrice: number;
-  currency: string;
 }
 
 export interface BookingResponse {

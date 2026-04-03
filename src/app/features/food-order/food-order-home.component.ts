@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, computed, effect, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { TenantConfig } from '../../core/models/tenant-config.model';
 import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 import { FoodOrderBookingsComponent } from './food-order-bookings.component';
@@ -21,6 +21,7 @@ import { FoodOrderStore } from './food-order.store';
     FoodOrderSuccessCardComponent
   ],
   providers: [FoodOrderFlowFacade],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="panel" [class.has-cart]="store.selectedCount() > 0 && !submittedBooking()">
       <header class="panel-header">

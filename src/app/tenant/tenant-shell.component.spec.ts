@@ -158,8 +158,7 @@ function createBookingResponse(id: number): BookingResponse {
       {
         serviceName: 'Coffee',
         quantity: 1,
-        unitPrice: 30000,
-        currency: 'VND'
+        unitPrice: 30000
       }
     ],
     createdAt: '2026-03-19T10:00:00.000Z'
