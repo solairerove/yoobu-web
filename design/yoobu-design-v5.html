@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yoobu — Design v5 · Final</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { width: 100%; height: 100%; }
+    body { font-family: 'Nunito', sans-serif; background: #1a1a1a; overflow: hidden; -webkit-font-smoothing: antialiased; }
+    p { text-wrap: pretty; }
+    ::-webkit-scrollbar { width: 0; height: 0; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel">
+
+// ─── Tokens ───────────────────────────────────────────────────────────────────
+const T = {
+  pageBg:       'oklch(92.5% 0.022 28)',
+  cardBg:       '#ffffff',
+  inputBg:      'oklch(96.5% 0.008 30)',
+  receiptBg:    'oklch(95.5% 0.016 38)',
+  border:       'oklch(90% 0.010 28)',
+  borderLight:  'oklch(94% 0.006 28)',
+
+  textPrimary:  '#1a1a1a',
+  textSecondary:'oklch(50% 0.01 30)',
+  textMuted:    'oklch(65% 0.008 30)',
+  textHint:     'oklch(62% 0.01 30)',
+
+  green:        'oklch(38% 0.11 145)',
+  greenBg:      'oklch(91% 0.055 145)',
+  greenDot:     'oklch(48% 0.13 145)',
+
+  red:          'oklch(38% 0.13 22)',
+  redBg:        'oklch(92% 0.04 22)',
+
+  golden:       'oklch(48% 0.10 72)',
+  goldenBg:     'oklch(91% 0.055 72)',
+
+  orderingBg:   'oklch(90% 0.04 28)',
+  orderingText: 'oklch(48% 0.07 28)',
+
+  olive:        'oklch(37% 0.07 82)',
+  tgBlue:       '#2481cc',
+
+  r8: '8px', r12: '12px', r16: '16px', r20: '20px', r999: '999px',
+};
+
+// ─── Shared primitives ────────────────────────────────────────────────────────
+
+const TgBar = () => (
+  <div style={{
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '13px 20px 11px',
+    background: T.cardBg, borderBottom: `1px solid ${T.border}`,
+    flexShrink: 0, minHeight: 52,
+  }}>
+    <span style={{ fontSize: 17, color: T.textSecondary, width: 24, textAlign: 'center' }}>✕</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'center' }}>
+      <div style={{
+        width: 28, height: 28, borderRadius: '50%',
+        background: 'linear-gradient(135deg, #c9aa82 0%, #9b7e58 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0,
+      }}>🫖</div>
+      <span style={{ fontWeight: 700, fontSize: 15, color: T.textPrimary, whiteSpace: 'nowrap' }}>Чепок ДМБ</span>
+    </div>
+    <span style={{ color: T.textSecondary, width: 24, textAlign: 'center', fontSize: 15, letterSpacing: 1 }}>•••</span>
+  </div>
+);
+
+const PhoneShell = ({ children, height = 812, bg }) => (
+  <div style={{
+    width: 390, height,
+    background: bg || T.pageBg,
+    borderRadius: 44, overflow: 'hidden',
+    display: 'flex', flexDirection: 'column',
+    boxShadow: '0 40px 100px rgba(0,0,0,0.30), 0 0 0 1px rgba(0,0,0,0.07)',
+    fontFamily: "'Nunito', sans-serif",
+  }}>
+    <TgBar />
+    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+      {children}
+    </div>
+  </div>
+);
+
+const StatusBadge = ({ status }) => {
+  const map = {
+    'Ordering':   { bg: T.orderingBg,  color: T.orderingText },
+    'Cancelled':  { bg: T.redBg,       color: T.red },
+    'Delivered':  { bg: T.greenBg,     color: T.green },
+    'Confirmed':  { bg: T.goldenBg,    color: T.golden },
+    'Delivering': { bg: T.goldenBg,    color: T.golden },
+    'Paid':       { bg: T.greenBg,     color: T.green },
+  };
+  const s = map[status] || map['Ordering'];
+  return (
+    <span style={{
+      background: s.bg, color: s.color,
+      padding: '4px 11px', borderRadius: T.r999,
+      fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
+    }}>{status}</span>
+  );
+};
+
+const TgBtn = ({ label, blue, small, icon }) => (
+  <button style={{
+    width: '100%', padding: small ? '11px 20px' : '14px 20px',
+    background: blue ? T.tgBlue : T.cardBg,
+    color: blue ? '#fff' : T.textPrimary,
+    border: blue ? 'none' : `1px solid ${T.border}`,
+    borderRadius: T.r999, fontWeight: 700,
+    fontSize: small ? 14 : 15,
+    cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+    boxShadow: blue ? '0 4px 16px rgba(36,129,204,0.3)' : 'none',
+  }}>{icon && <span>{icon}</span>}{label}</button>
+);
+
+const Img = ({ label, h = 200, r = 0, dimmed }) => (
+  <div style={{
+    width: '100%', height: h, borderRadius: r, flexShrink: 0, overflow: 'hidden',
+    background: `repeating-linear-gradient(-45deg,
+      oklch(86% 0.018 30) 0,oklch(86% 0.018 30) 10px,
+      oklch(91% 0.010 30) 10px,oklch(91% 0.010 30) 20px)`,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    opacity: dimmed ? 0.5 : 1,
+  }}>
+    {label && <span style={{
+      fontFamily: 'monospace', fontSize: 11, color: 'oklch(45% 0.02 30)',
+      background: 'rgba(255,255,255,0.72)', padding: '3px 8px', borderRadius: 4,
+    }}>{label}</span>}
+  </div>
+);
+
+// ─── 5-stage progress bar ─────────────────────────────────────────────────────
+const STAGES = ['Placed', 'Paid', 'Confirmed', 'Delivering', 'Delivered'];
+const StageBar = ({ current }) => {
+  const idx = STAGES.indexOf(current);
+  return (
+    <div style={{ marginBottom: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 7 }}>
+        {STAGES.map((s, i) => (
+          <React.Fragment key={s}>
+            <div style={{
+              width: 12, height: 12, borderRadius: '50%', flexShrink: 0,
+              background: i <= idx ? T.greenDot : T.border,
+              boxShadow: i === idx ? `0 0 0 3px ${T.greenBg}` : 'none',
+              transition: 'all 0.3s',
+            }} />
+            {i < STAGES.length - 1 && (
+              <div style={{
+                flex: 1, height: 2.5, borderRadius: 2,
+                background: i < idx ? T.greenDot : T.border,
+              }} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={{ display: 'flex' }}>
+        {STAGES.map((s, i) => (
+          <span key={s} style={{
+            fontSize: 9.5, fontWeight: i === idx ? 800 : 500,
+            color: i === idx ? T.green : (i < idx ? T.greenDot : T.textMuted),
+            textAlign: 'center', flex: 1,
+          }}>{s}</span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── Checkout bar ────────────────────────────────────────────────────────────
+const CheckoutBar = ({ total }) => (
+  <div style={{
+    position: 'sticky', bottom: 0, padding: '10px 16px 20px',
+    background: `linear-gradient(to top, ${T.pageBg} 70%, transparent)`,
+    pointerEvents: 'none',
+  }}>
+    <button style={{
+      width: '100%', padding: '14px 24px',
+      background: T.tgBlue, color: '#fff',
+      border: 'none', borderRadius: T.r999,
+      fontWeight: 700, fontSize: 16,
+      cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+      boxShadow: '0 4px 16px rgba(36,129,204,0.35)',
+      pointerEvents: 'all',
+    }}>Checkout • ₽{total}</button>
+  </div>
+);
+
+// ─── Mini Hero header (new default for catalog variants) ─────────────────────
+const MiniHero = ({ tabState, onTab }) => {
+  const [activeTab, setActiveTab] = React.useState(tabState || 'Menu');
+  const handleTab = (t) => { setActiveTab(t); onTab && onTab(t); };
+  return (
+    <div style={{ flexShrink: 0 }}>
+      {/* Banner */}
+      <div style={{ position: 'relative', height: 96 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `repeating-linear-gradient(-45deg,
+            oklch(72% 0.040 50) 0, oklch(72% 0.040 50) 14px,
+            oklch(67% 0.048 46) 14px, oklch(67% 0.048 46) 28px)`,
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.56) 100%)',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: 10, left: 14, right: 14,
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: '50%',
+              background: 'linear-gradient(135deg,#c9aa82,#9b7e58)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 16, flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            }}>🫖</div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '-0.2px', lineHeight: 1.1 }}>Чепок «ДМБ»</div>
+              <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>Упал — отжался. Поел — молодец.</div>
+            </div>
+          </div>
+          <StatusBadge status="Ordering" />
+        </div>
+      </div>
+      {/* Tab switcher */}
+      <div style={{ background: T.cardBg, padding: '8px 14px 0', borderBottom: `1px solid ${T.border}` }}>
+        <div style={{ display: 'flex', gap: 0 }}>
+          {['Menu', 'My orders'].map(t => (
+            <button key={t} onClick={() => handleTab(t)} style={{
+              padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer',
+              fontWeight: 800, fontSize: 14, fontFamily: "'Nunito', sans-serif",
+              color: activeTab === t ? T.textPrimary : T.textSecondary,
+              borderBottom: activeTab === t ? `2.5px solid ${T.olive}` : '2.5px solid transparent',
+              marginBottom: -1, transition: 'all 0.15s',
+            }}>{t}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Category sticky header ───────────────────────────────────────────────────
+const CategoryStickyHeader = ({ label }) => (
+  <div style={{
+    position: 'sticky', top: 0, zIndex: 10,
+    background: T.pageBg,
+    padding: '10px 14px 6px',
+    display: 'flex', alignItems: 'center', gap: 8,
+  }}>
+    <span style={{ fontWeight: 800, fontSize: 12, color: T.olive, letterSpacing: 0.8, textTransform: 'uppercase' }}>{label}</span>
+    <div style={{ flex: 1, height: 1, background: T.border }} />
+  </div>
+);
+
+// ─── Refined QtyBtn ──────────────────────────────────────────────────────────
+const QtyBtnV2 = ({ qty = 0 }) => (
+  qty === 0 ? (
+    <div style={{
+      width: 36, height: 36, background: T.olive, borderRadius: '50%',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#fff', fontSize: 22, lineHeight: 1, cursor: 'pointer', flexShrink: 0,
+      boxShadow: '0 2px 8px rgba(55,65,28,0.22)',
+    }}>+</div>
+  ) : (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 0,
+      background: T.olive, borderRadius: 999, overflow: 'hidden', flexShrink: 0,
+    }}>
+      <div style={{
+        width: 32, height: 36,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontSize: 20, cursor: 'pointer',
+      }}>−</div>
+      <span style={{ fontWeight: 800, fontSize: 14, color: '#fff', minWidth: 18, textAlign: 'center' }}>{qty}</span>
+      <div style={{
+        width: 32, height: 36,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontSize: 22, cursor: 'pointer',
+      }}>+</div>
+    </div>
+  )
+);
+
+// ─── CATALOG VARIANT C1: Large thumb compact list + sticky category headers ───
+const C1Row = ({ name, desc, price, qty = 0, sold }) => (
+  <div style={{
+    background: T.cardBg,
+    margin: '0 12px 8px',
+    borderRadius: T.r16,
+    display: 'flex', alignItems: 'stretch', overflow: 'hidden',
+    boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
+    opacity: sold ? 0.5 : 1,
+  }}>
+    {/* Thumbnail */}
+    <div style={{ width: 110, flexShrink: 0, position: 'relative' }}>
+      <div style={{
+        width: 110, height: 110,
+        background: `repeating-linear-gradient(-45deg,
+          oklch(86% 0.018 30) 0,oklch(86% 0.018 30) 9px,
+          oklch(91% 0.010 30) 9px,oklch(91% 0.010 30) 18px)`,
+      }} />
+      {sold && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(255,255,255,0.6)',
+        }}>
+          <span style={{ fontFamily: 'monospace', fontSize: 10, color: T.textMuted, background: 'rgba(255,255,255,0.8)', padding: '2px 6px', borderRadius: 4 }}>sold out</span>
+        </div>
+      )}
+    </div>
+    {/* Content */}
+    <div style={{ flex: 1, padding: '12px 12px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
+      <div>
+        <div style={{ fontWeight: 800, fontSize: 14, color: T.textPrimary, marginBottom: 3, letterSpacing: '-0.1px', lineHeight: 1.3 }}>{name}</div>
+        <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5, marginBottom: 4 }}>{desc}</div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontWeight: 800, fontSize: 18, color: T.green, letterSpacing: '-0.3px' }}>₽{price}</span>
+        {!sold && <QtyBtnV2 qty={qty} />}
+      </div>
+    </div>
+  </div>
+);
+
+const ScreenCatalogC1 = () => (
+  <PhoneShell height={900}>
+    <MiniHero />
+    <div style={{ flex: 1, overflowY: 'auto' }}>
+      <CategoryStickyHeader label="Всё" />
+      <div style={{ paddingBottom: 90 }}>
+        <C1Row name="Сгущёнка «Рогачёвская»" desc="Классика. Открывается гвоздём. Три часа ночи." price={55} qty={0} />
+        <C1Row name="Чай с сахаром" desc="Два куска рафинада, кружка, кипяток." price={15} qty={2} />
+        <C1Row name="Чёрный хлеб" desc="Кирпич. Хорошо с тушёнкой. Хорошо без." price={10} qty={1} />
+        <C1Row name="Тушёнка говяжья" desc="Мясо. Жир. Жесть. Всё как надо." price={120} qty={0} />
+        <C1Row name="Перловая каша" desc="С маслом. Питательная. Да." price={30} qty={0} />
+        <C1Row name="Компот вишнёвый" desc="Из столовой. Холодный. Сладкий." price={12} qty={0} sold />
+      </div>
+      <CheckoutBar total="155" />
+    </div>
+  </PhoneShell>
+);
+
+
+
+// ─── SCREEN 01: Home — active orders (MiniHero layout) ───────────────────────
+const ScreenActiveOrders = () => (
+  <PhoneShell height={860}>
+    <MiniHero tabState="My orders" />
+    <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 24px' }}>
+      {/* Section label */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 2px 10px' }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: T.green, letterSpacing: 1.1 }}>ACTIVE ORDERS</span>
+        <button style={{
+          background: T.cardBg, border: `1px solid ${T.border}`,
+          borderRadius: T.r999, padding: '4px 12px',
+          fontSize: 12, fontWeight: 700, color: T.textSecondary,
+          cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+        }}>↺ Refresh</button>
+      </div>
+      {/* Active order card #59 */}
+      <div style={{
+        background: T.cardBg, borderRadius: T.r16,
+        border: `1px solid ${T.border}`,
+        padding: '14px 16px', marginBottom: 10,
+        boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <span style={{ fontWeight: 800, fontSize: 16, color: T.textPrimary }}>#59</span>
+          <StatusBadge status="Confirmed" />
+        </div>
+        <StageBar current="Confirmed" />
+        <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 2, marginTop: 8 }}>May 1, 2026 · Адрес в дананге</div>
+        <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 12 }}>2× Тушёнка говяжья · ₽240</div>
+        <TgBtn label="View details" small />
+      </div>
+      {/* Active order card #58 */}
+      <div style={{
+        background: T.cardBg, borderRadius: T.r16,
+        border: `1px solid ${T.border}`,
+        padding: '14px 16px', marginBottom: 16,
+        boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <span style={{ fontWeight: 800, fontSize: 16, color: T.textPrimary }}>#58</span>
+          <StatusBadge status="Paid" />
+        </div>
+        <StageBar current="Paid" />
+        <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 2, marginTop: 8 }}>Apr 30, 2026 · ул. Полевая, 1</div>
+        <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 12 }}>1× Сгущёнка · ₽55</div>
+        <TgBtn label="View details" small />
+      </div>
+      {/* New order CTA */}
+      <TgBtn label="+ New order" blue />
+    </div>
+  </PhoneShell>
+);
+
+// ─── SCREEN 2: Cart ───────────────────────────────────────────────────────────
+const CartRow = ({ name, category, price, qty, imgLabel }) => (
+  <div style={{
+    display: 'flex', alignItems: 'center', gap: 12,
+    padding: '12px 16px', borderBottom: `1px solid ${T.border}`,
+  }}>
+    <div style={{ width: 64, height: 64, borderRadius: T.r12, overflow: 'hidden', flexShrink: 0 }}>
+      <Img label="" h={64} r={0} />
+    </div>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 1 }}>{category}</div>
+      <div style={{ fontWeight: 700, fontSize: 14, color: T.textPrimary, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
+      <div style={{ fontWeight: 800, fontSize: 15, color: T.green }}>₽{price}</div>
+    </div>
+    <QtyBtnV2 qty={qty} />
+  </div>
+);
+
+const ScreenCart = () => (
+  <PhoneShell height={860}>
+    <div style={{ padding: '16px 16px 12px', background: T.pageBg }}>
+      <div style={{ fontWeight: 800, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.3px', marginBottom: 2 }}>Your cart</div>
+      <div style={{ fontSize: 13, color: T.textSecondary }}>3 items</div>
+    </div>
+    <div style={{ background: T.cardBg }}>
+      <CartRow name="Чёрный хлеб" category="буханка" price={10} qty={1} />
+      <CartRow name="Чай с сахаром" category="стакан" price={15} qty={2} />
+      <CartRow name="Тушёнка говяжья" category="тушёнка" price={120} qty={1} />
+    </div>
+    {/* Order summary */}
+    <div style={{ margin: '10px 16px 0', background: T.cardBg, borderRadius: T.r16, overflow: 'hidden', border: `1px solid ${T.borderLight}` }}>
+      <div style={{ padding: '14px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ fontSize: 14, color: T.textSecondary }}>Subtotal</span>
+          <span style={{ fontSize: 14, fontWeight: 700 }}>₽145</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ fontSize: 14, color: T.textSecondary }}>Delivery</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: T.green }}>Free</span>
+        </div>
+        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 12, display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ fontWeight: 800, fontSize: 16 }}>Total</span>
+          <span style={{ fontWeight: 800, fontSize: 16, color: T.green }}>₽145</span>
+        </div>
+      </div>
+      {/* Promo code */}
+      <div style={{ borderTop: `1px solid ${T.border}`, padding: '12px 16px', display: 'flex', gap: 8 }}>
+        <input placeholder="Promo code" style={{
+          flex: 1, padding: '10px 12px',
+          background: T.inputBg, border: `1px solid ${T.border}`,
+          borderRadius: T.r12, fontSize: 13, fontFamily: "'Nunito', sans-serif",
+          color: T.textPrimary, outline: 'none',
+        }} />
+        <button style={{
+          padding: '10px 16px', background: T.olive, color: '#fff',
+          border: 'none', borderRadius: T.r12, fontWeight: 700, fontSize: 13,
+          cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+        }}>Apply</button>
+      </div>
+    </div>
+    <div style={{ padding: '12px 16px 24px' }}>
+      <button style={{
+        width: '100%', padding: '14px 24px',
+        background: T.tgBlue, color: '#fff',
+        border: 'none', borderRadius: T.r999,
+        fontWeight: 700, fontSize: 16,
+        cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+        boxShadow: '0 4px 16px rgba(36,129,204,0.3)',
+      }}>Checkout → ₽145</button>
+    </div>
+  </PhoneShell>
+);
+
+// ─── SCREEN 3: Checkout ───────────────────────────────────────────────────────
+const Field = ({ label, hint, value }) => (
+  <div style={{ marginBottom: 18 }}>
+    <div style={{ fontWeight: 800, fontSize: 14, color: T.textPrimary, marginBottom: 7, letterSpacing: '-0.1px' }}>{label}</div>
+    <div style={{
+      width: '100%', padding: '13px 16px',
+      background: T.cardBg, border: `1.5px solid ${T.border}`,
+      borderRadius: T.r12, fontSize: 15, color: value ? T.textPrimary : 'transparent', minHeight: 50,
+      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    }}>{value || ''}</div>
+    {hint && <div style={{ fontSize: 12, color: T.textHint, marginTop: 5 }}>{hint}</div>}
+  </div>
+);
+
+const DateChips = () => {
+  const days = [['Today', 'May 1'], ['Fri', 'May 2'], ['Sat', 'May 3'], ['Sun', 'May 4']];
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontWeight: 700, fontSize: 15, color: T.textPrimary, marginBottom: 8 }}>Delivery date</div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {days.map(([top, bot], i) => (
+          <div key={bot} style={{
+            flex: 1, padding: '8px 4px', textAlign: 'center',
+            background: i === 0 ? T.tgBlue : T.cardBg,
+            color: i === 0 ? '#fff' : T.textSecondary,
+            border: `1px solid ${i === 0 ? T.tgBlue : T.border}`,
+            borderRadius: T.r12, cursor: 'pointer',
+          }}>
+            <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.85 }}>{top}</div>
+            <div style={{ fontSize: 13, fontWeight: 800 }}>{bot}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ScreenCheckout = () => (
+  <PhoneShell height={900} bg="oklch(94% 0.014 30)">
+    <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 110px' }}>
+      {/* Sheet handle feel */}
+      <div style={{ padding: '14px 0 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: T.green, letterSpacing: 1 }}>CHECKOUT</span>
+        <button style={{
+          background: T.inputBg, border: `1px solid ${T.border}`,
+          borderRadius: T.r999, padding: '5px 14px',
+          fontSize: 13, fontWeight: 700, color: T.textSecondary,
+          cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+        }}>← Cart</button>
+      </div>
+      <Field label="Name" hint="Фамилия, имя, отчество" />
+      <Field label="Phone" hint="Телефон старшины" />
+      <Field label="Delivery address" hint="Куда нести — казарма, рота, плац" />
+      <DateChips />
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontWeight: 700, fontSize: 15, color: T.textPrimary, marginBottom: 6 }}>Note</div>
+        <div style={{
+          width: '100%', minHeight: 72, padding: '12px 14px',
+          background: T.cardBg, border: `1px solid ${T.border}`,
+          borderRadius: T.r12, fontSize: 13, color: T.textHint,
+        }}>Пожелания (необязательно)</div>
+      </div>
+      {/* Order summary */}
+      <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 10 }}>Review your details, then submit the order.</div>
+      <div style={{ background: T.receiptBg, borderRadius: T.r16, padding: '14px 16px' }}>
+        <div style={{ fontWeight: 800, fontSize: 15, color: T.textPrimary, marginBottom: 4 }}>Order review</div>
+        <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 12 }}>3 items</div>
+        {[['Тушёнка говяжья', 1, 120], ['Чай с сахаром', 2, 15], ['Чёрный хлеб', 1, 10]].map(([n, q, p]) => (
+          <div key={n} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: T.textPrimary }}>{n}</div>
+              <div style={{ fontSize: 12, color: T.textSecondary }}>{q} × ₽{p}</div>
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>₽{q * p}</span>
+          </div>
+        ))}
+        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 10, marginTop: 4, display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ fontWeight: 800, fontSize: 15 }}>Total</span>
+          <span style={{ fontWeight: 800, fontSize: 15, color: T.green }}>₽160</span>
+        </div>
+      </div>
+    </div>
+    <div style={{ position: 'sticky', bottom: 0, padding: '10px 16px 24px', background: 'oklch(94% 0.014 30)', flexShrink: 0 }}>
+      <button style={{
+        width: '100%', padding: '14px 24px',
+        background: T.tgBlue, color: '#fff',
+        border: 'none', borderRadius: T.r999,
+        fontWeight: 700, fontSize: 16,
+        cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+        boxShadow: '0 4px 16px rgba(36,129,204,0.3)',
+      }}>Place order • RUB 160</button>
+    </div>
+  </PhoneShell>
+);
+
+// ─── SCREEN 4: My Orders ──────────────────────────────────────────────────────
+const OrderCard = ({ num, date, address, items, total, status }) => {
+  const colorMap = { 'Cancelled': 'oklch(96% 0.016 20)', 'Confirmed': 'oklch(96.5% 0.020 70)', 'Delivered': T.cardBg, 'Paid': 'oklch(96.5% 0.022 145)' };
+  const borderMap = { 'Cancelled': 'oklch(92% 0.024 20)', 'Confirmed': 'oklch(92% 0.032 70)', 'Delivered': T.borderLight, 'Paid': 'oklch(91% 0.045 145)' };
+  return (
+    <div style={{
+      background: colorMap[status] || T.cardBg,
+      borderRadius: T.r16, padding: '14px 16px',
+      margin: '0 16px 10px',
+      border: `1px solid ${borderMap[status] || T.border}`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+        <span style={{ fontWeight: 800, fontSize: 18, color: T.textPrimary }}>#{num}</span>
+        <StatusBadge status={status} />
+      </div>
+      <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 1 }}>{date}</div>
+      <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 1 }}>{address}</div>
+      <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{items}</div>
+      <div style={{ fontWeight: 800, fontSize: 15, color: T.textPrimary }}>₽{total}</div>
+    </div>
+  );
+};
+
+const ScreenMyOrders = () => (
+  <PhoneShell height={880}>
+    <MiniHero tabState="My orders" />
+    <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px 6px' }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: T.green, letterSpacing: 1.1 }}>MY ORDERS</span>
+        <button style={{
+          background: T.cardBg, border: `1px solid ${T.border}`,
+          borderRadius: T.r999, padding: '4px 12px',
+          fontSize: 12, fontWeight: 700, color: T.textSecondary,
+          cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+        }}>↺ Refresh</button>
+      </div>
+      <div style={{ height: 4 }} />
+      <OrderCard num={59} date="May 1, 2026" address="Адрес в дананге для граба" items="2× Тушёнка говяжья" total={240} status="Confirmed" />
+      <OrderCard num={58} date="Apr 30, 2026" address="ул. Полевая, 1" items="1× Сгущёнка «Рогачёвская»" total={55} status="Paid" />
+      <OrderCard num={53} date="Apr 1, 2026" address="и размер сапог" items="1× Сгущёнка, 1× Чай с с..." total={80} status="Cancelled" />
+      <OrderCard num={51} date="Mar 28, 2026" address="ул. Полевая, 1" items="2× Чай с сахаром" total={30} status="Delivered" />
+    </div>
+  </PhoneShell>
+);
+
+// ─── SCREEN 5: Order detail — bottom sheet with I paid + QR ──────────────────
+const TimelineItem = ({ label, desc, done, current, colorDone }) => (
+  <div style={{ display: 'flex', gap: 14, marginBottom: 14 }}>
+    <div style={{
+      width: 14, height: 14, borderRadius: '50%', flexShrink: 0, marginTop: 3,
+      background: done ? (colorDone || T.greenDot) : 'transparent',
+      border: done ? 'none' : `2px solid ${T.border}`,
+    }} />
+    <div style={{ flex: 1 }}>
+      <div style={{
+        fontWeight: 800, fontSize: 14,
+        color: current ? (colorDone || T.green) : (done ? T.textPrimary : T.textSecondary),
+        marginBottom: 2,
+      }}>{label}</div>
+      <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{desc}</div>
+      {/* "I paid" button on payment step */}
+      {label === 'Payment' && done && !current && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{
+            background: T.receiptBg, borderRadius: T.r12,
+            padding: '10px 12px', marginBottom: 8,
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <div style={{
+              width: 44, height: 44, background: '#fff', border: `1px solid ${T.border}`,
+              borderRadius: T.r8, flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: T.textMuted, fontFamily: 'monospace',
+            }}>QR</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Pay ₽240</div>
+              <div style={{ fontSize: 11, color: T.textSecondary }}>Scan QR · SberPay · T-Bank</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const ReceiptRow = ({ label, value }) => (
+  <div style={{ paddingBottom: 12, marginBottom: 12, borderBottom: `1px solid ${T.borderLight}` }}>
+    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 3, letterSpacing: 0.1 }}>{label}</div>
+    <div style={{ fontWeight: 800, fontSize: 15, color: T.textPrimary }}>{value}</div>
+  </div>
+);
+
+// Order detail — rendered as a standalone bottom-sheet artboard (no PhoneShell scroll wrapper)
+const ScreenOrderDetail = () => (
+  <div style={{
+    width: 390, height: 960,
+    background: T.pageBg,
+    borderRadius: 44, overflow: 'hidden',
+    position: 'relative',
+    boxShadow: '0 40px 100px rgba(0,0,0,0.30), 0 0 0 1px rgba(0,0,0,0.07)',
+    fontFamily: "'Nunito', sans-serif",
+  }}>
+    {/* TG bar */}
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '13px 20px 11px', background: T.cardBg,
+      borderBottom: `1px solid ${T.border}`, minHeight: 52, flexShrink: 0,
+    }}>
+      <span style={{ fontSize: 17, color: T.textSecondary, width: 24, textAlign: 'center' }}>✕</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'center' }}>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#c9aa82,#9b7e58)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🫖</div>
+        <span style={{ fontWeight: 700, fontSize: 15, color: T.textPrimary, whiteSpace: 'nowrap' }}>Чепок ДМБ</span>
+      </div>
+      <span style={{ color: T.textSecondary, width: 24, textAlign: 'center', fontSize: 15, letterSpacing: 1 }}>•••</span>
+    </div>
+
+    {/* Dimmed my-orders bg */}
+    <div style={{ position: 'absolute', top: 52, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)' }} />
+
+    {/* Bottom sheet — takes up 88% of remaining height, scrollable inside */}
+    <div style={{
+      position: 'absolute', left: 0, right: 0, bottom: 0,
+      height: '88%',
+      background: '#fff',
+      borderRadius: '24px 24px 0 0',
+      boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Handle */}
+      <div style={{ paddingTop: 10, paddingBottom: 6, textAlign: 'center', flexShrink: 0 }}>
+        <div style={{ width: 36, height: 4, background: T.border, borderRadius: 2, display: 'inline-block' }} />
+      </div>
+
+      {/* Scrollable content */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '4px 20px 32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3 }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: T.green, letterSpacing: 0.5 }}>ORDER #59</span>
+          <StatusBadge status="Confirmed" />
+        </div>
+        <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 12 }}>May 1, 2026</div>
+
+        <StageBar current="Confirmed" />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20, marginTop: 14 }}>
+          <TgBtn label="Repeat order" />
+          <TgBtn label="Cancel order" />
+        </div>
+
+        <TimelineItem label="Order placed" desc="Your order has been received." done />
+        <TimelineItem label="Payment" desc={'Scan the QR or use your bank app to pay. Then tap \u201cI paid\u201d.'} done />
+        <TimelineItem label="Confirmed" desc="Admin confirmed your payment." done current colorDone={T.greenDot} />
+        <TimelineItem label="Delivering" desc="Your order is on the way." done={false} />
+        <TimelineItem label="Delivered" desc="The order has been completed." done={false} />
+
+        <div style={{ background: T.receiptBg, borderRadius: T.r16, padding: '14px 16px 4px', marginTop: 8 }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: T.textPrimary, marginBottom: 4 }}>Receipt</div>
+          <div style={{ fontSize: 12, color: T.textSecondary, marginBottom: 12 }}>5/1/26, 5:35 PM</div>
+          <ReceiptRow label="Delivery date" value="May 1, 2026" />
+          <ReceiptRow label="Contact" value="Mikita · +1499288" />
+          <ReceiptRow label="Delivery address" value="Адрес в дананге для граба" />
+          <ReceiptRow label="Notes" value="добавьте сгущенки" />
+          <div style={{ fontSize: 12, color: T.textSecondary, marginBottom: 8 }}>Items</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>Тушёнка говяжья</div>
+              <div style={{ fontSize: 12, color: T.textSecondary }}>2 × ₽120</div>
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>₽240</span>
+          </div>
+          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 10, marginTop: 4, display: 'flex', justifyContent: 'space-between', paddingBottom: 8 }}>
+            <span style={{ fontWeight: 800, fontSize: 15 }}>Total</span>
+            <span style={{ fontWeight: 800, fontSize: 15, color: T.green }}>₽240</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ─── SCREEN: Order Confirmation ───────────────────────────────────────────────
+const ScreenOrderConfirmation = () => (
+  <PhoneShell height={820}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 32px', textAlign: 'center' }}>
+      {/* Success icon */}
+      <div style={{
+        width: 80, height: 80, borderRadius: '50%', background: T.greenBg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+      }}>
+        <div style={{
+          width: 52, height: 52, borderRadius: '50%', background: T.greenDot,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{ color: '#fff', fontSize: 26, lineHeight: 1 }}>✓</span>
+        </div>
+      </div>
+
+      <div style={{ fontWeight: 800, fontSize: 26, color: T.textPrimary, letterSpacing: '-0.3px', marginBottom: 6 }}>Order placed!</div>
+      <div style={{ fontSize: 15, color: T.textSecondary, lineHeight: 1.6, marginBottom: 4 }}>
+        Order <strong style={{ color: T.textPrimary }}>#60</strong> received.
+      </div>
+      <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 28 }}>
+        Delivery: <strong style={{ color: T.textPrimary }}>May 2, 2026</strong>
+      </div>
+
+      {/* Payment prompt */}
+      <div style={{
+        width: '100%', background: 'oklch(94% 0.03 70)', border: `1px solid oklch(88% 0.05 70)`,
+        borderRadius: T.r16, padding: '16px', marginBottom: 20, textAlign: 'left',
+      }}>
+        <div style={{ fontWeight: 800, fontSize: 14, color: T.golden, marginBottom: 6 }}>⚠ Payment required</div>
+        <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.55, marginBottom: 12 }}>
+          Please pay ₽160 to confirm your order. Scan the QR code or use your bank app.
+        </div>
+        {/* QR placeholder */}
+        <div style={{
+          width: 80, height: 80, background: '#fff', border: `1px solid ${T.border}`,
+          borderRadius: T.r12, margin: '0 auto 12px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'monospace', fontSize: 10, color: T.textMuted,
+        }}>QR code</div>
+        <button style={{
+          width: '100%', padding: '12px 0',
+          background: T.golden, color: '#fff',
+          border: 'none', borderRadius: T.r999,
+          fontWeight: 800, fontSize: 15, cursor: 'pointer',
+          fontFamily: "'Nunito', sans-serif",
+        }}>I paid ₽160</button>
+      </div>
+
+      {/* Mini receipt */}
+      <div style={{
+        width: '100%', background: T.receiptBg, borderRadius: T.r16,
+        padding: '14px 16px', marginBottom: 20, textAlign: 'left',
+      }}>
+        {[['Тушёнка говяжья', 1, 120], ['Чай с сахаром', 2, 15], ['Чёрный хлеб', 1, 10]].map(([n, q, p]) => (
+          <div key={n} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontSize: 13, color: T.textSecondary }}>{q}× {n}</span>
+            <span style={{ fontWeight: 700, fontSize: 13 }}>₽{q * p}</span>
+          </div>
+        ))}
+        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 10, marginTop: 4, display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ fontWeight: 800, fontSize: 15 }}>Total</span>
+          <span style={{ fontWeight: 800, fontSize: 15, color: T.green }}>₽160</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+        <TgBtn label="Back to shop" blue />
+        <TgBtn label="View order details" />
+      </div>
+    </div>
+  </PhoneShell>
+);
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accentColor": "olive",
+  "showSoldOut": true
+}/*EDITMODE-END*/;
+
+const App = () => {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  return (
+    <>
+      <DesignCanvas title="Yoobu — v5 · Final milestone">
+
+        <DCSection id="home" title="01 · Active orders">
+          <DCArtboard id="active" label="01 · Active orders" width={390} height={860}>
+            <ScreenActiveOrders />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="catalog" title="02 · Menu catalog">
+          <DCArtboard id="c1" label="02 · Menu — large thumb list" width={390} height={900}>
+            <ScreenCatalogC1 />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="ordering" title="03–04 · Ordering flow">
+          <DCArtboard id="cart" label="03 · Cart" width={390} height={860}>
+            <ScreenCart />
+          </DCArtboard>
+          <DCArtboard id="checkout" label="04 · Checkout" width={390} height={900}>
+            <ScreenCheckout />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="orders" title="05–07 · Orders">
+          <DCArtboard id="my-orders" label="05 · My orders" width={390} height={880}>
+            <ScreenMyOrders />
+          </DCArtboard>
+          <DCArtboard id="order-detail" label="06 · Order detail + QR payment" width={390} height={960}>
+            <ScreenOrderDetail />
+          </DCArtboard>
+          <DCArtboard id="order-confirm" label="07 · Order confirmation + I paid" width={390} height={820}>
+            <ScreenOrderConfirmation />
+          </DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+
+      <TweaksPanel>
+        <TweakSection title="Catalog">
+          <TweakToggle
+            label="Show sold-out items"
+            value={tweaks.showSoldOut}
+            onChange={v => setTweak('showSoldOut', v)}
+          />
+          <TweakRadio
+            label="Accent"
+            value={tweaks.accentColor}
+            options={[{ value: 'olive', label: 'Olive' }, { value: 'tgblue', label: 'TG Blue' }]}
+            onChange={v => setTweak('accentColor', v)}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
