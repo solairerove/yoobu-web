@@ -6,7 +6,6 @@ import { FoodOrderCartBarComponent } from './food-order-cart-bar.component';
 import { FoodOrderCheckoutComponent } from './food-order-checkout.component';
 import { FoodOrderFlowFacade } from './food-order-flow.facade';
 import { FoodOrderMenuComponent } from './food-order-menu.component';
-import { FoodOrderSuccessCardComponent } from './food-order-success-card.component';
 import { FoodOrderStore } from './food-order.store';
 
 @Component({
@@ -15,8 +14,7 @@ import { FoodOrderStore } from './food-order.store';
     FoodOrderBookingsComponent,
     FoodOrderCartBarComponent,
     FoodOrderCheckoutComponent,
-    FoodOrderMenuComponent,
-    FoodOrderSuccessCardComponent
+    FoodOrderMenuComponent
   ],
   providers: [FoodOrderFlowFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,7 +62,7 @@ import { FoodOrderStore } from './food-order.store';
       </div>
 
       <!-- Scrollable content -->
-      <div class="content" [class.has-cart]="store.selectedCount() > 0 && !submittedBooking()">
+      <div class="content" [class.has-cart]="store.selectedCount() > 0">
 
         @if (vm().loading) {
           <section class="status-section ui-status-card">
@@ -87,20 +85,7 @@ import { FoodOrderStore } from './food-order.store';
           </section>
         }
 
-        @if (activeView() === 'menu' && submittedBooking()) {
-          <app-food-order-success-card
-            [booking]="submittedBooking()!"
-            [fallbackCurrency]="currencyCode()"
-            [paymentQrUrl]="config().paymentQrUrl || null"
-            [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
-            [paymentError]="paymentError()"
-            (paymentConfirmRequested)="confirmPayment($event)"
-            (newOrderRequested)="startNewOrder()"
-            (ordersRequested)="setActiveView('orders')"
-          />
-        }
-
-        @if (activeView() === 'menu' && vm().services.length && !submittedBooking()) {
+        @if (activeView() === 'menu' && vm().services.length) {
           <app-food-order-menu
             [services]="vm().services"
             [selectedCount]="store.selectedCount()"
@@ -112,7 +97,7 @@ import { FoodOrderStore } from './food-order.store';
           />
         }
 
-        @if (activeView() === 'menu' && checkoutOpen() && !submittedBooking()) {
+        @if (activeView() === 'menu' && checkoutOpen()) {
           <app-food-order-checkout
             [open]="checkoutOpen()"
             [localMode]="showLocalCheckoutButtons"
@@ -153,12 +138,13 @@ import { FoodOrderStore } from './food-order.store';
             (repeatRequested)="repeatBooking($event)"
             (paymentConfirmRequested)="confirmPayment($event)"
             (cancelRequested)="cancelBooking($event)"
+            (newOrderRequested)="startNewOrder()"
           />
         }
 
       </div>
 
-      @if (showLocalCheckoutButtons && activeView() === 'menu' && store.selectedCount() > 0 && !submittedBooking()) {
+      @if (showLocalCheckoutButtons && activeView() === 'menu' && store.selectedCount() > 0) {
         <app-food-order-cart-bar
           [checkoutOpen]="checkoutOpen()"
           [selectedCount]="store.selectedCount()"
@@ -344,7 +330,6 @@ export class FoodOrderHomeComponent {
   protected readonly submitting = this.facade.submitting;
   protected readonly submitError = this.facade.submitError;
   protected readonly repeatOrderBanner = this.facade.repeatOrderBanner;
-  protected readonly submittedBooking = this.facade.submittedBooking;
   protected readonly confirmingPaymentBookingId = this.facade.confirmingPaymentBookingId;
   protected readonly paymentError = this.facade.paymentError;
   protected readonly cancellingBookingId = this.facade.cancellingBookingId;

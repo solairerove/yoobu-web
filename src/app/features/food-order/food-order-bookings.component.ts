@@ -1,646 +1,433 @@
-import { CurrencyPipe, DatePipe, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output } from '@angular/core';
+import { CurrencyPipe, DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { BookingResponse } from '../../core/models/booking.model';
-import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 import { normalizeBookingStatus } from '../../core/utils/booking-status.util';
+import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 
 @Component({
   selector: 'app-food-order-bookings',
-  imports: [CurrencyPipe, DatePipe, NgFor, NgIf, NgTemplateOutlet],
+  imports: [CurrencyPipe, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="bookings-card">
-      <div class="bookings-head">
-        <p class="eyebrow">My orders</p>
-        <button type="button" class="head-action" (click)="refreshRequested.emit()" [disabled]="loading()">
-          ↻ Refresh
-        </button>
-      </div>
+    <div class="orders-shell">
 
-      <section class="status-card ui-status-card" *ngIf="loading()">
-        <h4>Loading orders</h4>
-        <p>Loading your orders.</p>
-      </section>
+      <!-- ── State cards ── -->
+      @if (loading()) {
+        <section class="state-card ui-status-card">
+          <h4>Loading orders</h4>
+          <p>Please wait while your orders load.</p>
+        </section>
+      }
+      @if (error(); as err) {
+        <section class="state-card ui-status-card error">
+          <h4>Orders unavailable</h4>
+          <p>{{ err }}</p>
+        </section>
+      }
 
-      <section class="status-card ui-status-card error" *ngIf="error() as error">
-        <h4>Orders unavailable</h4>
-        <p>{{ error }}</p>
-      </section>
-
-      <section class="status-card ui-status-card" *ngIf="!loading() && !error() && !bookings().length">
-        <h4>No orders yet</h4>
-        <p>Your orders will appear here.</p>
-      </section>
-
-      <ng-container *ngIf="bookings().length">
-        <div class="bookings-hint">
-          <span class="bookings-hint-dot"></span>
-          <p>Tap a card to see order details.</p>
-        </div>
-
-        <div class="booking-list">
-          <button
-            type="button"
-            class="booking-item"
-            *ngFor="let booking of allBookings(); trackBy: trackByBookingId"
-            [class.active]="selectedBookingId() === booking.id"
-            (click)="selectAndScroll(booking.id)"
-          >
-            <div class="booking-item-top">
-              <strong>#{{ booking.id }}</strong>
-              <span
-                class="booking-status"
-                [class.status-new]="isStatus(booking.status, 'NEW')"
-                [class.status-payment-pending]="isStatus(booking.status, 'PAYMENT_PENDING')"
-                [class.status-confirmed]="isStatus(booking.status, 'CONFIRMED')"
-                [class.status-delivering]="isStatus(booking.status, 'DELIVERING')"
-                [class.status-done]="isStatus(booking.status, 'DONE')"
-                [class.status-cancelled]="isStatus(booking.status, 'CANCELLED')"
-              >
-                {{ bookingStatusLabel(booking.status) }}
-              </span>
-            </div>
-            <p>{{ booking.deliveryDate | date: 'mediumDate' }}</p>
-            <p class="booking-address" [title]="displayAddress(booking.deliveryAddress)">
-              {{ displayAddress(booking.deliveryAddress) }}
-            </p>
-            <p class="booking-items" [title]="bookingItemsPreview(booking)">
-              {{ bookingItemsPreview(booking) }}
-            </p>
-            <p>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
+      <!-- ── Section header ── -->
+      @if (!loading() && !error()) {
+        <div class="section-head">
+          <span class="section-eyebrow">
+            {{ currentBookings().length ? 'ACTIVE ORDERS' : 'MY ORDERS' }}
+          </span>
+          <button type="button" class="refresh-btn" (click)="refreshRequested.emit()" [disabled]="loading()">
+            ↺ Refresh
           </button>
         </div>
+      }
 
-        <section class="booking-detail-anchor booking-detail-panel">
-          <ng-container *ngIf="selectedDisplayBooking() as booking; else chooseBooking">
-            <ng-container *ngTemplateOutlet="bookingDetailTemplate; context: { $implicit: booking }" />
-          </ng-container>
-        </section>
-      </ng-container>
+      <!-- ── Active order cards (StageBar) ── -->
+      @for (booking of currentBookings(); track booking.id) {
+        <article class="active-card">
+          <div class="card-top">
+            <span class="order-num">#{{ booking.id }}</span>
+            <span class="badge" [class]="badgeClass(booking.status)">{{ badgeLabel(booking.status) }}</span>
+          </div>
 
-      <ng-template #bookingDetailTemplate let-booking>
-        <section class="booking-detail">
-          <div class="booking-detail-head">
-            <div class="booking-summary">
-              <div class="booking-id-row">
-                <p class="eyebrow">Order #{{ booking.id }}</p>
-                <span
-                  class="booking-status large"
-                  [class.status-new]="isStatus(booking.status, 'NEW')"
-                  [class.status-payment-pending]="isStatus(booking.status, 'PAYMENT_PENDING')"
-                  [class.status-confirmed]="isStatus(booking.status, 'CONFIRMED')"
-                  [class.status-delivering]="isStatus(booking.status, 'DELIVERING')"
-                  [class.status-done]="isStatus(booking.status, 'DONE')"
-                  [class.status-cancelled]="isStatus(booking.status, 'CANCELLED')"
-                >
-                  {{ bookingStatusLabel(booking.status) }}
-                </span>
-              </div>
-              <p class="booking-meta-date">{{ booking.deliveryDate | date: 'mediumDate' }}</p>
+          <!-- StageBar -->
+          @let states = stageBarStates(booking.status);
+          <div class="stage-bar">
+            <div class="stage-track">
+              @for (state of states; track $index; let last = $last) {
+                <div class="stage-dot"
+                     [class.stage-dot-filled]="state !== 'pending'"
+                     [class.stage-dot-current]="state === 'current'"></div>
+                @if (!last) {
+                  <div class="stage-line" [class.stage-line-filled]="state === 'complete'"></div>
+                }
+              }
             </div>
-
-            <div class="booking-actions">
-              <a
-                class="ghost-button tracking-link"
-                *ngIf="deliveryTrackingUrl(booking) as trackingUrl"
-                [href]="trackingUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Track delivery
-              </a>
-
-              <button
-                type="button"
-                class="ghost-button"
-                *ngIf="canRepeat(booking)"
-                (click)="repeatRequested.emit(booking.id)"
-              >
-                Repeat order
-              </button>
-
-              <button
-                type="button"
-                class="ghost-button"
-                *ngIf="canConfirmPayment(booking)"
-                (click)="paymentConfirmRequested.emit(booking.id)"
-                [disabled]="confirmingPaymentBookingId() === booking.id"
-              >
-                {{ confirmingPaymentBookingId() === booking.id ? 'Confirming...' : 'I paid' }}
-              </button>
-
-              <button
-                type="button"
-                class="ghost-button"
-                *ngIf="canCancel(booking)"
-                (click)="cancelRequested.emit(booking.id)"
-                [disabled]="cancellingBookingId() === booking.id"
-              >
-                {{ cancellingBookingId() === booking.id ? 'Cancelling...' : 'Cancel order' }}
-              </button>
+            <div class="stage-labels">
+              @for (label of STAGE_LABELS; track label; let i = $index) {
+                <span class="stage-lbl" [class.stage-lbl-current]="states[i] === 'current'">{{ label }}</span>
+              }
             </div>
           </div>
 
-          <div class="booking-timeline" aria-label="Order progress">
-            <div
-              class="timeline-step"
-              *ngFor="let step of bookingTimeline(booking.status)"
-              [class.complete]="step.state === 'complete'"
-              [class.current]="step.state === 'current'"
-              [class.cancelled]="step.state === 'cancelled'"
-            >
-              <span class="timeline-dot"></span>
-              <div>
-                <strong>{{ step.label }}</strong>
-                <p>{{ step.description }}</p>
-              </div>
-            </div>
+          <button type="button" class="view-details-btn">View details</button>
+
+          <div class="card-meta">
+            {{ booking.deliveryDate | date: 'MMM d, y' }}
+            @if (displayAddress(booking.deliveryAddress) !== 'N/A') {
+              · {{ displayAddress(booking.deliveryAddress) }}
+            }
           </div>
+          <div class="card-items">{{ bookingItemsPreview(booking) }}</div>
 
-          <section class="payment-qr-card" *ngIf="shouldShowPaymentQr(booking) && effectivePaymentQrUrl(booking) as paymentQrUrl">
-            <h5>Payment QR</h5>
-            <p class="copy ui-copy">Scan this QR to pay, then tap "I paid" so the admin can verify your payment.</p>
-            <a
-              class="payment-qr-link"
-              [href]="paymentQrUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open payment QR code in a new tab"
-            >
-              <img [src]="paymentQrUrl" alt="Payment QR code" loading="lazy" />
-            </a>
-            <a class="qr-open-link" [href]="paymentQrUrl" target="_blank" rel="noopener noreferrer">Open full size</a>
-          </section>
+        </article>
+      }
 
-          <div class="receipt-card">
-            <div class="receipt-head">
-              <h5>Receipt</h5>
-              <span>{{ booking.createdAt | date: 'short' }}</span>
+      <!-- New order CTA -->
+      @if (currentBookings().length) {
+        <button type="button" class="new-order-btn" (click)="newOrderRequested.emit()">
+          + New order
+        </button>
+      }
+
+      <!-- ── History divider ── -->
+      @if (currentBookings().length && previousBookings().length) {
+        <div class="history-divider">
+          <span>Order history</span>
+        </div>
+      }
+
+      <!-- ── History cards ── -->
+      @for (booking of previousBookings(); track booking.id) {
+        <article class="history-card"
+                 [class.history-cancelled]="isStatus(booking.status, 'CANCELLED')"
+                 [class.history-done]="isStatus(booking.status, 'DONE')">
+          <button type="button" class="history-summary" (click)="bookingSelected.emit(booking.id)">
+            <div class="card-top">
+              <span class="order-num">#{{ booking.id }}</span>
+              <span class="badge" [class]="badgeClass(booking.status)">{{ badgeLabel(booking.status) }}</span>
             </div>
-
-            <div class="receipt-meta">
-              <div class="receipt-row">
-                <span>Delivery date</span>
-                <strong>{{ booking.deliveryDate | date: 'mediumDate' }}</strong>
-              </div>
-              <div class="receipt-row">
-                <span>Contact</span>
-                <strong>{{ booking.customerName }} · {{ booking.customerPhone }}</strong>
-              </div>
-              <div class="receipt-row">
-                <span>Delivery address</span>
-                <strong>{{ displayAddress(booking.deliveryAddress) }}</strong>
-              </div>
+            <div class="history-date">{{ booking.deliveryDate | date: 'mediumDate' }}</div>
+            <div class="history-address">{{ displayAddress(booking.deliveryAddress) }}</div>
+            <div class="history-items">{{ bookingItemsPreview(booking) }}</div>
+            <div class="history-total">
+              {{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}
             </div>
+          </button>
 
-            <p class="receipt-note" *ngIf="booking.note">{{ booking.note }}</p>
+        </article>
+      }
 
-            <div class="review-list">
-              <div class="review-row" *ngFor="let item of receiptItems(booking); trackBy: trackByItemName">
-                <div>
-                  <strong>{{ item.serviceName }}</strong>
-                  <p>{{ item.quantity }} × {{ item.unitPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</p>
-                </div>
-                <span>{{ item.unitPrice * item.quantity | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</span>
-              </div>
-              <p class="review-more" *ngIf="booking.items.length > receiptItemsLimit">
-                +{{ booking.items.length - receiptItemsLimit }} more item{{ booking.items.length - receiptItemsLimit > 1 ? 's' : '' }}
-              </p>
-            </div>
-
-            <div class="review-total">
-              <span>Total</span>
-              <strong>{{ booking.totalPrice | currency: bookingCurrency(booking) : 'symbol-narrow' : '1.0-0' }}</strong>
-            </div>
-          </div>
-
-          <p class="form-error" *ngIf="paymentError() as error">{{ error }}</p>
-          <p class="form-error" *ngIf="cancelError() as error">{{ error }}</p>
+      <!-- ── Empty state ── -->
+      @if (!loading() && !error() && !bookings().length) {
+        <section class="state-card ui-status-card">
+          <h4>No orders yet</h4>
+          <p>Your orders will appear here once you place one.</p>
         </section>
-      </ng-template>
+        <button type="button" class="new-order-btn" (click)="newOrderRequested.emit()">
+          + New order
+        </button>
+      }
 
-      <ng-template #chooseBooking>
-        <section class="status-card ui-status-card">
-          <h4>Select an order</h4>
-          <p>Choose any order to view full details.</p>
-        </section>
-      </ng-template>
-    </section>
+    </div>
+
   `,
   styles: `
-    :host {
-      display: block;
-      min-width: 0;
+    h4, p { margin: 0; }
+
+    .orders-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 12px 12px 24px;
     }
 
-    h3,
-    h4,
-    h5,
-    p {
-      margin: 0;
+    /* ── State cards ── */
+    .state-card {
+      margin-bottom: 12px;
     }
 
-    .bookings-card {
-      display: grid;
-      gap: 0.75rem;
-      padding: 0.95rem 1rem;
-      border-radius: 18px;
-      background: var(--yoobu-surface-card-soft);
-      border: 1px solid var(--yoobu-border);
-    }
-
-    .booking-detail {
-      padding: 0.95rem 1rem;
-      border-radius: 18px;
-      background: var(--yoobu-surface-card-soft);
-      border: 1px solid var(--yoobu-border);
-    }
-
-    .status-card p {
-      margin-top: 0.45rem;
+    .state-card p {
+      margin-top: 0.35rem;
       color: var(--yoobu-muted);
+      font-size: 0.9rem;
       line-height: 1.5;
     }
 
-    .bookings-head {
+    /* ── Section header ── */
+    .section-head {
       display: flex;
-      justify-content: space-between;
-      gap: 1rem;
       align-items: center;
-    }
-
-    .booking-detail-head {
-      display: flex;
-      flex-wrap: wrap;
       justify-content: space-between;
-      gap: 1rem;
-      align-items: start;
+      padding: 4px 2px 10px;
     }
 
-    .booking-list {
-      display: grid;
-      gap: 0.65rem;
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      color: oklch(38% 0.11 145);
+      letter-spacing: 1.1px;
     }
 
-    .booking-item {
+    .refresh-btn {
+      background: #fff;
+      border: 1px solid oklch(90% 0.010 28);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: oklch(50% 0.01 30);
       cursor: pointer;
-      font: inherit;
+      font-family: inherit;
     }
 
-    .booking-item {
-      display: grid;
-      gap: 0.28rem;
-      width: 100%;
-      padding: 0.78rem 0.85rem;
-      border-radius: 16px;
-      border: 1px solid var(--yoobu-border);
-      background: var(--yoobu-surface-card-strong);
-      text-align: left;
-      color: inherit;
-      transition:
-        border-color 160ms ease,
-        background 160ms ease,
-        box-shadow 160ms ease;
-    }
-
-    .booking-item:disabled {
+    .refresh-btn:disabled {
       opacity: 0.45;
       cursor: not-allowed;
     }
 
-    .booking-item.active {
-      border-color: var(--yoobu-border-accent);
-      background: var(--yoobu-surface-tint);
-      box-shadow: var(--yoobu-shadow-xs);
+    /* ── Active card ── */
+    .active-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid oklch(90% 0.010 28);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
     }
 
-    .booking-item-top {
+    .card-top {
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
       justify-content: space-between;
-      gap: 0.75rem;
-      align-items: center;
+      margin-bottom: 10px;
     }
 
-    .booking-item p {
-      color: var(--yoobu-muted);
-      font-size: 0.88rem;
+    .order-num {
+      font-weight: 800;
+      font-size: 16px;
+      color: #1a1a1a;
     }
 
-    .bookings-hint {
-      display: flex;
-      gap: 0.55rem;
-      align-items: center;
-      padding: 0.65rem 0.85rem;
-      border-radius: 14px;
-      background: var(--yoobu-surface-tint);
-      border: 1px solid var(--yoobu-border-accent-soft);
-    }
-
-    .bookings-hint-dot {
-      width: 0.5rem;
-      height: 0.5rem;
+    /* ── Status badges ── */
+    .badge {
+      padding: 4px 11px;
       border-radius: 999px;
-      background: var(--yoobu-primary);
-      flex-shrink: 0;
-      box-shadow: var(--yoobu-ring-accent);
-    }
-
-    .bookings-hint p {
-      color: var(--yoobu-muted);
-      font-size: 0.85rem;
-      line-height: 1.4;
-    }
-
-    .booking-detail-panel {
-      margin-top: 0;
-    }
-
-    .booking-address {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .booking-items {
-      font-size: 0.82rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .booking-status {
-      padding: 0.2rem 0.55rem;
-      border-radius: 999px;
-      background: var(--yoobu-primary-soft);
-      color: var(--yoobu-primary);
-      font-size: 0.8rem;
+      font-size: 12px;
       font-weight: 700;
+      white-space: nowrap;
     }
 
-    .booking-status.large {
-      padding: 0.35rem 0.8rem;
-      font-size: 0.88rem;
+    .badge-ordering {
+      background: oklch(90% 0.04 28);
+      color: oklch(48% 0.07 28);
     }
 
-    .booking-status.status-new {
-      background: var(--yoobu-primary-soft);
-      color: var(--yoobu-primary);
+    .badge-paid, .badge-delivered {
+      background: oklch(91% 0.055 145);
+      color: oklch(38% 0.11 145);
     }
 
-    .booking-status.status-payment-pending {
-      background: var(--yoobu-status-payment-pending-bg);
-      color: var(--yoobu-status-payment-pending-color);
+    .badge-confirmed, .badge-delivering {
+      background: oklch(91% 0.055 72);
+      color: oklch(48% 0.10 72);
     }
 
-    .booking-status.status-confirmed {
-      background: var(--yoobu-status-confirmed-bg);
-      color: var(--yoobu-status-confirmed-color);
+    .badge-cancelled {
+      background: oklch(92% 0.04 22);
+      color: oklch(38% 0.13 22);
     }
 
-    .booking-status.status-delivering {
-      background: var(--yoobu-status-delivering-bg);
-      color: var(--yoobu-status-delivering-color);
+    /* ── StageBar ── */
+    .stage-bar {
+      margin-bottom: 4px;
     }
 
-    .booking-status.status-done {
-      background: var(--yoobu-status-done-bg);
-      color: var(--yoobu-status-done-color);
-    }
-
-    .booking-status.status-cancelled {
-      background: var(--yoobu-status-cancelled-bg);
-      color: var(--yoobu-status-cancelled-color);
-    }
-
-    .booking-detail {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .booking-summary {
-      display: grid;
-      gap: 0.3rem;
-    }
-
-    .booking-id-row {
+    .stage-track {
       display: flex;
       align-items: center;
-      gap: 0.55rem;
+      margin-bottom: 7px;
     }
 
-    .booking-meta-date {
-      font-size: 0.88rem;
-      color: var(--yoobu-muted);
+    .stage-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: oklch(90% 0.010 28);
+      transition: all 0.25s;
     }
 
-    .booking-actions,
-    .receipt-head,
-    .receipt-row {
+    .stage-dot-filled {
+      background: oklch(48% 0.13 145);
+    }
+
+    .stage-dot-current {
+      background: oklch(48% 0.13 145);
+      box-shadow: 0 0 0 3px oklch(91% 0.055 145);
+    }
+
+    .stage-line {
+      flex: 1;
+      height: 2.5px;
+      border-radius: 2px;
+      background: oklch(90% 0.010 28);
+    }
+
+    .stage-line-filled {
+      background: oklch(48% 0.13 145);
+    }
+
+    .stage-labels {
       display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: center;
     }
 
-    .booking-timeline,
-    .payment-qr-card,
-    .receipt-meta,
-    .review-list {
-      display: grid;
-      gap: 0.75rem;
+    .stage-lbl {
+      flex: 1;
+      text-align: center;
+      font-size: 9.5px;
+      font-weight: 500;
+      color: oklch(65% 0.008 30);
+      line-height: 1.2;
     }
 
-    .timeline-step {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 0.75rem;
-      align-items: start;
-      color: var(--yoobu-muted);
+    .stage-lbl-current {
+      font-weight: 800;
+      color: oklch(38% 0.11 145);
     }
 
-    .timeline-dot {
-      width: 0.8rem;
-      height: 0.8rem;
-      margin-top: 0.3rem;
+    /* ── View details button ── */
+    .view-details-btn {
+      width: 100%;
+      padding: 11px 20px;
+      margin-top: 12px;
+      background: #fff;
+      border: 1px solid oklch(90% 0.010 28);
       border-radius: 999px;
-      border: 2px solid var(--yoobu-border-soft);
-      background: var(--yoobu-surface-card);
-      box-shadow: var(--yoobu-ring-soft);
+      font-weight: 700;
+      font-size: 14px;
+      color: #1a1a1a;
+      cursor: pointer;
+      font-family: inherit;
     }
 
-    .timeline-step strong {
-      display: block;
-      color: var(--yoobu-ink);
+    /* ── Card meta ── */
+    .card-meta {
+      font-size: 13px;
+      color: oklch(50% 0.01 30);
+      margin-top: 8px;
+      margin-bottom: 2px;
     }
 
-    .timeline-step p {
-      margin-top: 0.2rem;
-      font-size: 0.9rem;
-      line-height: 1.45;
+    .card-items {
+      font-size: 13px;
+      color: oklch(50% 0.01 30);
+      margin-bottom: 12px;
     }
 
-    .timeline-step.complete .timeline-dot,
-    .timeline-step.current .timeline-dot {
-      border-color: var(--yoobu-primary);
-      background: var(--yoobu-primary);
-      box-shadow: var(--yoobu-ring-accent);
+    .view-details-btn {
+      width: 100%;
+      padding: 11px 20px;
+      background: #fff;
+      border: 1px solid oklch(90% 0.010 28);
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #1a1a1a;
+      cursor: pointer;
+      font-family: inherit;
     }
 
-    .timeline-step.current strong {
-      color: var(--yoobu-primary);
+    /* ── New order button ── */
+    .new-order-btn {
+      width: 100%;
+      padding: 14px 20px;
+      background: #2481cc;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 16px rgba(36, 129, 204, 0.3);
+      margin-bottom: 16px;
     }
 
-    .timeline-step.cancelled .timeline-dot {
-      border-color: brown;
-      background: brown;
-      box-shadow: 0 0 0 6px rgba(165, 42, 42, 0.12);
-    }
-
-    .timeline-step.cancelled strong {
-      color: brown;
-    }
-
-    .payment-qr-card {
-      padding: 1rem;
-      border-radius: 18px;
-      background: var(--yoobu-surface-tint);
-      border: 1px solid var(--yoobu-border-soft);
-    }
-
-    .payment-qr-card p {
-      color: var(--yoobu-muted);
-      line-height: 1.5;
-    }
-
-    .payment-qr-card img {
-      width: min(260px, 100%);
-      border-radius: 14px;
-      border: 1px solid var(--yoobu-border);
-      background: white;
-    }
-
-    .payment-qr-link {
-      width: fit-content;
-      max-width: 100%;
-      display: block;
-    }
-
-    .qr-open-link {
-      width: fit-content;
-      color: var(--yoobu-primary);
-      font-size: 0.9rem;
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    .qr-open-link:hover {
-      text-decoration: underline;
-    }
-
-    .booking-actions {
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      margin-left: auto;
-    }
-
-    .booking-actions .ghost-button {
-      max-width: 100%;
-      white-space: normal;
-    }
-
-    .tracking-link {
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .receipt-card {
-      display: grid;
-      gap: 0.9rem;
-      padding: 1rem;
-      border-radius: 18px;
-      background: var(--yoobu-surface-tint);
-      border: 1px solid var(--yoobu-border-soft);
-    }
-
-    .receipt-head span,
-    .receipt-row span {
-      color: var(--yoobu-muted);
-      font-size: 0.92rem;
-    }
-
-    .receipt-row {
-      align-items: baseline;
-      padding-bottom: 0.65rem;
-      border-bottom: 1px solid var(--yoobu-border-soft);
-    }
-
-    .receipt-note {
-      padding: 0.85rem 0.95rem;
-      border-radius: 14px;
-      background: var(--yoobu-surface-card);
-      color: var(--yoobu-muted);
-      line-height: 1.5;
-    }
-
-    .review-row,
-    .review-total {
+    /* ── History divider ── */
+    .history-divider {
       display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: start;
-    }
-
-    .review-row p {
-      margin-top: 0.2rem;
-      color: var(--yoobu-muted);
-      font-size: 0.9rem;
-    }
-
-    .review-more {
-      margin: 0;
-      color: var(--yoobu-muted);
-      font-size: 0.86rem;
-    }
-
-    .review-total {
       align-items: center;
-      padding-top: 0.85rem;
-      border-top: 1px solid var(--yoobu-border);
+      gap: 8px;
+      margin-bottom: 10px;
     }
 
-    .form-error {
-      color: brown;
-      font-size: 0.92rem;
+    .history-divider span {
+      font-size: 11px;
+      font-weight: 800;
+      color: oklch(65% 0.008 30);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
-    @media (max-width: 640px) {
-      .booking-detail-head,
-      .review-row,
-      .booking-actions,
-      .receipt-head,
-      .receipt-row,
-      .review-total {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .booking-actions {
-        width: 100%;
-        margin-left: 0;
-      }
-
-      .booking-actions .ghost-button {
-        width: 100%;
-      }
+    .history-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: oklch(90% 0.010 28);
     }
+
+    /* ── History card ── */
+    .history-card {
+      border-radius: 16px;
+      margin-bottom: 10px;
+      border: 1px solid oklch(94% 0.006 28);
+      overflow: hidden;
+    }
+
+    .history-card.history-cancelled {
+      background: oklch(96% 0.016 20);
+      border-color: oklch(92% 0.024 20);
+    }
+
+    .history-card.history-done {
+      background: #fff;
+      border-color: oklch(94% 0.006 28);
+    }
+
+    .history-summary {
+      display: block;
+      width: 100%;
+      padding: 14px 16px;
+      background: transparent;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .history-date,
+    .history-address,
+    .history-items {
+      font-size: 13px;
+      color: oklch(50% 0.01 30);
+      margin-bottom: 1px;
+    }
+
+    .history-address,
+    .history-items {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .history-total {
+      font-weight: 800;
+      font-size: 15px;
+      color: #1a1a1a;
+      margin-top: 6px;
+    }
+
   `
 })
 export class FoodOrderBookingsComponent {
-  private readonly el = inject(ElementRef);
-  protected readonly receiptItemsLimit = 3;
+  protected readonly STAGE_LABELS = ['Placed', 'Paid', 'Confirmed', 'Delivering', 'Delivered'];
 
   readonly bookings = input.required<BookingResponse[]>();
   readonly loading = input.required<boolean>();
@@ -659,207 +446,48 @@ export class FoodOrderBookingsComponent {
   readonly repeatRequested = output<number>();
   readonly paymentConfirmRequested = output<number>();
   readonly cancelRequested = output<number>();
-  readonly currentBookings = computed(() => this.sortedBookings().filter((booking) => this.isCurrentBooking(booking)));
-  readonly previousBookings = computed(() => this.sortedBookings().filter((booking) => !this.isCurrentBooking(booking)));
-  readonly allBookings = computed(() => [...this.currentBookings(), ...this.previousBookings()]);
-  readonly selectedDisplayBooking = computed<BookingResponse | null>(() => {
-    const selected = this.selectedBooking();
-    if (selected) {
-      return selected;
+  readonly newOrderRequested = output<void>();
+
+  readonly currentBookings = computed(() =>
+    this.sortedBookings().filter((b) => this.isCurrentBooking(b))
+  );
+  readonly previousBookings = computed(() =>
+    this.sortedBookings().filter((b) => !this.isCurrentBooking(b))
+  );
+
+  protected stageBarStates(status: string): Array<'complete' | 'current' | 'pending'> {
+    const idx = this.statusToStageIndex(status);
+    return [0, 1, 2, 3, 4].map((i) =>
+      i < idx ? 'complete' : i === idx ? 'current' : 'pending'
+    );
+  }
+
+  protected badgeLabel(status: string): string {
+    switch (this.normalizeStatus(status)) {
+      case 'NEW': return 'Ordering';
+      case 'PAYMENT_PENDING': return 'Paid';
+      case 'CONFIRMED': return 'Confirmed';
+      case 'DELIVERING': return 'Delivering';
+      case 'DONE': return 'Delivered';
+      case 'CANCELLED': return 'Cancelled';
+      default: return status;
     }
-
-    return this.currentBookings()[0] ?? this.previousBookings()[0] ?? null;
-  });
-
-  protected trackByBookingId(_index: number, booking: BookingResponse): number {
-    return booking.id;
   }
 
-  protected trackByItemName(_index: number, item: BookingResponse['items'][number]): string {
-    return item.serviceName;
-  }
-
-  protected selectAndScroll(bookingId: number): void {
-    this.bookingSelected.emit(bookingId);
-    setTimeout(() => {
-      const detail = this.el.nativeElement.querySelector('.booking-detail-anchor .booking-detail');
-      detail?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 50);
-  }
-
-  protected canRepeat(booking: BookingResponse): boolean {
-    return booking.items.length > 0;
-  }
-
-  private sortedBookings(): BookingResponse[] {
-    return [...this.bookings()].sort((left, right) => {
-      const currentLeft = this.isCurrentBooking(left);
-      const currentRight = this.isCurrentBooking(right);
-
-      if (currentLeft !== currentRight) {
-        return currentLeft ? -1 : 1;
-      }
-
-      return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
-    });
-  }
-
-  private isCurrentBooking(booking: BookingResponse): boolean {
-    const status = this.normalizeStatus(booking.status);
-    return status === 'NEW' || status === 'PAYMENT_PENDING' || status === 'CONFIRMED' || status === 'DELIVERING';
-  }
-
-  protected canCancel(booking: BookingResponse): boolean {
-    const status = this.normalizeStatus(booking.status);
-    return status === 'NEW' || status === 'PAYMENT_PENDING' || status === 'CONFIRMED';
-  }
-
-  protected canConfirmPayment(booking: BookingResponse): boolean {
-    return this.normalizeStatus(booking.status) === 'NEW';
-  }
-
-  protected effectivePaymentQrUrl(booking: BookingResponse): string | null {
-    return booking.paymentQrUrl ?? this.paymentQrUrl();
-  }
-
-  protected shouldShowPaymentQr(booking: BookingResponse): boolean {
-    const status = this.normalizeStatus(booking.status);
-    return !!this.effectivePaymentQrUrl(booking) && (status === 'NEW' || status === 'PAYMENT_PENDING');
+  protected badgeClass(status: string): string {
+    switch (this.normalizeStatus(status)) {
+      case 'NEW': return 'badge badge-ordering';
+      case 'PAYMENT_PENDING': return 'badge badge-paid';
+      case 'CONFIRMED': return 'badge badge-confirmed';
+      case 'DELIVERING': return 'badge badge-delivering';
+      case 'DONE': return 'badge badge-delivered';
+      case 'CANCELLED': return 'badge badge-cancelled';
+      default: return 'badge badge-ordering';
+    }
   }
 
   protected isStatus(status: string, expected: string): boolean {
     return this.normalizeStatus(status) === expected;
-  }
-
-  private normalizeStatus(status: string): string {
-    return normalizeBookingStatus(status);
-  }
-
-  protected bookingStatusLabel(status: BookingResponse['status']): string {
-    switch (this.normalizeStatus(status)) {
-      case 'NEW':
-        return 'New';
-      case 'PAYMENT_PENDING':
-        return 'Awaiting verification';
-      case 'CONFIRMED':
-        return 'Confirmed';
-      case 'DELIVERING':
-        return 'Out for delivery';
-      case 'DONE':
-        return 'Delivered';
-      case 'CANCELLED':
-        return 'Cancelled';
-      default:
-        return status;
-    }
-  }
-
-  protected bookingStatusTitle(status: BookingResponse['status']): string {
-    switch (this.normalizeStatus(status)) {
-      case 'NEW':
-        return 'Waiting for confirmation';
-      case 'PAYMENT_PENDING':
-        return 'Awaiting admin verification';
-      case 'CONFIRMED':
-        return 'Order confirmed';
-      case 'DELIVERING':
-        return 'Out for delivery';
-      case 'DONE':
-        return 'Order completed';
-      case 'CANCELLED':
-        return 'Order cancelled';
-      default:
-        return 'Order status updated';
-    }
-  }
-
-  protected bookingStatusDescription(status: BookingResponse['status']): string {
-    switch (this.normalizeStatus(status)) {
-      case 'NEW':
-        return 'Your order has been received and is waiting for confirmation.';
-      case 'PAYMENT_PENDING':
-        return 'Payment was submitted and is waiting for admin verification.';
-      case 'CONFIRMED':
-        return 'Your order has been confirmed and is being prepared.';
-      case 'DELIVERING':
-        return 'Your order is on the way. Use tracking to follow delivery updates.';
-      case 'DONE':
-        return 'This order has been completed.';
-      case 'CANCELLED':
-        return 'This order was cancelled.';
-      default:
-        return 'Check this order for the latest status details.';
-    }
-  }
-
-  protected bookingTimeline(status: BookingResponse['status']): Array<{
-    label: string;
-    description: string;
-    state: 'pending' | 'complete' | 'current' | 'cancelled';
-  }> {
-    const normalizedStatus = this.normalizeStatus(status);
-
-    if (normalizedStatus === 'CANCELLED') {
-      return [
-        {
-          label: 'Order placed',
-          description: 'Your order was placed successfully.',
-          state: 'complete'
-        },
-        {
-          label: 'Cancelled',
-          description: 'The order was stopped before completion.',
-          state: 'cancelled'
-        }
-      ];
-    }
-
-    return [
-      {
-        label: 'Order placed',
-        description: 'Your order has been received.',
-        state: normalizedStatus === 'NEW' ? 'current' : 'complete'
-      },
-      {
-        label: 'Payment verification',
-        description: 'Admin verifies your payment after you tap "I paid".',
-        state:
-          normalizedStatus === 'PAYMENT_PENDING'
-            ? 'current'
-            : normalizedStatus === 'CONFIRMED' || normalizedStatus === 'DELIVERING' || normalizedStatus === 'DONE'
-              ? 'complete'
-              : 'pending'
-      },
-      {
-        label: 'Confirmed',
-        description: 'Your order has been confirmed.',
-        state:
-          normalizedStatus === 'CONFIRMED'
-            ? 'current'
-            : normalizedStatus === 'DELIVERING' || normalizedStatus === 'DONE'
-              ? 'complete'
-              : 'pending'
-      },
-      {
-        label: 'Delivering',
-        description: 'Your order is currently on the way.',
-        state: normalizedStatus === 'DELIVERING' ? 'current' : normalizedStatus === 'DONE' ? 'complete' : 'pending'
-      },
-      {
-        label: 'Delivered',
-        description: 'The order has been completed.',
-        state: normalizedStatus === 'DONE' ? 'current' : 'pending'
-      }
-    ];
-  }
-
-  protected deliveryTrackingUrl(booking: BookingResponse): string | null {
-    const trackingUrl = booking.trackingUrl?.trim();
-    if (!trackingUrl || !/^https?:\/\//i.test(trackingUrl)) {
-      return null;
-    }
-
-    return trackingUrl;
   }
 
   protected bookingCurrency(booking: BookingResponse): string {
@@ -867,22 +495,43 @@ export class FoodOrderBookingsComponent {
   }
 
   protected displayAddress(address: string | null): string {
-    const normalizedAddress = address?.trim();
-    return normalizedAddress ? normalizedAddress : 'N/A';
+    return address?.trim() || 'N/A';
   }
 
   protected bookingItemsPreview(booking: BookingResponse): string {
-    if (!booking.items.length) {
-      return 'No items';
-    }
-
+    if (!booking.items.length) return 'No items';
     return booking.items
       .slice(0, 2)
-      .map((item) => `${item.quantity}× ${item.serviceName}`)
+      .map((i) => `${i.quantity}× ${i.serviceName}`)
       .join(', ');
   }
 
-  protected receiptItems(booking: BookingResponse): BookingResponse['items'] {
-    return booking.items.slice(0, this.receiptItemsLimit);
+  private statusToStageIndex(status: string): number {
+    switch (this.normalizeStatus(status)) {
+      case 'NEW': return 0;
+      case 'PAYMENT_PENDING': return 1;
+      case 'CONFIRMED': return 2;
+      case 'DELIVERING': return 3;
+      case 'DONE': return 4;
+      default: return 0;
+    }
+  }
+
+  private isCurrentBooking(booking: BookingResponse): boolean {
+    const s = this.normalizeStatus(booking.status);
+    return s === 'NEW' || s === 'PAYMENT_PENDING' || s === 'CONFIRMED' || s === 'DELIVERING';
+  }
+
+  private sortedBookings(): BookingResponse[] {
+    return [...this.bookings()].sort((a, b) => {
+      const ca = this.isCurrentBooking(a);
+      const cb = this.isCurrentBooking(b);
+      if (ca !== cb) return ca ? -1 : 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }
+
+  private normalizeStatus(status: string): string {
+    return normalizeBookingStatus(status);
   }
 }

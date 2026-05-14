@@ -471,6 +471,7 @@ export class FoodOrderFlowFacade {
       this.checkoutOpen.set(false);
       this.repeatOrderBanner.set(null);
       this.resetCheckoutForm();
+      this.activeView.set('orders');
       this.refreshBookings();
     } catch {
       this.checkoutOpen.set(true);
