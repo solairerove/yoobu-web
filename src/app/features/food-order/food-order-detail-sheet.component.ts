@@ -86,6 +86,17 @@ interface TimelineStep { label: string; desc: string; state: StepState; }
                   </div>
                   <div class="tl-desc">{{ step.desc }}</div>
 
+                  <!-- Tracking card — shown on the Delivering step when a tracking link exists -->
+                  @if (step.label === 'Delivering' && trackingUrl()) {
+                    <div class="tracking-card">
+                      <div class="tracking-icon">📦</div>
+                      <div class="tracking-text">Your order is on its way</div>
+                      <a class="track-btn" [href]="trackingUrl()!" target="_blank" rel="noopener noreferrer">
+                        Track delivery
+                      </a>
+                    </div>
+                  }
+
                   <!-- Payment card — shown on the Payment step when payment is expected -->
                   @if (step.label === 'Payment' && showPaymentCard()) {
                     <div class="payment-card">
@@ -508,6 +519,48 @@ interface TimelineStep { label: string; desc: string; state: StepState; }
       cursor: not-allowed;
     }
 
+    /* ── Tracking card ── */
+    .tracking-card {
+      background: oklch(91% 0.055 72);
+      border-radius: 12px;
+      padding: 14px 12px 12px;
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tracking-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .tracking-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: oklch(38% 0.10 72);
+      text-align: center;
+    }
+
+    .track-btn {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px 20px;
+      background: oklch(48% 0.10 72);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 15px;
+      font-family: inherit;
+      text-align: center;
+      text-decoration: none;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+    }
+
     /* ── Receipt ── */
     .receipt {
       background: oklch(95.5% 0.016 38);
@@ -693,6 +746,11 @@ export class FoodOrderDetailSheetComponent {
   protected readonly deliveryAddress = computed(() =>
     this.booking().deliveryAddress?.trim() || null
   );
+
+  protected readonly trackingUrl = computed<string | null>(() => {
+    const url = this.booking().trackingUrl?.trim();
+    return url && /^https?:\/\//i.test(url) ? url : null;
+  });
 
   protected readonly stageBarStates = computed<Array<'complete' | 'current' | 'pending'>>(() => {
     const idx = this.statusToStageIndex(this.normalizeStatus(this.booking().status));
