@@ -3,10 +3,11 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { BookingResponse } from '../../core/models/booking.model';
 import { normalizeBookingStatus } from '../../core/utils/booking-status.util';
 import { normalizeCurrencyCode } from '../../core/utils/currency.util';
+import { FoodOrderDetailSheetComponent } from './food-order-detail-sheet.component';
 
 @Component({
   selector: 'app-food-order-bookings',
-  imports: [CurrencyPipe, DatePipe],
+  imports: [CurrencyPipe, DatePipe, FoodOrderDetailSheetComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="orders-shell">
@@ -65,7 +66,9 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
             </div>
           </div>
 
-          <button type="button" class="view-details-btn">View details</button>
+          <button type="button" class="view-details-btn" (click)="bookingSelected.emit(booking.id)">
+            View details
+          </button>
 
           <div class="card-meta">
             {{ booking.deliveryDate | date: 'MMM d, y' }}
@@ -126,6 +129,21 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 
     </div>
 
+    @if (selectedBooking()) {
+      <app-food-order-detail-sheet
+        [booking]="selectedBooking()!"
+        [paymentQrUrl]="paymentQrUrl()"
+        [currencyCodeFallback]="currencyCode()"
+        [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
+        [paymentError]="paymentError()"
+        [cancellingBookingId]="cancellingBookingId()"
+        [cancelError]="cancelError()"
+        (closeRequested)="bookingDeselected.emit()"
+        (repeatRequested)="repeatRequested.emit($event)"
+        (paymentConfirmRequested)="paymentConfirmRequested.emit($event)"
+        (cancelRequested)="cancelRequested.emit($event)"
+      />
+    }
   `,
   styles: `
     h4, p { margin: 0; }
@@ -443,6 +461,7 @@ export class FoodOrderBookingsComponent {
 
   readonly refreshRequested = output<void>();
   readonly bookingSelected = output<number>();
+  readonly bookingDeselected = output<void>();
   readonly repeatRequested = output<number>();
   readonly paymentConfirmRequested = output<number>();
   readonly cancelRequested = output<number>();

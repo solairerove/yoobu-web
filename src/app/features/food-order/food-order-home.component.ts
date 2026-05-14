@@ -139,6 +139,7 @@ import { FoodOrderStore } from './food-order.store';
             (paymentConfirmRequested)="confirmPayment($event)"
             (cancelRequested)="cancelBooking($event)"
             (newOrderRequested)="startNewOrder()"
+            (bookingDeselected)="deselectBooking()"
           />
         }
 
@@ -391,6 +392,10 @@ export class FoodOrderHomeComponent {
 
   protected async repeatBooking(bookingId: number): Promise<void> {
     await this.facade.repeatBooking(bookingId);
+  }
+
+  protected deselectBooking(): void {
+    this.facade.deselectBooking();
   }
 
   protected async cancelBooking(bookingId: number): Promise<void> {

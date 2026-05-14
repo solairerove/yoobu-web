@@ -106,7 +106,7 @@ export class FoodOrderFlowFacade {
             const nextSelectedId =
               bookings.some((booking) => booking.id === this.selectedBookingId())
                 ? this.selectedBookingId()
-                : bookings[0]?.id ?? null;
+                : null;
             const latestActiveBooking = this.findLatestActiveBooking(bookings);
             const currentSubmittedBooking = this.submittedBooking();
             const submittedBookingFromList = currentSubmittedBooking
@@ -480,6 +480,11 @@ export class FoodOrderFlowFacade {
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  deselectBooking(): void {
+    this.selectedBookingId.set(null);
+    this.selectedBooking.set(null);
   }
 
   setActiveView(view: 'menu' | 'orders'): void {
