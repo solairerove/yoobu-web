@@ -1,4 +1,3 @@
-import { NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { TenantConfig } from '../../core/models/tenant-config.model';
 import { normalizeCurrencyCode } from '../../core/utils/currency.util';
@@ -13,7 +12,6 @@ import { FoodOrderStore } from './food-order.store';
 @Component({
   selector: 'app-food-order-home',
   imports: [
-    NgIf,
     FoodOrderBookingsComponent,
     FoodOrderCartBarComponent,
     FoodOrderCheckoutComponent,
@@ -23,225 +21,313 @@ import { FoodOrderStore } from './food-order.store';
   providers: [FoodOrderFlowFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="panel" [class.has-cart]="store.selectedCount() > 0 && !submittedBooking()">
-      <header class="panel-header">
-        <div class="header-name-row">
-          <h2>{{ config().name }}</h2>
-          <span class="header-badge">Ordering</span>
+    <div class="page">
+
+      <!-- MiniHero: banner + tab bar -->
+      <div class="mini-hero">
+        <div class="banner">
+          <div class="banner-grad"></div>
+          <div class="banner-content">
+            <div class="venue-row">
+              <div class="venue-logo">
+                @if (config().logoUrl) {
+                  <img class="venue-logo-img" [src]="config().logoUrl" [alt]="config().name" />
+                } @else {
+                  <span>{{ nameInitial() }}</span>
+                }
+              </div>
+              <div class="venue-text">
+                <span class="venue-name">{{ config().name }}</span>
+                @if (config().welcomeMessage) {
+                  <span class="venue-tagline">{{ config().welcomeMessage }}</span>
+                }
+              </div>
+            </div>
+            <span class="ordering-badge">Ordering</span>
+          </div>
         </div>
-        @if (config().welcomeMessage) {
-          <p class="header-welcome">{{ config().welcomeMessage }}</p>
+
+        <nav class="tab-bar" aria-label="Order sections">
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="activeView() === 'menu'"
+            (click)="setActiveView('menu')"
+          >Menu</button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="activeView() === 'orders'"
+            (click)="setActiveView('orders')"
+          >My orders</button>
+        </nav>
+      </div>
+
+      <!-- Scrollable content -->
+      <div class="content" [class.has-cart]="store.selectedCount() > 0 && !submittedBooking()">
+
+        @if (vm().loading) {
+          <section class="status-section ui-status-card">
+            <h3>Loading menu</h3>
+            <p>Please wait while the menu loads.</p>
+          </section>
         }
-      </header>
 
-      <nav class="view-switch" aria-label="Order sections">
-        <button
-          type="button"
-          class="view-switch-button"
-          [class.active]="activeView() === 'menu'"
-          (click)="setActiveView('menu')"
-        >
-          Menu
-        </button>
-        <button
-          type="button"
-          class="view-switch-button"
-          [class.active]="activeView() === 'orders'"
-          (click)="setActiveView('orders')"
-        >
-          My orders
-        </button>
-      </nav>
+        @if (vm().error; as error) {
+          <section class="status-section ui-status-card error">
+            <h3>Menu unavailable</h3>
+            <p>{{ error }}</p>
+          </section>
+        }
 
-      <section class="status-card ui-status-card" *ngIf="vm().loading">
-        <h3>Loading menu</h3>
-        <p>Please wait while the menu loads.</p>
-      </section>
+        @if (!vm().loading && !vm().error && !vm().services.length) {
+          <section class="status-section ui-status-card">
+            <h3>No items available</h3>
+            <p>No items are available right now.</p>
+          </section>
+        }
 
-      <section class="status-card ui-status-card error" *ngIf="vm().error as error">
-        <h3>Menu unavailable</h3>
-        <p>{{ error }}</p>
-      </section>
+        @if (activeView() === 'menu' && submittedBooking()) {
+          <app-food-order-success-card
+            [booking]="submittedBooking()!"
+            [fallbackCurrency]="currencyCode()"
+            [paymentQrUrl]="config().paymentQrUrl || null"
+            [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
+            [paymentError]="paymentError()"
+            (paymentConfirmRequested)="confirmPayment($event)"
+            (newOrderRequested)="startNewOrder()"
+            (ordersRequested)="setActiveView('orders')"
+          />
+        }
 
-      <section class="status-card ui-status-card" *ngIf="!vm().loading && !vm().error && !vm().services.length">
-        <h3>No items available</h3>
-        <p>No items are available right now.</p>
-      </section>
+        @if (activeView() === 'menu' && vm().services.length && !submittedBooking()) {
+          <app-food-order-menu
+            [services]="vm().services"
+            [selectedCount]="store.selectedCount()"
+            [currencyCode]="currencyCode()"
+            [defaultUnit]="'item'"
+            [quantities]="selectedQuantities()"
+            (increaseRequested)="increase($event)"
+            (decreaseRequested)="decrease($event)"
+          />
+        }
 
-      <app-food-order-success-card
-        *ngIf="activeView() === 'menu' && submittedBooking() as booking"
-        [booking]="booking"
-        [fallbackCurrency]="currencyCode()"
-        [paymentQrUrl]="config().paymentQrUrl || null"
-        [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
-        [paymentError]="paymentError()"
-        (paymentConfirmRequested)="confirmPayment($event)"
-        (newOrderRequested)="startNewOrder()"
-        (ordersRequested)="setActiveView('orders')"
-      />
+        @if (activeView() === 'menu' && checkoutOpen() && !submittedBooking()) {
+          <app-food-order-checkout
+            [open]="checkoutOpen()"
+            [localMode]="showLocalCheckoutButtons"
+            [submitting]="submitting()"
+            [submitError]="submitError()"
+            [repeatOrderBanner]="repeatOrderBanner()"
+            [form]="checkoutForm"
+            [customerNameHint]="config().checkoutNameHint || null"
+            [customerPhoneHint]="config().checkoutPhoneHint || null"
+            [deliveryAddressHint]="config().checkoutDeliveryHint || null"
+            [customerNoteHint]="config().checkoutNoteHint || null"
+            [currencyCode]="currencyCode()"
+            [earliestDeliveryDate]="earliestDeliveryDate()"
+            [selectedItems]="store.selectedItems()"
+            [selectedCount]="store.selectedCount()"
+            [selectedTotal]="store.selectedTotal()"
+            (closeRequested)="closeCheckout()"
+            (repeatOrderBannerDismissed)="dismissRepeatOrderBanner()"
+            (submitRequested)="submitOrder()"
+          />
+        }
 
-      <app-food-order-menu
-        *ngIf="activeView() === 'menu' && vm().services.length && !submittedBooking()"
-        [services]="vm().services"
-        [selectedCount]="store.selectedCount()"
-        [currencyCode]="currencyCode()"
-        [defaultUnit]="'item'"
-        [quantities]="selectedQuantities()"
-        (increaseRequested)="increase($event)"
-        (decreaseRequested)="decrease($event)"
-      />
+        @if (activeView() === 'orders') {
+          <app-food-order-bookings
+            [bookings]="bookingsVm().bookings"
+            [loading]="bookingsVm().loading"
+            [error]="bookingsVm().error"
+            [paymentQrUrl]="config().paymentQrUrl || null"
+            [selectedBookingId]="selectedBookingId()"
+            [selectedBooking]="selectedBooking()"
+            [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
+            [paymentError]="paymentError()"
+            [cancellingBookingId]="cancellingBookingId()"
+            [cancelError]="cancelError()"
+            [currencyCode]="currencyCode()"
+            (refreshRequested)="refreshBookings()"
+            (bookingSelected)="selectBooking($event)"
+            (repeatRequested)="repeatBooking($event)"
+            (paymentConfirmRequested)="confirmPayment($event)"
+            (cancelRequested)="cancelBooking($event)"
+          />
+        }
 
-      <app-food-order-cart-bar
-        *ngIf="showLocalCheckoutButtons && activeView() === 'menu' && store.selectedCount() > 0 && !submittedBooking()"
-        [checkoutOpen]="checkoutOpen()"
-        [selectedCount]="store.selectedCount()"
-        [selectedTotal]="store.selectedTotal()"
-        [currencyCode]="currencyCode()"
-        (openRequested)="openCheckout()"
-      />
+      </div>
 
-      <app-food-order-checkout
-        *ngIf="activeView() === 'menu' && checkoutOpen() && !submittedBooking()"
-        [open]="checkoutOpen()"
-        [localMode]="showLocalCheckoutButtons"
-        [submitting]="submitting()"
-        [submitError]="submitError()"
-        [repeatOrderBanner]="repeatOrderBanner()"
-        [form]="checkoutForm"
-        [customerNameHint]="config().checkoutNameHint || null"
-        [customerPhoneHint]="config().checkoutPhoneHint || null"
-        [deliveryAddressHint]="config().checkoutDeliveryHint || null"
-        [customerNoteHint]="config().checkoutNoteHint || null"
-        [currencyCode]="currencyCode()"
-        [earliestDeliveryDate]="earliestDeliveryDate()"
-        [selectedItems]="store.selectedItems()"
-        [selectedCount]="store.selectedCount()"
-        [selectedTotal]="store.selectedTotal()"
-        (closeRequested)="closeCheckout()"
-        (repeatOrderBannerDismissed)="dismissRepeatOrderBanner()"
-        (submitRequested)="submitOrder()"
-      />
+      @if (showLocalCheckoutButtons && activeView() === 'menu' && store.selectedCount() > 0 && !submittedBooking()) {
+        <app-food-order-cart-bar
+          [checkoutOpen]="checkoutOpen()"
+          [selectedCount]="store.selectedCount()"
+          [selectedTotal]="store.selectedTotal()"
+          [currencyCode]="currencyCode()"
+          (openRequested)="openCheckout()"
+        />
+      }
 
-      <app-food-order-bookings
-        *ngIf="activeView() === 'orders'"
-        [bookings]="bookingsVm().bookings"
-        [loading]="bookingsVm().loading"
-        [error]="bookingsVm().error"
-        [paymentQrUrl]="config().paymentQrUrl || null"
-        [selectedBookingId]="selectedBookingId()"
-        [selectedBooking]="selectedBooking()"
-        [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
-        [paymentError]="paymentError()"
-        [cancellingBookingId]="cancellingBookingId()"
-        [cancelError]="cancelError()"
-        [currencyCode]="currencyCode()"
-        (refreshRequested)="refreshBookings()"
-        (bookingSelected)="selectBooking($event)"
-        (repeatRequested)="repeatBooking($event)"
-        (paymentConfirmRequested)="confirmPayment($event)"
-        (cancelRequested)="cancelBooking($event)"
-      />
-    </section>
+    </div>
   `,
   styles: `
-    .panel {
-      display: grid;
-      gap: 0.85rem;
-      padding: 1rem;
-      border-radius: 22px;
-      background: var(--yoobu-surface-card);
-      border: 1px solid var(--yoobu-border);
-      box-shadow: var(--yoobu-shadow);
-    }
-
-    .panel.has-cart {
-      padding-bottom: 5.5rem;
-    }
-
-    .panel-header {
+    .page {
+      min-height: 100vh;
+      background: oklch(92.5% 0.022 28);
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
     }
 
-    .header-name-row {
-      display: flex;
-      align-items: center;
-      gap: 0.55rem;
-    }
-
-    .header-badge {
-      padding: 0.25rem 0.55rem;
-      border-radius: 999px;
-      background: var(--yoobu-primary-soft);
-      color: var(--yoobu-primary);
-      font-size: 0.72rem;
-      font-weight: 700;
-      white-space: nowrap;
+    /* ── MiniHero ── */
+    .mini-hero {
       flex-shrink: 0;
     }
 
-    .header-welcome {
-      font-size: 0.88rem;
-      color: var(--yoobu-muted);
-      margin: 0;
-      line-height: 1.45;
+    .banner {
+      position: relative;
+      height: 96px;
+      background: repeating-linear-gradient(
+        -45deg,
+        oklch(72% 0.040 50) 0,
+        oklch(72% 0.040 50) 14px,
+        oklch(67% 0.048 46) 14px,
+        oklch(67% 0.048 46) 28px
+      );
     }
 
-    h2,
+    .banner-grad {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.56) 100%);
+    }
+
+    .banner-content {
+      position: absolute;
+      bottom: 10px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+
+    .venue-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .venue-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c9aa82 0%, #9b7e58 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+
+    .venue-logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .venue-text {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .venue-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.2px;
+      line-height: 1.1;
+    }
+
+    .venue-tagline {
+      font-size: 10.5px;
+      color: rgba(255, 255, 255, 0.75);
+      line-height: 1.3;
+    }
+
+    .ordering-badge {
+      background: oklch(90% 0.04 28);
+      color: oklch(48% 0.07 28);
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      background: #fff;
+      padding: 8px 14px 0;
+      border-bottom: 1px solid oklch(90% 0.010 28);
+      display: flex;
+    }
+
+    .tab-btn {
+      padding: 9px 16px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 14px;
+      color: oklch(50% 0.01 30);
+      border-bottom: 2.5px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab-btn.active {
+      color: #1a1a1a;
+      border-bottom-color: oklch(37% 0.07 82);
+    }
+
+    .tab-btn:active {
+      transform: none;
+    }
+
+    /* ── Scrollable content ── */
+    .content {
+      flex: 1;
+    }
+
+    .content.has-cart {
+      padding-bottom: 90px;
+    }
+
+    /* ── Status states ── */
+    .status-section {
+      margin: 16px 12px;
+    }
+
     h3,
-    h4,
-    h5,
     p {
       margin: 0;
     }
 
-    h2 {
-      font-size: clamp(1.2rem, 3vw, 1.6rem);
-      line-height: 1.15;
-    }
-
-    .view-switch {
-      display: inline-grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.3rem;
-      padding: 0.25rem;
-      border-radius: 16px;
-      background: var(--yoobu-surface-muted);
-      width: fit-content;
-    }
-
-    .view-switch-button {
-      border: 0;
-      border-radius: 12px;
-      padding: 0.7rem 1rem;
-      background: transparent;
-      color: var(--yoobu-muted);
-      font: inherit;
+    h3 {
+      font-size: 1rem;
       font-weight: 700;
-      cursor: pointer;
     }
 
-    .view-switch-button.active {
-      background: var(--yoobu-surface-card-strong);
-      color: var(--yoobu-ink);
-      box-shadow: var(--yoobu-shadow-xs);
-    }
-
-    .status-card p {
-      margin-top: 0.45rem;
+    .status-section p {
+      margin-top: 0.35rem;
       color: var(--yoobu-muted);
       line-height: 1.5;
-    }
-
-    @media (max-width: 640px) {
-      .view-switch {
-        width: 100%;
-      }
-
-      .panel.has-cart {
-        padding-bottom: 5.5rem;
-      }
+      font-size: 0.9rem;
     }
   `
 })
@@ -268,6 +354,10 @@ export class FoodOrderHomeComponent {
   protected readonly isFirstOrder = this.facade.isFirstOrder;
   protected readonly earliestDeliveryDate = this.facade.earliestDeliveryDate;
   protected readonly currencyCode = computed(() => normalizeCurrencyCode(this.config().currency));
+  protected readonly nameInitial = computed(() => {
+    const name = this.config().name.trim();
+    return name ? name.charAt(0).toUpperCase() : '?';
+  });
   protected readonly selectedQuantities = computed<Record<number, number>>(() => {
     const quantities: Record<number, number> = {};
     for (const service of this.vm().services) {

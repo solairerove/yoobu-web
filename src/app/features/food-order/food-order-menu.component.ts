@@ -1,408 +1,301 @@
-import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { ServiceItem } from '../../core/models/service.model';
 import { FoodOrderStore } from './food-order.store';
 
 @Component({
   selector: 'app-food-order-menu',
-  imports: [CurrencyPipe, NgFor, NgIf],
+  imports: [CurrencyPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="catalog-shell">
-      <div class="catalog-note">
-        <span class="catalog-dot"></span>
-        <p>Tap + on any item to add it to your cart.</p>
+    <div class="menu-shell">
+      <div class="category-header">
+        <span class="category-label">All</span>
+        <div class="category-rule"></div>
       </div>
 
-      <div class="catalog">
-        <article
-          class="product-card"
-          *ngFor="let service of services(); trackBy: trackByServiceId"
-          [class.selected]="quantityFor(service.id) > 0"
-        >
-          <div class="product-accent"></div>
-
-          <figure class="product-image-shell">
-            <img
-              *ngIf="service.imageUrl; else productImagePlaceholder"
-              class="product-image"
-              [src]="service.imageUrl"
-              [alt]="service.name"
-              loading="lazy"
-            />
-            <ng-template #productImagePlaceholder>
-              <div class="product-image-placeholder" aria-hidden="true">
-                <span>{{ serviceInitial(service.name) }}</span>
-              </div>
-            </ng-template>
-          </figure>
-
-          <div class="product-copy">
-            <div class="product-topline">
-              <p class="unit">{{ service.unit || defaultUnit() }}</p>
-            </div>
-
-            <div class="product-meta">
-              <h3>{{ service.name }}</h3>
-            </div>
-
-            <p class="description" *ngIf="service.description">{{ service.description }}</p>
-            <p class="selection-copy" [class.selection-copy--visible]="quantityFor(service.id) > 0">
-              {{ quantityFor(service.id) }} selected
-            </p>
-          </div>
-
-          <div class="product-side">
-            <div class="price-row">
-              <p class="price">{{ service.price | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
-              <div class="quantity-shell">
-                <div class="quantity" [class.quantity-empty]="quantityFor(service.id) === 0">
-                  <button
-                    type="button"
-                    class="quantity-button quantity-button-decrease"
-                    (click)="decreaseRequested.emit(service.id)"
-                    [attr.aria-label]="'Decrease quantity for ' + service.name"
-                    [disabled]="quantityFor(service.id) === 0"
-                  >
-                    <span aria-hidden="true">−</span>
-                  </button>
-                  <span class="quantity-value" aria-live="polite">
-                    {{ quantityFor(service.id) > 0 ? quantityFor(service.id) : '' }}
-                  </span>
-                  <button
-                    type="button"
-                    class="quantity-button quantity-button-increase"
-                    (click)="increaseRequested.emit(service.id)"
-                    [attr.aria-label]="'Increase quantity for ' + service.name"
-                    [disabled]="maxed(service.id)"
-                  >
-                    <span aria-hidden="true">+</span>
-                  </button>
+      <div class="item-list">
+        @for (service of services(); track service.id) {
+          <article class="item-row" [class.sold-out]="isSoldOut(service)">
+            <div class="item-thumb">
+              @if (service.imageUrl) {
+                <img
+                  class="item-img"
+                  [src]="service.imageUrl"
+                  [alt]="service.name"
+                  loading="lazy"
+                />
+              } @else {
+                <div class="item-img-placeholder" aria-hidden="true"></div>
+              }
+              @if (isSoldOut(service)) {
+                <div class="sold-out-overlay" aria-label="sold out">
+                  <span class="sold-out-label">sold out</span>
                 </div>
+              }
+            </div>
+
+            <div class="item-content">
+              <div class="item-top">
+                <div class="item-name">{{ service.name }}</div>
+                @if (service.description) {
+                  <div class="item-desc">{{ service.description }}</div>
+                }
+              </div>
+              <div class="item-footer">
+                <span class="item-price">
+                  {{ service.price | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
+                </span>
+                @if (!isSoldOut(service)) {
+                  @if (quantityFor(service.id) === 0) {
+                    <button
+                      type="button"
+                      class="qty-add"
+                      (click)="increaseRequested.emit(service.id)"
+                      [disabled]="maxed(service.id)"
+                      [attr.aria-label]="'Add ' + service.name"
+                    >+</button>
+                  } @else {
+                    <div class="qty-pill">
+                      <button
+                        type="button"
+                        class="qty-pill-btn"
+                        (click)="decreaseRequested.emit(service.id)"
+                        [attr.aria-label]="'Decrease ' + service.name"
+                      >−</button>
+                      <span class="qty-pill-val">{{ quantityFor(service.id) }}</span>
+                      <button
+                        type="button"
+                        class="qty-pill-btn"
+                        (click)="increaseRequested.emit(service.id)"
+                        [disabled]="maxed(service.id)"
+                        [attr.aria-label]="'Increase ' + service.name"
+                      >+</button>
+                    </div>
+                  }
+                }
               </div>
             </div>
-          </div>
-        </article>
+          </article>
+        }
       </div>
-    </section>
+    </div>
   `,
   styles: `
-    h3,
-    p {
-      margin: 0;
-    }
-
-    .catalog-shell {
-      display: grid;
-      gap: 0.8rem;
-    }
-
-    .catalog-note {
-      display: flex;
-      gap: 0.55rem;
-      align-items: center;
-      padding: 0.65rem 0.85rem;
-      border-radius: 14px;
-      background: var(--yoobu-surface-tint);
-      border: 1px solid var(--yoobu-border-accent-soft);
-    }
-
-    .catalog-dot {
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: 999px;
-      background: var(--yoobu-primary);
-      flex-shrink: 0;
-      box-shadow: var(--yoobu-ring-accent);
-    }
-
-    .catalog-note p {
-      color: var(--yoobu-muted);
-      font-size: 0.85rem;
-      line-height: 1.4;
-    }
-
-    /* ── 2-column grid ── */
-    .catalog {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.65rem;
-    }
-
-    /* ── Vertical card ── */
-    .product-card {
+    .menu-shell {
       display: flex;
       flex-direction: column;
+    }
+
+    /* ── Sticky category header ── */
+    .category-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: oklch(92.5% 0.022 28);
+      padding: 10px 14px 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-label {
+      font-weight: 800;
+      font-size: 12px;
+      color: oklch(37% 0.07 82);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .category-rule {
+      flex: 1;
+      height: 1px;
+      background: oklch(90% 0.010 28);
+    }
+
+    /* ── Item list ── */
+    .item-list {
+      padding-bottom: 8px;
+    }
+
+    /* ── Row card ── */
+    .item-row {
+      display: flex;
+      align-items: stretch;
+      background: #fff;
+      margin: 0 12px 8px;
       border-radius: 16px;
-      background: var(--yoobu-surface-tint);
-      border: 1px solid var(--yoobu-border-soft);
-      position: relative;
       overflow: hidden;
-      transition:
-        border-color 180ms ease,
-        background 180ms ease,
-        box-shadow 180ms ease;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      transition: opacity 180ms ease;
     }
 
-    .product-card.selected {
-      border-color: var(--yoobu-border-accent);
-      background: linear-gradient(160deg, rgba(255, 246, 240, 0.98), rgba(255, 252, 249, 0.95));
-      box-shadow: var(--yoobu-shadow-accent);
+    .item-row.sold-out {
+      opacity: 0.5;
     }
 
-    /* Top accent stripe */
-    .product-accent {
-      position: absolute;
-      inset: 0 0 auto 0;
-      height: 0.2rem;
-      background: linear-gradient(90deg, var(--yoobu-primary), rgba(255, 160, 122, 0.4));
-      opacity: 0.28;
-      z-index: 1;
-    }
-
-    .product-card.selected .product-accent {
-      opacity: 1;
-    }
-
-    /* ── Image ── */
-    .product-image-shell {
-      margin: 0;
-      width: 100%;
-      aspect-ratio: 16 / 9;
+    /* ── Thumbnail ── */
+    .item-thumb {
+      width: 110px;
       flex-shrink: 0;
-      border-radius: 0;
-      overflow: hidden;
-      border: none;
-      border-bottom: 1px solid var(--yoobu-border-soft);
-      box-shadow: none;
-      background: var(--yoobu-surface-card);
+      position: relative;
     }
 
-    .product-image {
-      display: block;
+    .item-img,
+    .item-img-placeholder {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
+      display: block;
       object-fit: cover;
       object-position: center;
     }
 
-    .product-image-placeholder {
-      width: 100%;
-      height: 100%;
-      display: grid;
-      place-items: center;
-      color: var(--yoobu-primary);
-      background: linear-gradient(135deg, rgba(255, 246, 240, 0.95), rgba(255, 253, 249, 0.98));
-      font-size: 1.75rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
+    .item-img-placeholder {
+      background: repeating-linear-gradient(
+        -45deg,
+        oklch(86% 0.018 30) 0,
+        oklch(86% 0.018 30) 9px,
+        oklch(91% 0.010 30) 9px,
+        oklch(91% 0.010 30) 18px
+      );
     }
 
-    /* ── Body ── */
-    .product-copy {
+    .sold-out-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .sold-out-label {
+      font-family: monospace;
+      font-size: 10px;
+      color: oklch(65% 0.008 30);
+      background: rgba(255, 255, 255, 0.8);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* ── Content ── */
+    .item-content {
       flex: 1;
-      padding: 0.6rem 0.7rem 0.5rem;
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 0.28rem;
+      justify-content: space-between;
       min-width: 0;
     }
 
-    .product-topline {
+    .item-top {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-      align-items: baseline;
+      flex-direction: column;
+      gap: 3px;
     }
 
-    .unit {
-      padding: 0.1rem 0.38rem;
-      border-radius: 999px;
-      background: var(--yoobu-surface-muted);
-      color: var(--yoobu-muted);
-      font-size: 0.7rem;
+    .item-name {
+      font-weight: 800;
+      font-size: 14px;
+      color: #1a1a1a;
+      line-height: 1.3;
+      letter-spacing: -0.1px;
     }
 
-    .product-meta {
-      display: grid;
-    }
-
-    .product-meta h3 {
-      font-size: 0.88rem;
-      line-height: 1.25;
-      letter-spacing: -0.01em;
+    .item-desc {
+      font-size: 12px;
+      color: oklch(50% 0.01 30);
+      line-height: 1.5;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
-    .description {
-      color: var(--yoobu-muted);
-      font-size: 0.76rem;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    /* Hidden, reserves no space — qty control shows the count */
-    .selection-copy {
-      display: none;
-    }
-
-    /* ── Footer: price row + stepper ── */
-    .product-side {
-      padding: 0.5rem 0.7rem 0.6rem;
-      border-top: 1px solid var(--yoobu-border-soft);
-    }
-
-    .price-row {
+    /* ── Footer: price + qty ── */
+    .item-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.5rem;
-      min-height: 2.35rem;
-      min-width: 0;
+      gap: 8px;
+      margin-top: 4px;
     }
 
-    .price {
-      color: var(--yoobu-primary);
+    .item-price {
       font-weight: 800;
+      font-size: 18px;
+      color: oklch(38% 0.11 145);
+      letter-spacing: -0.3px;
       white-space: nowrap;
-      font-size: 0.9rem;
-      min-width: 0;
     }
 
-    .quantity-shell {
-      width: clamp(4.9rem, 40%, 5.5rem);
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 0.18rem 0.22rem;
-      border-radius: 999px;
-      border: 1px solid var(--yoobu-border-accent-soft);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 240, 0.94));
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.8),
-        var(--yoobu-shadow-sm);
-      flex-shrink: 0;
-    }
-
-    /* Stepper row: [–] [ n ] [+] */
-    .quantity {
+    /* ── Qty add circle ── */
+    .qty-add {
+      width: 36px;
+      height: 36px;
+      background: oklch(37% 0.07 82);
+      border: none;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.3rem;
-      width: 100%;
-    }
-
-    .quantity-empty .quantity-button-decrease {
-      visibility: hidden;
-      pointer-events: none;
-      box-shadow: none;
-    }
-
-    .quantity button {
-      cursor: pointer;
-      font: inherit;
-    }
-
-    .quantity-button {
-      flex-shrink: 0;
-      width: 1.95rem;
-      height: 1.95rem;
-      border: 1px solid transparent;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      color: #fff;
+      font-size: 22px;
       line-height: 1;
-      font-size: 1rem;
-      font-weight: 800;
-      transition:
-        transform 140ms ease,
-        box-shadow 140ms ease,
-        background 140ms ease,
-        border-color 140ms ease,
-        color 140ms ease,
-        opacity 140ms ease;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(55, 65, 28, 0.22);
+      padding: 0;
     }
 
-    .quantity-button span {
-      transform: translateY(-0.03em);
-    }
-
-    .quantity-button-decrease {
-      background: var(--yoobu-surface-card);
-      border-color: var(--yoobu-border-soft);
-      color: var(--yoobu-ink);
-      box-shadow: var(--yoobu-shadow-xs);
-    }
-
-    .quantity-button-increase {
-      background: linear-gradient(135deg, var(--yoobu-primary), #ff8753);
-      color: white;
-      box-shadow: 0 6px 14px rgba(255, 107, 53, 0.22);
-    }
-
-    .quantity-button:not(:disabled):active {
-      transform: scale(0.94);
-      box-shadow: inset 0 2px 5px rgba(36, 22, 15, 0.14);
-    }
-
-    .quantity-button:focus-visible {
-      outline: 2px solid var(--yoobu-border-accent);
-      outline-offset: 2px;
-    }
-
-    .quantity-button:disabled {
-      opacity: 0.35;
+    .qty-add:disabled {
+      opacity: 0.4;
       cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
     }
 
-    .quantity-value {
-      min-width: 1.15rem;
+    .qty-add:not(:disabled):active {
+      transform: scale(0.92);
+    }
+
+    /* ── Qty pill ── */
+    .qty-pill {
+      display: flex;
+      align-items: center;
+      background: oklch(37% 0.07 82);
+      border-radius: 999px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .qty-pill-btn {
+      width: 32px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .qty-pill-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .qty-pill-val {
+      font-weight: 800;
+      font-size: 14px;
+      color: #fff;
+      min-width: 18px;
       text-align: center;
-      font-weight: 700;
-      font-size: 0.9rem;
       font-variant-numeric: tabular-nums;
-      color: var(--yoobu-ink);
-    }
-
-    @media (max-width: 430px) {
-      .catalog {
-        grid-template-columns: 1fr;
-      }
-
-      .quantity-shell {
-        width: 5rem;
-        padding: 0.12rem 0.15rem;
-      }
-
-      .quantity {
-        gap: 0.2rem;
-      }
-
-      .quantity-button {
-        width: 1.8rem;
-        height: 1.8rem;
-        font-size: 0.95rem;
-      }
-
-      .quantity-value {
-        min-width: 0.95rem;
-        font-size: 0.82rem;
-      }
-
-      .price {
-        font-size: 0.92rem;
-      }
     }
   `
 })
@@ -415,10 +308,6 @@ export class FoodOrderMenuComponent {
   readonly increaseRequested = output<number>();
   readonly decreaseRequested = output<number>();
 
-  protected trackByServiceId(_index: number, service: ServiceItem): number {
-    return service.id;
-  }
-
   protected quantityFor(serviceId: number): number {
     return this.quantities()[serviceId] ?? 0;
   }
@@ -427,8 +316,7 @@ export class FoodOrderMenuComponent {
     return this.quantityFor(serviceId) >= FoodOrderStore.MAX_ITEM_QUANTITY;
   }
 
-  protected serviceInitial(name: string): string {
-    const trimmedName = name.trim();
-    return trimmedName ? trimmedName.charAt(0).toUpperCase() : '?';
+  protected isSoldOut(service: ServiceItem): boolean {
+    return service.status !== 'ACTIVE';
   }
 }

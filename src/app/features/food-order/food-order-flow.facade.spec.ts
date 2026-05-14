@@ -39,7 +39,7 @@ describe('FoodOrderFlowFacade', () => {
   };
 
   const tenantConfig: TenantConfig = {
-    slug: 'demo',
+    slug: 'dark-kitchen-dn2',
     name: 'Demo Store',
     type: 'FOOD_ORDER',
     primaryColor: '#ff6b35',
