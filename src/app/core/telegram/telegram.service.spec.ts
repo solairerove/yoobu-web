@@ -3,6 +3,66 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { TelegramService } from './telegram.service';
 
 describe('TelegramService', () => {
+  it('ready is false before init is called', () => {
+    const service = setupService(null, 'example.com');
+
+    expect(service.ready()).toBeFalse();
+  });
+
+  it('ready is true immediately on localhost regardless of init data', fakeAsync(() => {
+    const service = setupService({ ready: jasmine.createSpy(), expand: jasmine.createSpy() }, 'localhost');
+    service.init();
+    tick();
+
+    expect(service.ready()).toBeTrue();
+  }));
+
+  it('ready is true immediately when no Telegram WebApp present', fakeAsync(() => {
+    const service = setupService(null, 'example.com');
+    service.init();
+    tick();
+
+    expect(service.ready()).toBeTrue();
+  }));
+
+  it('ready is true immediately when init data is available on init', fakeAsync(() => {
+    const service = setupService({ initData: 'token=1', ready: jasmine.createSpy(), expand: jasmine.createSpy() }, 'example.com');
+    service.init();
+    tick();
+
+    expect(service.ready()).toBeTrue();
+    expect(service.initError()).toBeFalse();
+  }));
+
+  it('ready becomes true when init data arrives after polling', fakeAsync(() => {
+    const webApp: { initData: string; ready: jasmine.Spy; expand: jasmine.Spy } = {
+      initData: '',
+      ready: jasmine.createSpy(),
+      expand: jasmine.createSpy()
+    };
+    const service = setupService(webApp, 'example.com');
+    service.init();
+
+    expect(service.ready()).toBeFalse();
+
+    webApp.initData = 'token=late';
+    tick(100);
+
+    expect(service.ready()).toBeTrue();
+    expect(service.initError()).toBeFalse();
+  }));
+
+  it('sets initError after polling timeout with no init data', fakeAsync(() => {
+    const webApp = { initData: '', ready: jasmine.createSpy(), expand: jasmine.createSpy() };
+    const service = setupService(webApp, 'example.com');
+    service.init();
+
+    tick(15_000);
+
+    expect(service.ready()).toBeFalse();
+    expect(service.initError()).toBeTrue();
+  }));
+
   it('initializes web app and exposes trimmed init data', fakeAsync(() => {
     const ready = jasmine.createSpy('ready');
     const expand = jasmine.createSpy('expand');

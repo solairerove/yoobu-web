@@ -1,4 +1,5 @@
 import { DOCUMENT } from '@angular/common';
+import { signal } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
@@ -40,6 +41,8 @@ describe('TenantShellComponent', () => {
     telegram.isLocalhost.and.returnValue(false);
     telegram.confirm.and.resolveTo(true);
     telegram.alert.and.resolveTo();
+    (telegram as unknown as { ready: ReturnType<typeof signal<boolean>> }).ready = signal(true);
+    (telegram as unknown as { initError: ReturnType<typeof signal<boolean>> }).initError = signal(false);
     slugParamMap$ = new BehaviorSubject(convertToParamMap({ slug: 'demo' }));
 
     TestBed.configureTestingModule({
