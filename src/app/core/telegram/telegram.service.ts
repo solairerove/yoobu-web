@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 
 interface TelegramWebApp {
   initData?: string;
@@ -38,6 +38,11 @@ export class TelegramService {
   private readonly destroyRef = inject(DestroyRef);
   private readonly webAppSignal = signal<TelegramWebApp | null>(null);
   private readonly mainButtonHandler = signal<(() => void) | null>(null);
+  private readonly initDataAvailable = signal(false);
+
+  readonly isInsideTelegram = computed(
+    () => this.initDataAvailable() && !!(this.webAppSignal()?.MainButton)
+  );
 
   constructor() {
     effect(() => {
@@ -76,7 +81,17 @@ export class TelegramService {
   }
 
   init(): void {
-    this.webAppSignal.set(this.resolveWebApp());
+    const webApp = this.resolveWebApp();
+    this.webAppSignal.set(webApp);
+    this.initDataAvailable.set(!!(webApp?.initData?.trim()));
+
+    if (webApp && !webApp.initData?.trim()) {
+      setTimeout(() => {
+        if (webApp.initData?.trim()) {
+          this.initDataAvailable.set(true);
+        }
+      }, 500);
+    }
   }
 
   getInitData(): string | null {
@@ -106,11 +121,6 @@ export class TelegramService {
   isLocalhost(): boolean {
     const hostname = this.document.defaultView?.location.hostname ?? '';
     return hostname === 'localhost' || hostname === '127.0.0.1';
-  }
-
-  usesTelegramMainButton(): boolean {
-    const webApp = this.resolveWebApp();
-    return !!(webApp?.initData?.trim() && webApp.MainButton);
   }
 
   setMainButton(text: string | null, enabled = true): void {

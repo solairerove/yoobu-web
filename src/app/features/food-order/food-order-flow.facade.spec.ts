@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, Subject } from 'rxjs';
@@ -60,7 +61,6 @@ describe('FoodOrderFlowFacade', () => {
 
     telegram = jasmine.createSpyObj<TelegramService>('TelegramService', [
       'isLocalhost',
-      'usesTelegramMainButton',
       'setMainButton',
       'onMainButtonClick',
       'confirm',
@@ -76,7 +76,7 @@ describe('FoodOrderFlowFacade', () => {
     api.cancelBooking.and.returnValue(of(createBookingResponse(1)));
 
     telegram.isLocalhost.and.returnValue(false);
-    telegram.usesTelegramMainButton.and.returnValue(true);
+    (telegram as unknown as { isInsideTelegram: ReturnType<typeof signal> }).isInsideTelegram = signal(false);
     telegram.confirm.and.resolveTo(true);
     telegram.alert.and.resolveTo();
 

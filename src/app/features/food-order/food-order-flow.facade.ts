@@ -39,7 +39,7 @@ export class FoodOrderFlowFacade {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly store = inject(FoodOrderStore);
-  readonly showNativeCheckoutButtons = !this.telegram.usesTelegramMainButton();
+  readonly showNativeCheckoutButtons = computed(() => !this.telegram.isInsideTelegram());
 
   readonly checkoutForm = this.fb.nonNullable.group({
     customerName: ['', [Validators.required]],
