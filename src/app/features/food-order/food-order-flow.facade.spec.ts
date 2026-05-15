@@ -60,6 +60,7 @@ describe('FoodOrderFlowFacade', () => {
 
     telegram = jasmine.createSpyObj<TelegramService>('TelegramService', [
       'isLocalhost',
+      'usesTelegramMainButton',
       'setMainButton',
       'onMainButtonClick',
       'confirm',
@@ -75,6 +76,7 @@ describe('FoodOrderFlowFacade', () => {
     api.cancelBooking.and.returnValue(of(createBookingResponse(1)));
 
     telegram.isLocalhost.and.returnValue(false);
+    telegram.usesTelegramMainButton.and.returnValue(true);
     telegram.confirm.and.resolveTo(true);
     telegram.alert.and.resolveTo();
 

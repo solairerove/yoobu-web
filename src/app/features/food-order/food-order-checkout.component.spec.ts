@@ -27,8 +27,8 @@ describe('FoodOrderCheckoutComponent', () => {
     });
   }
 
-  function setRequiredInputs(localMode: boolean, deliveryDate = '2026-03-19'): void {
-    fixture.componentRef.setInput('localMode', localMode);
+  function setRequiredInputs(deliveryDate = '2026-03-19'): void {
+    fixture.componentRef.setInput('showNativeButtons', true);
     fixture.componentRef.setInput('submitting', false);
     fixture.componentRef.setInput('submitError', null);
     fixture.componentRef.setInput('form', createForm(deliveryDate));
@@ -53,8 +53,8 @@ describe('FoodOrderCheckoutComponent', () => {
     fixture.detectChanges();
   }
 
-  it('emits submitRequested when local checkout form is submitted', () => {
-    setRequiredInputs(true);
+  it('emits submitRequested when checkout form is submitted', () => {
+    setRequiredInputs();
     const submitSpy = jasmine.createSpy('submitSpy');
     component.submitRequested.subscribe(submitSpy);
 
@@ -66,7 +66,7 @@ describe('FoodOrderCheckoutComponent', () => {
   });
 
   it('disables back button while submitting', () => {
-    setRequiredInputs(true);
+    setRequiredInputs();
     fixture.componentRef.setInput('submitting', true);
     fixture.detectChanges();
 
@@ -76,7 +76,7 @@ describe('FoodOrderCheckoutComponent', () => {
   });
 
   it('shows tenant hints whenever provided', () => {
-    setRequiredInputs(true);
+    setRequiredInputs();
     fixture.componentRef.setInput('customerNameHint', 'Use full name');
     fixture.componentRef.setInput('customerPhoneHint', '+84...');
     fixture.componentRef.setInput('deliveryAddressHint', 'Street, house');
@@ -97,12 +97,12 @@ describe('FoodOrderCheckoutComponent', () => {
   });
 
   it('does not show tenant hints when not provided', () => {
-    setRequiredInputs(true);
+    setRequiredInputs();
     expect(fixture.debugElement.queryAll(By.css('.field-hint')).length).toBe(0);
   });
 
   it('renders 7 day chips starting from earliestDeliveryDate', () => {
-    setRequiredInputs(true);
+    setRequiredInputs();
     fixture.componentRef.setInput('earliestDeliveryDate', '2026-05-01');
     fixture.detectChanges();
 
@@ -115,7 +115,7 @@ describe('FoodOrderCheckoutComponent', () => {
   });
 
   it('marks correct chip as active based on form deliveryDate', () => {
-    setRequiredInputs(true, '2026-05-03');
+    setRequiredInputs('2026-05-03');
     fixture.componentRef.setInput('earliestDeliveryDate', '2026-05-01');
     fixture.detectChanges();
 
@@ -127,7 +127,7 @@ describe('FoodOrderCheckoutComponent', () => {
   });
 
   it('updates form deliveryDate when chip is clicked', () => {
-    setRequiredInputs(true);
+    setRequiredInputs();
     fixture.componentRef.setInput('earliestDeliveryDate', '2026-05-10');
     fixture.detectChanges();
 
@@ -142,7 +142,7 @@ describe('FoodOrderCheckoutComponent', () => {
   });
 
   it('renders and dismisses repeat-order banner', () => {
-    setRequiredInputs(true);
+    setRequiredInputs();
     fixture.componentRef.setInput('repeatOrderBanner', 'Cart prefilled from order #12.');
     fixture.detectChanges();
     const dismissSpy = jasmine.createSpy('dismissSpy');

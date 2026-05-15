@@ -111,7 +111,7 @@ interface DeliveryDay {
             </div>
           </aside>
 
-          @if (localMode()) {
+          @if (showNativeButtons()) {
             <button type="submit" class="primary-button" [disabled]="submitting()">
               {{ submitting() ? 'Submitting...' : 'Place order' }}
             </button>
@@ -353,7 +353,7 @@ interface DeliveryDay {
   `
 })
 export class FoodOrderCheckoutComponent {
-  readonly localMode = input.required<boolean>();
+  readonly showNativeButtons = input.required<boolean>();
   readonly submitting = input.required<boolean>();
   readonly submitError = input.required<string | null>();
   readonly repeatOrderBanner = input<string | null>(null);

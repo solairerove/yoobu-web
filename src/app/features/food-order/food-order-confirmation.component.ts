@@ -84,7 +84,7 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
           </div>
         </div>
 
-        @if (localMode()) {
+        @if (showNativeButtons()) {
           <button type="button" class="back-btn" (click)="backToShopRequested.emit()">
             Back to shop
           </button>
@@ -380,7 +380,7 @@ export class FoodOrderConfirmationComponent {
   readonly booking = input.required<BookingResponse>();
   readonly paymentQrUrl = input<string | null>(null);
   readonly currencyCodeFallback = input<string>('VND');
-  readonly localMode = input.required<boolean>();
+  readonly showNativeButtons = input.required<boolean>();
   readonly confirmingPaymentBookingId = input<number | null>(null);
   readonly paymentError = input<string | null>(null);
 
