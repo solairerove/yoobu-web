@@ -189,11 +189,16 @@ export class FoodOrderFlowFacade {
     });
 
     effect(() => {
+      const isInsideTelegram = this.telegram.isInsideTelegram();
       const booking = this.submittedBooking();
       const itemCount = this.store.selectedCount();
       const total = this.store.selectedTotal();
       const activeView = this.activeView();
       const submitting = this.submitting();
+
+      if (!isInsideTelegram) {
+        return;
+      }
 
       if (activeView === 'confirmation') {
         this.telegram.setMainButton('Back to shop');
