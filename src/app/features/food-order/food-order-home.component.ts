@@ -3,6 +3,7 @@ import { TenantConfig } from '../../core/models/tenant-config.model';
 import { normalizeCurrencyCode } from '../../core/utils/currency.util';
 import { FoodOrderBookingsComponent } from './food-order-bookings.component';
 import { FoodOrderCartBarComponent } from './food-order-cart-bar.component';
+import { FoodOrderCartComponent } from './food-order-cart.component';
 import { FoodOrderCheckoutComponent } from './food-order-checkout.component';
 import { FoodOrderFlowFacade } from './food-order-flow.facade';
 import { FoodOrderMenuComponent } from './food-order-menu.component';
@@ -13,6 +14,7 @@ import { FoodOrderStore } from './food-order.store';
   imports: [
     FoodOrderBookingsComponent,
     FoodOrderCartBarComponent,
+    FoodOrderCartComponent,
     FoodOrderCheckoutComponent,
     FoodOrderMenuComponent
   ],
@@ -21,137 +23,157 @@ import { FoodOrderStore } from './food-order.store';
   template: `
     <div class="page">
 
-      <!-- MiniHero: banner + tab bar -->
-      <div class="mini-hero">
-        <div class="banner">
-          <div class="banner-grad"></div>
-          <div class="banner-content">
-            <div class="venue-row">
-              <div class="venue-logo">
-                @if (config().logoUrl) {
-                  <img class="venue-logo-img" [src]="config().logoUrl" [alt]="config().name" />
-                } @else {
-                  <span>{{ nameInitial() }}</span>
-                }
+      <!-- MiniHero: banner + tab bar (hidden when in cart view) -->
+      @if (activeView() !== 'cart') {
+        <div class="mini-hero">
+          <div class="banner">
+            <div class="banner-grad"></div>
+            <div class="banner-content">
+              <div class="venue-row">
+                <div class="venue-logo">
+                  @if (config().logoUrl) {
+                    <img class="venue-logo-img" [src]="config().logoUrl" [alt]="config().name" />
+                  } @else {
+                    <span>{{ nameInitial() }}</span>
+                  }
+                </div>
+                <div class="venue-text">
+                  <span class="venue-name">{{ config().name }}</span>
+                  @if (config().welcomeMessage) {
+                    <span class="venue-tagline">{{ config().welcomeMessage }}</span>
+                  }
+                </div>
               </div>
-              <div class="venue-text">
-                <span class="venue-name">{{ config().name }}</span>
-                @if (config().welcomeMessage) {
-                  <span class="venue-tagline">{{ config().welcomeMessage }}</span>
-                }
-              </div>
+              <span class="ordering-badge">Ordering</span>
             </div>
-            <span class="ordering-badge">Ordering</span>
           </div>
+
+          <nav class="tab-bar" aria-label="Order sections">
+            <button
+              type="button"
+              class="tab-btn view-switch-button"
+              [class.active]="activeView() === 'menu'"
+              (click)="setActiveView('menu')"
+            >Menu</button>
+            <button
+              type="button"
+              class="tab-btn view-switch-button"
+              [class.active]="activeView() === 'orders'"
+              (click)="setActiveView('orders')"
+            >My orders</button>
+          </nav>
         </div>
+      }
 
-        <nav class="tab-bar" aria-label="Order sections">
-          <button
-            type="button"
-            class="tab-btn"
-            [class.active]="activeView() === 'menu'"
-            (click)="setActiveView('menu')"
-          >Menu</button>
-          <button
-            type="button"
-            class="tab-btn"
-            [class.active]="activeView() === 'orders'"
-            (click)="setActiveView('orders')"
-          >My orders</button>
-        </nav>
-      </div>
-
-      <!-- Scrollable content -->
-      <div class="content" [class.has-cart]="store.selectedCount() > 0">
-
-        @if (vm().loading) {
-          <section class="status-section ui-status-card">
-            <h3>Loading menu</h3>
-            <p>Please wait while the menu loads.</p>
-          </section>
-        }
-
-        @if (vm().error; as error) {
-          <section class="status-section ui-status-card error">
-            <h3>Menu unavailable</h3>
-            <p>{{ error }}</p>
-          </section>
-        }
-
-        @if (!vm().loading && !vm().error && !vm().services.length) {
-          <section class="status-section ui-status-card">
-            <h3>No items available</h3>
-            <p>No items are available right now.</p>
-          </section>
-        }
-
-        @if (activeView() === 'menu' && vm().services.length) {
-          <app-food-order-menu
-            [services]="vm().services"
-            [selectedCount]="store.selectedCount()"
-            [currencyCode]="currencyCode()"
-            [defaultUnit]="'item'"
-            [quantities]="selectedQuantities()"
-            (increaseRequested)="increase($event)"
-            (decreaseRequested)="decrease($event)"
-          />
-        }
-
-        @if (activeView() === 'menu' && checkoutOpen()) {
-          <app-food-order-checkout
-            [open]="checkoutOpen()"
-            [localMode]="showLocalCheckoutButtons"
-            [submitting]="submitting()"
-            [submitError]="submitError()"
-            [repeatOrderBanner]="repeatOrderBanner()"
-            [form]="checkoutForm"
-            [customerNameHint]="config().checkoutNameHint || null"
-            [customerPhoneHint]="config().checkoutPhoneHint || null"
-            [deliveryAddressHint]="config().checkoutDeliveryHint || null"
-            [customerNoteHint]="config().checkoutNoteHint || null"
-            [currencyCode]="currencyCode()"
-            [earliestDeliveryDate]="earliestDeliveryDate()"
-            [selectedItems]="store.selectedItems()"
-            [selectedCount]="store.selectedCount()"
-            [selectedTotal]="store.selectedTotal()"
-            (closeRequested)="closeCheckout()"
-            (repeatOrderBannerDismissed)="dismissRepeatOrderBanner()"
-            (submitRequested)="submitOrder()"
-          />
-        }
-
-        @if (activeView() === 'orders') {
-          <app-food-order-bookings
-            [bookings]="bookingsVm().bookings"
-            [loading]="bookingsVm().loading"
-            [error]="bookingsVm().error"
-            [paymentQrUrl]="config().paymentQrUrl || null"
-            [selectedBookingId]="selectedBookingId()"
-            [selectedBooking]="selectedBooking()"
-            [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
-            [paymentError]="paymentError()"
-            [cancellingBookingId]="cancellingBookingId()"
-            [cancelError]="cancelError()"
-            [currencyCode]="currencyCode()"
-            (refreshRequested)="refreshBookings()"
-            (bookingSelected)="selectBooking($event)"
-            (repeatRequested)="repeatBooking($event)"
-            (paymentConfirmRequested)="confirmPayment($event)"
-            (cancelRequested)="cancelBooking($event)"
-            (newOrderRequested)="startNewOrder()"
-            (bookingDeselected)="deselectBooking()"
-          />
-        }
-
-      </div>
-
-      @if (showLocalCheckoutButtons && activeView() === 'menu' && store.selectedCount() > 0) {
-        <app-food-order-cart-bar
-          [checkoutOpen]="checkoutOpen()"
+      <!-- Cart view -->
+      @if (activeView() === 'cart') {
+        <app-food-order-cart
+          [selectedItems]="store.selectedItems()"
           [selectedCount]="store.selectedCount()"
           [selectedTotal]="store.selectedTotal()"
           [currencyCode]="currencyCode()"
-          (openRequested)="openCheckout()"
+          [localMode]="showLocalCheckoutButtons"
+          (backRequested)="closeCart()"
+          (checkoutRequested)="openCheckout()"
+          (increaseRequested)="increase($event)"
+          (decreaseRequested)="decrease($event)"
+        />
+      }
+
+      <!-- Menu / orders content -->
+      @if (activeView() !== 'cart') {
+        <div class="content" [class.has-cart]="store.selectedCount() > 0 && activeView() === 'menu'">
+
+          @if (vm().loading) {
+            <section class="status-section ui-status-card">
+              <h3>Loading menu</h3>
+              <p>Please wait while the menu loads.</p>
+            </section>
+          }
+
+          @if (vm().error; as error) {
+            <section class="status-section ui-status-card error">
+              <h3>Menu unavailable</h3>
+              <p>{{ error }}</p>
+            </section>
+          }
+
+          @if (!vm().loading && !vm().error && !vm().services.length) {
+            <section class="status-section ui-status-card">
+              <h3>No items available</h3>
+              <p>No items are available right now.</p>
+            </section>
+          }
+
+          @if (activeView() === 'menu' && vm().services.length) {
+            <app-food-order-menu
+              [services]="vm().services"
+              [selectedCount]="store.selectedCount()"
+              [currencyCode]="currencyCode()"
+              [defaultUnit]="'item'"
+              [quantities]="selectedQuantities()"
+              (increaseRequested)="increase($event)"
+              (decreaseRequested)="decrease($event)"
+            />
+          }
+
+          @if (activeView() === 'orders') {
+            <app-food-order-bookings
+              [bookings]="bookingsVm().bookings"
+              [loading]="bookingsVm().loading"
+              [error]="bookingsVm().error"
+              [paymentQrUrl]="config().paymentQrUrl || null"
+              [selectedBookingId]="selectedBookingId()"
+              [selectedBooking]="selectedBooking()"
+              [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
+              [paymentError]="paymentError()"
+              [cancellingBookingId]="cancellingBookingId()"
+              [cancelError]="cancelError()"
+              [currencyCode]="currencyCode()"
+              (refreshRequested)="refreshBookings()"
+              (bookingSelected)="selectBooking($event)"
+              (repeatRequested)="repeatBooking($event)"
+              (paymentConfirmRequested)="confirmPayment($event)"
+              (cancelRequested)="cancelBooking($event)"
+              (newOrderRequested)="startNewOrder()"
+              (bookingDeselected)="deselectBooking()"
+            />
+          }
+
+        </div>
+      }
+
+      <!-- Checkout sheet (opens from cart view) -->
+      @if (activeView() === 'cart' && checkoutOpen()) {
+        <app-food-order-checkout
+          [open]="checkoutOpen()"
+          [localMode]="showLocalCheckoutButtons"
+          [submitting]="submitting()"
+          [submitError]="submitError()"
+          [repeatOrderBanner]="repeatOrderBanner()"
+          [form]="checkoutForm"
+          [customerNameHint]="config().checkoutNameHint || null"
+          [customerPhoneHint]="config().checkoutPhoneHint || null"
+          [deliveryAddressHint]="config().checkoutDeliveryHint || null"
+          [customerNoteHint]="config().checkoutNoteHint || null"
+          [currencyCode]="currencyCode()"
+          [earliestDeliveryDate]="earliestDeliveryDate()"
+          [selectedItems]="store.selectedItems()"
+          [selectedCount]="store.selectedCount()"
+          [selectedTotal]="store.selectedTotal()"
+          (closeRequested)="closeCheckout()"
+          (repeatOrderBannerDismissed)="dismissRepeatOrderBanner()"
+          (submitRequested)="submitOrder()"
+        />
+      }
+
+      <!-- Cart bar (menu view only, local mode) -->
+      @if (showLocalCheckoutButtons && activeView() === 'menu' && store.selectedCount() > 0) {
+        <app-food-order-cart-bar
+          [selectedCount]="store.selectedCount()"
+          [selectedTotal]="store.selectedTotal()"
+          [currencyCode]="currencyCode()"
+          (openRequested)="openCart()"
         />
       }
 
@@ -364,6 +386,14 @@ export class FoodOrderHomeComponent {
 
   protected decrease(serviceId: number): void {
     this.facade.decrease(serviceId);
+  }
+
+  protected openCart(): void {
+    this.facade.openCart();
+  }
+
+  protected closeCart(): void {
+    this.facade.closeCart();
   }
 
   protected openCheckout(): void {

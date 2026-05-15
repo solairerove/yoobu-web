@@ -172,7 +172,7 @@ describe('FoodOrderFlowFacade', () => {
     facade.selectedBooking.set(completedBooking);
     await facade.repeatBooking(completedBooking.id);
 
-    expect(facade.activeView()).toBe('menu');
+    expect(facade.activeView()).toBe('cart');
     expect(facade.checkoutOpen()).toBeTrue();
     expect(facade.store.quantityFor(service.id)).toBe(2);
     expect(facade.store.quantityFor(teaService.id)).toBe(1);
@@ -396,6 +396,8 @@ describe('FoodOrderFlowFacade', () => {
     facade.setConfig(tenantConfig);
     facade.increase(service.id);
 
+    (facade as unknown as { mainButtonAction: () => void }).mainButtonAction();
+    await Promise.resolve();
     (facade as unknown as { mainButtonAction: () => void }).mainButtonAction();
     await Promise.resolve();
     (facade as unknown as { mainButtonAction: () => void }).mainButtonAction();

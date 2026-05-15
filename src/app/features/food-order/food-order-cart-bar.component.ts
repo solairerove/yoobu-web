@@ -8,18 +8,11 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   template: `
     <button type="button" class="cart-bar" (click)="openRequested.emit()">
       <div class="cart-copy">
-        @if (checkoutOpen()) {
-          <strong class="cart-count">Your order</strong>
-        } @else {
-          <strong class="cart-count">{{ selectedCount() }} {{ selectedCount() === 1 ? 'item' : 'items' }}</strong>
-          <span class="cart-sep">·</span>
-          <span class="cart-total">{{ selectedTotal() | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
-        }
+        <strong class="cart-count">{{ selectedCount() }} {{ selectedCount() === 1 ? 'item' : 'items' }}</strong>
+        <span class="cart-sep">·</span>
+        <span class="cart-total">{{ selectedTotal() | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
       </div>
-
-      <span class="cart-action">
-        {{ checkoutOpen() ? 'Review ›' : 'Checkout ›' }}
-      </span>
+      <span class="cart-action">View cart ›</span>
     </button>
   `,
   styles: `
@@ -42,7 +35,6 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       box-shadow: 0 8px 28px rgba(255, 107, 53, 0.38);
       text-align: left;
       cursor: pointer;
-      font: inherit;
     }
 
     .cart-copy {
@@ -81,7 +73,6 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   `
 })
 export class FoodOrderCartBarComponent {
-  readonly checkoutOpen = input.required<boolean>();
   readonly selectedCount = input.required<number>();
   readonly selectedTotal = input.required<number>();
   readonly currencyCode = input.required<string>();

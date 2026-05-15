@@ -44,7 +44,7 @@ interface CheckoutSelection {
       <div class="checkout-head">
         <p class="eyebrow">Checkout</p>
         <button type="button" class="head-action" (click)="closeRequested.emit()" [disabled]="submitting()">
-          ← Menu
+          ← Cart
         </button>
       </div>
 
@@ -315,16 +315,13 @@ interface CheckoutSelection {
 
     .primary-button {
       cursor: pointer;
-      font: inherit;
-    }
-
-    .primary-button {
       border: 0;
       border-radius: 999px;
       padding: 0.85rem 1.2rem;
-      background: var(--yoobu-primary);
+      background: linear-gradient(135deg, var(--yoobu-primary), #ff8c5a);
       color: white;
       font-weight: 700;
+      box-shadow: 0 8px 28px rgba(255, 107, 53, 0.38);
     }
 
     .primary-button:disabled {

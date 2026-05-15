@@ -54,7 +54,7 @@ export class FoodOrderFlowFacade {
   readonly bookingsReloadKey = signal(0);
   readonly selectedBookingId = signal<number | null>(null);
   readonly selectedBooking = signal<BookingResponse | null>(null);
-  readonly activeView = signal<'menu' | 'orders'>('menu');
+  readonly activeView = signal<'menu' | 'orders' | 'cart'>('menu');
   readonly checkoutOpen = signal(false);
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
@@ -175,6 +175,7 @@ export class FoodOrderFlowFacade {
       const itemCount = this.store.selectedCount();
       const total = this.store.selectedTotal();
       const checkoutOpen = this.checkoutOpen();
+      const activeView = this.activeView();
       const submitting = this.submitting();
 
       if (booking || itemCount === 0) {
@@ -183,7 +184,13 @@ export class FoodOrderFlowFacade {
         return;
       }
 
-      if (!checkoutOpen) {
+      if (activeView === 'menu') {
+        this.telegram.setMainButton(`View cart • ${this.formatCurrency(total)}`);
+        this.telegram.onMainButtonClick(this.mainButtonAction);
+        return;
+      }
+
+      if (activeView === 'cart' && !checkoutOpen) {
         this.telegram.setMainButton(`Checkout • ${this.formatCurrency(total)}`);
         this.telegram.onMainButtonClick(this.mainButtonAction);
         return;
@@ -221,7 +228,19 @@ export class FoodOrderFlowFacade {
     this.telegram.hapticLight();
     if (this.store.selectedCount() === 0) {
       this.checkoutOpen.set(false);
+      if (this.activeView() === 'cart') {
+        this.activeView.set('menu');
+      }
     }
+  }
+
+  openCart(): void {
+    this.activeView.set('cart');
+  }
+
+  closeCart(): void {
+    this.checkoutOpen.set(false);
+    this.activeView.set('menu');
   }
 
   openCheckout(): void {
@@ -397,7 +416,7 @@ export class FoodOrderFlowFacade {
     }
 
     this.submittedBooking.set(null);
-    this.activeView.set('menu');
+    this.activeView.set('cart');
     this.submitError.set(null);
     this.checkoutOpen.set(true);
     this.store.setQuantities(nextQuantities);
@@ -488,10 +507,9 @@ export class FoodOrderFlowFacade {
   }
 
   setActiveView(view: 'menu' | 'orders'): void {
+    this.checkoutOpen.set(false);
     this.activeView.set(view);
-    if (view === 'orders' || view === 'menu') {
-      this.refreshBookings();
-    }
+    this.refreshBookings();
   }
 
   private resetForTenant(slug: string): void {
@@ -556,6 +574,11 @@ export class FoodOrderFlowFacade {
   }
 
   private async handlePrimaryAction(): Promise<void> {
+    if (this.activeView() === 'menu') {
+      this.openCart();
+      return;
+    }
+
     if (!this.checkoutOpen()) {
       this.openCheckout();
       return;
