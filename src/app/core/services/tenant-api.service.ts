@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, retry, timeout, timer } from 'rxjs';
+import { Observable, retry, TimeoutError, timeout, timer } from 'rxjs';
 import { BookingResponse, CreateBookingRequest } from '../models/booking.model';
 import { ServiceItem } from '../models/service.model';
 import { TenantConfig } from '../models/tenant-config.model';
@@ -46,7 +46,15 @@ export class TenantApiService {
       timeout(TenantApiService.REQUEST_TIMEOUT_MS),
       retry({
         count: TenantApiService.RETRY_COUNT,
-        delay: (_, retryIndex) => timer(retryIndex * 2000)
+        delay: (error, retryIndex) => {
+          const retryable =
+            error instanceof TimeoutError ||
+            (error instanceof HttpErrorResponse && (error.status === 0 || error.status >= 500));
+          if (!retryable) {
+            throw error;
+          }
+          return timer(retryIndex * 2000);
+        }
       })
     );
   }

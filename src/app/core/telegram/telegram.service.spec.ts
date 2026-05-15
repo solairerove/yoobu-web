@@ -63,6 +63,27 @@ describe('TelegramService', () => {
     expect(service.initError()).toBeTrue();
   }));
 
+  it('calling init multiple times still resolves ready once init data arrives', fakeAsync(() => {
+    const webApp: { initData: string; ready: jasmine.Spy; expand: jasmine.Spy } = {
+      initData: '',
+      ready: jasmine.createSpy(),
+      expand: jasmine.createSpy()
+    };
+    const service = setupService(webApp, 'example.com');
+
+    service.init();
+    service.init();
+    service.init();
+
+    expect(service.ready()).toBeFalse();
+
+    webApp.initData = 'token=multi';
+    tick(100);
+
+    expect(service.ready()).toBeTrue();
+    expect(service.initError()).toBeFalse();
+  }));
+
   it('initializes web app and exposes trimmed init data', fakeAsync(() => {
     const ready = jasmine.createSpy('ready');
     const expand = jasmine.createSpy('expand');
