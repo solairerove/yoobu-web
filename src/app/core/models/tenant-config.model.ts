@@ -8,6 +8,7 @@ export interface TenantConfig {
   paymentQrUrl?: string | null;
   primaryColor: string | null;
   logoUrl: string | null;
+  bannerUrl?: string | null;
   welcomeMessage: string | null;
   checkoutNameHint?: string | null;
   checkoutPhoneHint?: string | null;

@@ -29,6 +29,9 @@ import { FoodOrderStore } from './food-order.store';
       @if (activeView() !== 'cart' && activeView() !== 'checkout' && activeView() !== 'confirmation') {
         <div class="mini-hero">
           <div class="banner">
+            @if (config().bannerUrl) {
+              <img class="banner-img" [src]="config().bannerUrl" alt="" aria-hidden="true" />
+            }
             <div class="banner-grad"></div>
             <div class="banner-content">
               <div class="venue-row">
@@ -217,6 +220,15 @@ import { FoodOrderStore } from './food-order.store';
         oklch(67% 0.048 46) 14px,
         oklch(67% 0.048 46) 28px
       );
+    }
+
+    .banner-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
     }
 
     .banner-grad {
