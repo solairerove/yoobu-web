@@ -151,13 +151,15 @@ export class FoodOrderFlowFacade {
             loading: true,
             error: null
           }),
-          catchError(() =>
-            of({
-              bookings: [],
-              loading: false,
-              error: 'Could not load your orders.'
-            })
-          )
+          catchError((err: unknown) => {
+            let error = 'Could not load your orders.';
+            if (err instanceof HttpErrorResponse && (err.status === 401 || err.status === 403)) {
+              error = 'Session expired. Please close and reopen the app.';
+            } else if (err instanceof Error && err.message) {
+              error = err.message;
+            }
+            return of({ bookings: [], loading: false, error });
+          })
         )
       )
     ),
