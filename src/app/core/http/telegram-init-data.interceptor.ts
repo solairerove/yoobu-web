@@ -16,14 +16,7 @@ export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) =>
 
   return from(initDataWait).pipe(
     switchMap((initData) => {
-      if (!initData) {
-        if (!devTelegramUserId) {
-          if (request.url.includes('/bookings')) {
-            return throwError(() => new Error('Telegram session unavailable. Please reopen the app.'));
-          }
-          return next(request);
-        }
-
+      if (devTelegramUserId) {
         return next(
           request.clone({
             setHeaders: {
@@ -33,6 +26,13 @@ export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) =>
         );
       }
 
+      if (!initData) {
+        if (request.url.includes('/bookings')) {
+          return throwError(() => new Error('Telegram session unavailable. Please reopen the app.'));
+        }
+        return next(request);
+      }
+
       return next(
         request.clone({
           setHeaders: {
@@ -40,8 +40,7 @@ export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) =>
           }
         })
       );
-    }
-    )
+    })
   );
 };
 

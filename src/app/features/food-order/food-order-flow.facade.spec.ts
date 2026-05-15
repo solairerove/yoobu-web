@@ -39,7 +39,7 @@ describe('FoodOrderFlowFacade', () => {
   };
 
   const tenantConfig: TenantConfig = {
-    slug: 'demo',
+    slug: 'dark-kitchen-dn2',
     name: 'Demo Store',
     type: 'FOOD_ORDER',
     primaryColor: '#ff6b35',
@@ -110,7 +110,7 @@ describe('FoodOrderFlowFacade', () => {
     facade.setConfig(tenantConfig);
     tick();
 
-    expect(api.getServices).toHaveBeenCalledWith('demo');
+    expect(api.getServices).toHaveBeenCalledWith(tenantConfig.slug);
     expect(facade.vm().services).toEqual([service]);
     expect(facade.vm().error).toBeNull();
   }));
@@ -172,8 +172,7 @@ describe('FoodOrderFlowFacade', () => {
     facade.selectedBooking.set(completedBooking);
     await facade.repeatBooking(completedBooking.id);
 
-    expect(facade.activeView()).toBe('menu');
-    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.activeView()).toBe('checkout');
     expect(facade.store.quantityFor(service.id)).toBe(2);
     expect(facade.store.quantityFor(teaService.id)).toBe(1);
     expect(facade.checkoutForm.getRawValue().customerName).toBe(completedBooking.customerName);
@@ -197,7 +196,7 @@ describe('FoodOrderFlowFacade', () => {
     await facade.repeatBooking(legacyBooking.id);
 
     expect(facade.store.selectedCount()).toBe(0);
-    expect(facade.checkoutOpen()).toBeFalse();
+    expect(facade.activeView()).not.toBe('checkout');
     expect(telegram.alert).toHaveBeenCalledWith('None of the items from this order are available now.');
   });
 
@@ -269,7 +268,7 @@ describe('FoodOrderFlowFacade', () => {
     expect(api.createBooking).not.toHaveBeenCalled();
     expect(facade.submitting()).toBeFalse();
     expect(facade.store.selectedCount()).toBe(1);
-    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.activeView()).toBe('checkout');
   });
 
   it('submits an order and resets checkout state on success', async () => {
@@ -292,7 +291,7 @@ describe('FoodOrderFlowFacade', () => {
 
     await facade.submitOrder();
 
-    expect(api.createBooking).toHaveBeenCalledWith('demo', {
+    expect(api.createBooking).toHaveBeenCalledWith(tenantConfig.slug, {
       customerName: 'Alice',
       customerPhone: '0123456789',
       deliveryAddress: '123 Main St',
@@ -303,7 +302,7 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.submittedBooking()?.id).toBe(createdBooking.id);
     expect(facade.selectedBookingId()).toBe(createdBooking.id);
     expect(facade.store.selectedCount()).toBe(0);
-    expect(facade.checkoutOpen()).toBeFalse();
+    expect(facade.activeView()).toBe('confirmation');
     expect(facade.submitting()).toBeFalse();
     expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
     expect(facade.checkoutForm.getRawValue().customerName).toBe('Alice');
@@ -321,7 +320,7 @@ describe('FoodOrderFlowFacade', () => {
     await facade.submitOrder();
 
     expect(api.createBooking).not.toHaveBeenCalled();
-    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.activeView()).toBe('checkout');
     expect(facade.submitError()).toBe('Enter your name, phone number, and delivery date before placing the order.');
     expect(telegram.alert).toHaveBeenCalledWith(
       'Enter your name, phone number, and delivery date before placing the order.'
@@ -366,7 +365,7 @@ describe('FoodOrderFlowFacade', () => {
     await facade.submitOrder();
 
     expect(api.createBooking).not.toHaveBeenCalled();
-    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.activeView()).toBe('checkout');
     expect(facade.submitError()).toBe('Enter your name, phone number, and delivery date before placing the order.');
   });
 
@@ -387,7 +386,7 @@ describe('FoodOrderFlowFacade', () => {
     await facade.submitOrder();
 
     expect(api.createBooking).not.toHaveBeenCalled();
-    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.activeView()).toBe('checkout');
     expect(facade.submitError()).toContain('2026-03-25');
   });
 
@@ -400,8 +399,10 @@ describe('FoodOrderFlowFacade', () => {
     await Promise.resolve();
     (facade as unknown as { mainButtonAction: () => void }).mainButtonAction();
     await Promise.resolve();
+    (facade as unknown as { mainButtonAction: () => void }).mainButtonAction();
+    await Promise.resolve();
 
-    expect(facade.checkoutOpen()).toBeTrue();
+    expect(facade.activeView()).toBe('checkout');
     expect(api.createBooking).not.toHaveBeenCalled();
     expect(facade.submitError()).toBe('Enter your name, phone number, and delivery date before placing the order.');
     expect(telegram.alert).toHaveBeenCalledWith(
@@ -409,14 +410,14 @@ describe('FoodOrderFlowFacade', () => {
     );
   });
 
-  it('closes checkout when trying to submit with an empty cart', async () => {
+  it('navigates to menu when trying to submit with an empty cart', async () => {
     facade.setConfig(tenantConfig);
     facade.openCheckout();
 
     await facade.submitOrder();
 
     expect(api.createBooking).not.toHaveBeenCalled();
-    expect(facade.checkoutOpen()).toBeFalse();
+    expect(facade.activeView()).toBe('menu');
   });
 
   it('refreshes bookings when switching to orders view', () => {
@@ -458,7 +459,7 @@ describe('FoodOrderFlowFacade', () => {
 
     await facade.cancelBooking(1);
 
-    expect(api.cancelBooking).toHaveBeenCalledWith('demo', 1);
+    expect(api.cancelBooking).toHaveBeenCalledWith(tenantConfig.slug, 1);
     expect(facade.selectedBooking()?.status).toBe('CANCELLED');
     expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
     expect(facade.cancellingBookingId()).toBeNull();
@@ -475,7 +476,7 @@ describe('FoodOrderFlowFacade', () => {
 
     await facade.confirmPayment(1);
 
-    expect(api.confirmBookingPayment).toHaveBeenCalledWith('demo', 1);
+    expect(api.confirmBookingPayment).toHaveBeenCalledWith(tenantConfig.slug, 1);
     expect(facade.selectedBooking()?.status).toBe('PAYMENT_PENDING');
     expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
     expect(facade.confirmingPaymentBookingId()).toBeNull();
@@ -506,7 +507,7 @@ describe('FoodOrderFlowFacade', () => {
     );
     expect(facade.paymentError()).toBeNull();
     expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
-    expect(api.getBooking).toHaveBeenCalledWith('demo', 1);
+    expect(api.getBooking).toHaveBeenCalledWith(tenantConfig.slug, 1);
     expect(facade.confirmingPaymentBookingId()).toBeNull();
   });
 

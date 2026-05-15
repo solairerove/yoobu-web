@@ -56,8 +56,8 @@ describe('FoodOrderMenuComponent', () => {
     const increaseSpy = jasmine.createSpy('increaseSpy');
     component.increaseRequested.subscribe(increaseSpy);
 
-    const buttons = fixture.debugElement.queryAll(By.css('.quantity-button-increase'));
-    buttons[0].nativeElement.click();
+    const button = fixture.debugElement.query(By.css('[aria-label="Increase Coffee"]'));
+    button.nativeElement.click();
 
     expect(increaseSpy).toHaveBeenCalledWith(10);
   });
@@ -67,43 +67,47 @@ describe('FoodOrderMenuComponent', () => {
     const decreaseSpy = jasmine.createSpy('decreaseSpy');
     component.decreaseRequested.subscribe(decreaseSpy);
 
-    const buttons = fixture.debugElement.queryAll(By.css('.quantity-button-decrease'));
-    buttons[0].nativeElement.click();
+    const button = fixture.debugElement.query(By.css('[aria-label="Decrease Coffee"]'));
+    button.nativeElement.click();
 
     expect(decreaseSpy).toHaveBeenCalledWith(10);
   });
 
-  it('keeps decrease button disabled when quantity is zero', () => {
+  it('keeps decrease button hidden when quantity is zero', () => {
     setRequiredInputs({ quantities: { 10: 0, 20: 0 } });
 
-    const buttons = fixture.debugElement.queryAll(By.css('.quantity-button-decrease'));
+    const pillButtons = fixture.debugElement.queryAll(By.css('.qty-pill-btn'));
+    const addButtons = fixture.debugElement.queryAll(By.css('.qty-add'));
 
-    expect(buttons.length).toBe(2);
-    expect(buttons.every((button) => button.nativeElement.disabled)).toBeTrue();
+    expect(pillButtons.length).toBe(0);
+    expect(addButtons.length).toBe(2);
   });
 
   it('disables increase button when item quantity reaches cap', () => {
     setRequiredInputs({ quantities: { 10: 9, 20: 0 } });
 
-    const buttons = fixture.debugElement.queryAll(By.css('.quantity-button-increase'));
+    const increaseButtonCoffee = fixture.debugElement.query(By.css('[aria-label="Increase Coffee"]')).nativeElement as HTMLButtonElement;
+    const addButtonTea = fixture.debugElement.query(By.css('[aria-label="Add Tea"]')).nativeElement as HTMLButtonElement;
 
-    expect(buttons[0].nativeElement.disabled).toBeTrue();
-    expect(buttons[1].nativeElement.disabled).toBeFalse();
+    expect(increaseButtonCoffee.disabled).toBeTrue();
+    expect(addButtonTea.disabled).toBeFalse();
   });
 
-  it('marks selected product rows when quantity is greater than zero', () => {
+  it('shows qty pill for selected items and add button for unselected items', () => {
     setRequiredInputs({ quantities: { 10: 1, 20: 0 } });
 
-    const cards = fixture.debugElement.queryAll(By.css('.product-card'));
+    const rows = fixture.debugElement.queryAll(By.css('.item-row'));
 
-    expect(cards[0].nativeElement.classList.contains('selected')).toBeTrue();
-    expect(cards[1].nativeElement.classList.contains('selected')).toBeFalse();
+    expect(rows[0].query(By.css('.qty-pill'))).not.toBeNull();
+    expect(rows[0].query(By.css('.qty-add'))).toBeNull();
+    expect(rows[1].query(By.css('.qty-add'))).not.toBeNull();
+    expect(rows[1].query(By.css('.qty-pill'))).toBeNull();
   });
 
   it('renders product image when imageUrl exists', () => {
     setRequiredInputs();
 
-    const image = fixture.debugElement.query(By.css('.product-card:first-child .product-image'))?.nativeElement as
+    const image = fixture.debugElement.query(By.css('.item-row:first-child .item-img'))?.nativeElement as
       | HTMLImageElement
       | undefined;
 
@@ -116,10 +120,9 @@ describe('FoodOrderMenuComponent', () => {
     setRequiredInputs();
 
     const placeholder = fixture.debugElement.query(
-      By.css('.product-card:nth-child(2) .product-image-placeholder')
+      By.css('.item-row:nth-child(2) .item-img-placeholder')
     )?.nativeElement as HTMLElement | undefined;
 
     expect(placeholder).toBeDefined();
-    expect(placeholder?.textContent?.trim()).toBe('T');
   });
 });

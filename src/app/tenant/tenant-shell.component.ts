@@ -31,14 +31,12 @@ import { TelegramService } from '../core/telegram/telegram.service';
   styles: `
     .shell {
       min-height: 100vh;
-      padding: 0.9rem 0.9rem 1.5rem;
-      display: grid;
-      gap: 0.85rem;
       max-width: 720px;
       margin: 0 auto;
     }
 
     .status-card {
+      margin: 1rem;
       padding: 0.75rem 1rem;
       border-radius: 16px;
       background: linear-gradient(145deg, var(--yoobu-surface-card-strong), var(--yoobu-surface-tint));

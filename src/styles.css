@@ -39,10 +39,7 @@
 
   font-family: "SF Pro Display", "Avenir Next", "Segoe UI", sans-serif;
   color: var(--yoobu-ink);
-  background:
-    radial-gradient(circle at top left, rgba(255, 107, 53, 0.16), transparent 24%),
-    radial-gradient(circle at 85% 10%, rgba(255, 184, 102, 0.12), transparent 22%),
-    linear-gradient(180deg, #fff7f1 0%, #fffaf5 42%, #fffdf9 100%);
+  background: oklch(92.5% 0.022 28);
 }
 
 * {
@@ -59,10 +56,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   color: var(--yoobu-ink);
-  background:
-    radial-gradient(circle at top left, rgba(255, 107, 53, 0.16), transparent 24%),
-    radial-gradient(circle at 85% 10%, rgba(255, 184, 102, 0.12), transparent 22%),
-    linear-gradient(180deg, #fff7f1 0%, #fffaf5 42%, #fffdf9 100%);
+  background: oklch(92.5% 0.022 28);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

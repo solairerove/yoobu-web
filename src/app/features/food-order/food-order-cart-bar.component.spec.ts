@@ -15,8 +15,7 @@ describe('FoodOrderCartBarComponent', () => {
     component = fixture.componentInstance;
   });
 
-  function setRequiredInputs(overrides: Partial<{ checkoutOpen: boolean }> = {}): void {
-    fixture.componentRef.setInput('checkoutOpen', overrides.checkoutOpen ?? false);
+  function setRequiredInputs(): void {
     fixture.componentRef.setInput('selectedCount', 2);
     fixture.componentRef.setInput('selectedTotal', 60000);
     fixture.componentRef.setInput('currencyCode', 'VND');
@@ -34,19 +33,19 @@ describe('FoodOrderCartBarComponent', () => {
     expect(openSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('renders open checkout action when checkout is closed', () => {
-    setRequiredInputs({ checkoutOpen: false });
+  it('renders item count and total', () => {
+    setRequiredInputs();
 
-    const cartAction = fixture.debugElement.query(By.css('.cart-action')).nativeElement as HTMLElement;
+    const cartCopy = fixture.debugElement.query(By.css('.cart-copy')).nativeElement as HTMLElement;
 
-    expect(cartAction.textContent).toContain('Checkout');
+    expect(cartCopy.textContent).toContain('2 items');
   });
 
-  it('renders review action when checkout is already open', () => {
-    setRequiredInputs({ checkoutOpen: true });
+  it('renders view cart action label', () => {
+    setRequiredInputs();
 
     const cartAction = fixture.debugElement.query(By.css('.cart-action')).nativeElement as HTMLElement;
 
-    expect(cartAction.textContent).toContain('Review');
+    expect(cartAction.textContent).toContain('View cart');
   });
 });

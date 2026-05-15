@@ -15,6 +15,8 @@ describe('FoodOrderHomeComponent', () => {
     setConfig: jasmine.Spy;
     increase: jasmine.Spy;
     decrease: jasmine.Spy;
+    openCart: jasmine.Spy;
+    closeCart: jasmine.Spy;
     openCheckout: jasmine.Spy;
     closeCheckout: jasmine.Spy;
     dismissRepeatOrderBanner: jasmine.Spy;
@@ -26,13 +28,13 @@ describe('FoodOrderHomeComponent', () => {
     cancelBooking: jasmine.Spy;
     submitOrder: jasmine.Spy;
     setActiveView: jasmine.Spy;
+    deselectBooking: jasmine.Spy;
     store: FoodOrderStore;
     showLocalCheckoutButtons: boolean;
     checkoutForm: unknown;
     selectedBookingId: ReturnType<typeof signal<number | null>>;
     selectedBooking: ReturnType<typeof signal<BookingResponse | null>>;
-    activeView: ReturnType<typeof signal<'menu' | 'orders'>>;
-    checkoutOpen: ReturnType<typeof signal<boolean>>;
+    activeView: ReturnType<typeof signal<'menu' | 'orders' | 'cart' | 'checkout'>>;
     submitting: ReturnType<typeof signal<boolean>>;
     submitError: ReturnType<typeof signal<string | null>>;
     repeatOrderBanner: ReturnType<typeof signal<string | null>>;
@@ -42,6 +44,7 @@ describe('FoodOrderHomeComponent', () => {
     cancellingBookingId: ReturnType<typeof signal<number | null>>;
     cancelError: ReturnType<typeof signal<string | null>>;
     isFirstOrder: ReturnType<typeof signal<boolean>>;
+    earliestDeliveryDate: ReturnType<typeof signal<string>>;
     vm: ReturnType<typeof signal<{ services: ServiceItem[]; loading: boolean; error: string | null }>>;
     bookingsVm: ReturnType<typeof signal<{ bookings: BookingResponse[]; loading: boolean; error: string | null }>>;
   };
@@ -76,6 +79,8 @@ describe('FoodOrderHomeComponent', () => {
       setConfig: jasmine.createSpy('setConfig'),
       increase: jasmine.createSpy('increase'),
       decrease: jasmine.createSpy('decrease'),
+      openCart: jasmine.createSpy('openCart'),
+      closeCart: jasmine.createSpy('closeCart'),
       openCheckout: jasmine.createSpy('openCheckout'),
       closeCheckout: jasmine.createSpy('closeCheckout'),
       dismissRepeatOrderBanner: jasmine.createSpy('dismissRepeatOrderBanner'),
@@ -87,6 +92,7 @@ describe('FoodOrderHomeComponent', () => {
       cancelBooking: jasmine.createSpy('cancelBooking'),
       submitOrder: jasmine.createSpy('submitOrder'),
       setActiveView: jasmine.createSpy('setActiveView'),
+      deselectBooking: jasmine.createSpy('deselectBooking'),
       store,
       showLocalCheckoutButtons: true,
       checkoutForm: fb.nonNullable.group({
@@ -98,8 +104,7 @@ describe('FoodOrderHomeComponent', () => {
       }),
       selectedBookingId: signal<number | null>(null),
       selectedBooking: signal<BookingResponse | null>(null),
-      activeView: signal<'menu' | 'orders'>('menu'),
-      checkoutOpen: signal(false),
+      activeView: signal<'menu' | 'orders' | 'cart' | 'checkout'>('menu'),
       submitting: signal(false),
       submitError: signal<string | null>(null),
       repeatOrderBanner: signal<string | null>(null),
@@ -109,6 +114,7 @@ describe('FoodOrderHomeComponent', () => {
       cancellingBookingId: signal<number | null>(null),
       cancelError: signal<string | null>(null),
       isFirstOrder: signal(true),
+      earliestDeliveryDate: signal('2026-05-15'),
       vm: signal({
         services: [service],
         loading: false,
@@ -123,6 +129,8 @@ describe('FoodOrderHomeComponent', () => {
 
     facade.increase.and.callFake((serviceId: number) => store.increase(serviceId));
     facade.decrease.and.callFake((serviceId: number) => store.decrease(serviceId));
+    facade.openCart.and.callFake(() => facade.activeView.set('cart'));
+    facade.closeCart.and.callFake(() => facade.activeView.set('menu'));
     facade.setActiveView.and.callFake((view: 'menu' | 'orders') => facade.activeView.set(view));
     facade.selectBooking.and.resolveTo();
     facade.repeatBooking.and.resolveTo();
@@ -148,12 +156,12 @@ describe('FoodOrderHomeComponent', () => {
   });
 
   it('routes quantity controls to facade methods', () => {
-    const increaseButton = fixture.debugElement.query(By.css('.quantity-button-increase')).nativeElement as HTMLButtonElement;
+    const increaseButton = fixture.debugElement.query(By.css('[aria-label="Add Coffee"]')).nativeElement as HTMLButtonElement;
 
     increaseButton.click();
     fixture.detectChanges();
 
-    const decreaseButton = fixture.debugElement.query(By.css('.quantity-button-decrease')).nativeElement as HTMLButtonElement;
+    const decreaseButton = fixture.debugElement.query(By.css('[aria-label="Decrease Coffee"]')).nativeElement as HTMLButtonElement;
     decreaseButton.click();
 
     expect(facade.increase).toHaveBeenCalledWith(service.id);
@@ -161,7 +169,7 @@ describe('FoodOrderHomeComponent', () => {
   });
 
   it('switches to orders view when My orders tab is clicked', () => {
-    const buttons = fixture.debugElement.queryAll(By.css('.view-switch-button'));
+    const buttons = fixture.debugElement.queryAll(By.css('.tab-btn'));
     const myOrdersButton = buttons[1];
 
     myOrdersButton.nativeElement.click();
@@ -218,8 +226,8 @@ describe('FoodOrderHomeComponent', () => {
     fixture.detectChanges();
 
     const repeatButton = fixture.debugElement
-      .queryAll(By.css('.booking-actions .ghost-button'))
-      .find((button) => button.nativeElement.textContent.includes('Repeat order'));
+      .queryAll(By.css('.btn-ghost'))
+      .find((button) => button.nativeElement.textContent.trim() === 'Repeat order');
     if (!repeatButton) {
       fail('Expected repeat order button to be present');
       return;

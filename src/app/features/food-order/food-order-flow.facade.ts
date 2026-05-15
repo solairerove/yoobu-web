@@ -54,8 +54,7 @@ export class FoodOrderFlowFacade {
   readonly bookingsReloadKey = signal(0);
   readonly selectedBookingId = signal<number | null>(null);
   readonly selectedBooking = signal<BookingResponse | null>(null);
-  readonly activeView = signal<'menu' | 'orders'>('menu');
-  readonly checkoutOpen = signal(false);
+  readonly activeView = signal<'menu' | 'orders' | 'cart' | 'checkout' | 'confirmation'>('menu');
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
   readonly repeatOrderBanner = signal<string | null>(null);
@@ -71,6 +70,7 @@ export class FoodOrderFlowFacade {
     customerPhone: '',
     deliveryAddress: ''
   });
+  private readonly formLoadedFromRepeat = signal(false);
   private readonly configSignal = signal<TenantConfig | null>(null);
   private readonly vmSignal = signal<FoodOrderVm>({
     services: [],
@@ -106,7 +106,7 @@ export class FoodOrderFlowFacade {
             const nextSelectedId =
               bookings.some((booking) => booking.id === this.selectedBookingId())
                 ? this.selectedBookingId()
-                : bookings[0]?.id ?? null;
+                : null;
             const latestActiveBooking = this.findLatestActiveBooking(bookings);
             const currentSubmittedBooking = this.submittedBooking();
             const submittedBookingFromList = currentSubmittedBooking
@@ -121,6 +121,24 @@ export class FoodOrderFlowFacade {
               this.submittedBooking.set(latestActiveBooking);
             } else if (!this.isActiveBooking(currentSubmittedBooking)) {
               this.submittedBooking.set(null);
+            }
+
+            // Prefill customer details from the latest delivered order when the
+            // draft is still empty (e.g. on a fresh session load).
+            const draft = this.customerDetailsDraft();
+            if (!draft.customerName && !draft.customerPhone) {
+              const latestDone = this.findLatestDoneBooking(bookings);
+              if (latestDone) {
+                const prefill: CustomerDetailsDraft = {
+                  customerName: latestDone.customerName.trim(),
+                  customerPhone: latestDone.customerPhone.trim(),
+                  deliveryAddress: latestDone.deliveryAddress?.trim() ?? ''
+                };
+                this.customerDetailsDraft.set(prefill);
+                if (this.checkoutForm.pristine) {
+                  this.checkoutForm.patchValue(prefill);
+                }
+              }
             }
           }),
           map((bookings) => ({
@@ -174,8 +192,14 @@ export class FoodOrderFlowFacade {
       const booking = this.submittedBooking();
       const itemCount = this.store.selectedCount();
       const total = this.store.selectedTotal();
-      const checkoutOpen = this.checkoutOpen();
+      const activeView = this.activeView();
       const submitting = this.submitting();
+
+      if (activeView === 'confirmation') {
+        this.telegram.setMainButton('Back to shop');
+        this.telegram.onMainButtonClick(this.mainButtonAction);
+        return;
+      }
 
       if (booking || itemCount === 0) {
         this.telegram.setMainButton(null);
@@ -183,17 +207,29 @@ export class FoodOrderFlowFacade {
         return;
       }
 
-      if (!checkoutOpen) {
+      if (activeView === 'menu') {
+        this.telegram.setMainButton(`View cart • ${this.formatCurrency(total)}`);
+        this.telegram.onMainButtonClick(this.mainButtonAction);
+        return;
+      }
+
+      if (activeView === 'cart') {
         this.telegram.setMainButton(`Checkout • ${this.formatCurrency(total)}`);
         this.telegram.onMainButtonClick(this.mainButtonAction);
         return;
       }
 
-      this.telegram.setMainButton(
-        submitting ? 'Submitting...' : `Place order • ${this.formatCurrency(total)}`,
-        !submitting
-      );
-      this.telegram.onMainButtonClick(this.mainButtonAction);
+      if (activeView === 'checkout') {
+        this.telegram.setMainButton(
+          submitting ? 'Submitting...' : `Place order • ${this.formatCurrency(total)}`,
+          !submitting
+        );
+        this.telegram.onMainButtonClick(this.mainButtonAction);
+        return;
+      }
+
+      this.telegram.setMainButton(null);
+      this.telegram.onMainButtonClick(null);
     });
   }
 
@@ -220,26 +256,40 @@ export class FoodOrderFlowFacade {
     this.store.decrease(serviceId);
     this.telegram.hapticLight();
     if (this.store.selectedCount() === 0) {
-      this.checkoutOpen.set(false);
+      this.activeView.set('menu');
     }
+  }
+
+  openCart(): void {
+    this.activeView.set('cart');
+  }
+
+  closeCart(): void {
+    this.activeView.set('menu');
   }
 
   openCheckout(): void {
     this.submitError.set(null);
-    this.checkoutOpen.set(true);
+    if (this.formLoadedFromRepeat()) {
+      this.formLoadedFromRepeat.set(false);
+      this.repeatOrderBanner.set(null);
+      this.resetCheckoutForm();
+    }
+    this.activeView.set('checkout');
   }
 
   closeCheckout(): void {
-    this.submitError.set(null);
-    this.checkoutOpen.set(false);
+    this.activeView.set('cart');
   }
 
   startNewOrder(): void {
     this.activeView.set('menu');
     this.submittedBooking.set(null);
+    this.selectedBookingId.set(null);
+    this.selectedBooking.set(null);
     this.submitError.set(null);
     this.repeatOrderBanner.set(null);
-    this.checkoutOpen.set(false);
+    this.formLoadedFromRepeat.set(false);
     this.store.clearCart();
     this.checkoutForm.patchValue({
       deliveryAddress: this.customerDetailsDraft().deliveryAddress,
@@ -397,9 +447,8 @@ export class FoodOrderFlowFacade {
     }
 
     this.submittedBooking.set(null);
-    this.activeView.set('menu');
+    this.activeView.set('checkout');
     this.submitError.set(null);
-    this.checkoutOpen.set(true);
     this.store.setQuantities(nextQuantities);
     this.checkoutForm.patchValue({
       customerName: sourceBooking.customerName.trim(),
@@ -408,6 +457,7 @@ export class FoodOrderFlowFacade {
       deliveryDate: this.defaultDeliveryDate(),
       note: sourceBooking.note?.trim() ?? ''
     });
+    this.formLoadedFromRepeat.set(true);
     this.repeatOrderBanner.set(`Cart prefilled from order #${sourceBooking.id}. Review details before placing.`);
 
     if (missingItemsCount > 0) {
@@ -427,12 +477,12 @@ export class FoodOrderFlowFacade {
     }
 
     if (this.store.selectedCount() === 0) {
-      this.checkoutOpen.set(false);
+      this.activeView.set('menu');
       return;
     }
 
     if (this.checkoutForm.invalid) {
-      this.checkoutOpen.set(true);
+      this.activeView.set('checkout');
       this.checkoutForm.markAllAsTouched();
       this.submitError.set('Enter your name, phone number, and delivery date before placing the order.');
       await this.telegram.alert('Enter your name, phone number, and delivery date before placing the order.');
@@ -442,7 +492,7 @@ export class FoodOrderFlowFacade {
     const formValue = this.checkoutForm.getRawValue();
     const earliest = this.earliestDeliveryDate();
     if (formValue.deliveryDate < earliest) {
-      this.checkoutOpen.set(true);
+      this.activeView.set('checkout');
       this.checkoutForm.markAllAsTouched();
       this.submitError.set(`Earliest delivery is ${earliest}. Please select a valid date.`);
       await this.telegram.alert(`Please choose ${earliest} or a later date for delivery.`);
@@ -468,12 +518,13 @@ export class FoodOrderFlowFacade {
       this.selectedBookingId.set(booking.id);
       this.selectedBooking.set(booking);
       this.store.clearCart();
-      this.checkoutOpen.set(false);
       this.repeatOrderBanner.set(null);
+      this.formLoadedFromRepeat.set(false);
       this.resetCheckoutForm();
+      this.activeView.set('confirmation');
       this.refreshBookings();
     } catch {
-      this.checkoutOpen.set(true);
+      this.activeView.set('checkout');
       this.submitError.set('Could not place your order. Please try again.');
       await this.telegram.alert('Could not place your order. Please try again.');
     } finally {
@@ -481,19 +532,22 @@ export class FoodOrderFlowFacade {
     }
   }
 
+  deselectBooking(): void {
+    this.selectedBookingId.set(null);
+    this.selectedBooking.set(null);
+  }
+
   setActiveView(view: 'menu' | 'orders'): void {
     this.activeView.set(view);
-    if (view === 'orders' || view === 'menu') {
-      this.refreshBookings();
-    }
+    this.refreshBookings();
   }
 
   private resetForTenant(slug: string): void {
     this.store.setTenant(slug);
-    this.checkoutOpen.set(false);
     this.submitting.set(false);
     this.submitError.set(null);
     this.repeatOrderBanner.set(null);
+    this.formLoadedFromRepeat.set(false);
     this.submittedBooking.set(null);
     this.confirmingPaymentBookingId.set(null);
     this.paymentError.set(null);
@@ -550,7 +604,17 @@ export class FoodOrderFlowFacade {
   }
 
   private async handlePrimaryAction(): Promise<void> {
-    if (!this.checkoutOpen()) {
+    if (this.activeView() === 'confirmation') {
+      this.startNewOrder();
+      return;
+    }
+
+    if (this.activeView() === 'menu') {
+      this.openCart();
+      return;
+    }
+
+    if (this.activeView() === 'cart') {
       this.openCheckout();
       return;
     }
@@ -604,6 +668,11 @@ export class FoodOrderFlowFacade {
     return bookings.reduce((latest, booking) =>
       new Date(booking.createdAt).getTime() > new Date(latest.createdAt).getTime() ? booking : latest
     );
+  }
+
+  private findLatestDoneBooking(bookings: BookingResponse[]): BookingResponse | null {
+    const done = bookings.filter((b) => normalizeBookingStatus(b.status) === 'DONE');
+    return this.findLatestBooking(done);
   }
 
   private findLatestActiveBooking(bookings: BookingResponse[]): BookingResponse | null {
