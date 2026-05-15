@@ -1,6 +1,6 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { throwError } from 'rxjs';
+import { catchError, throwError } from 'rxjs';
 import { TelegramService } from '../telegram/telegram.service';
 
 export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) => {
@@ -20,5 +20,12 @@ export const telegramInitDataInterceptor: HttpInterceptorFn = (request, next) =>
     return next(request);
   }
 
-  return next(request.clone({ setHeaders: { 'X-Telegram-Init-Data': initData } }));
+  return next(request.clone({ setHeaders: { 'X-Telegram-Init-Data': initData } })).pipe(
+    catchError((err) => {
+      if (err instanceof HttpErrorResponse && (err.status === 401 || err.status === 403)) {
+        telegram.clearCachedInitData();
+      }
+      return throwError(() => err);
+    })
+  );
 };
