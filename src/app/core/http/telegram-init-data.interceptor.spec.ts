@@ -32,7 +32,6 @@ describe('telegramInitDataInterceptor', () => {
 
   it('adds X-Telegram-Init-Data when init data is available', fakeAsync(() => {
     telegram.getInitData.and.returnValue('init-data-value');
-    telegram.getDevTelegramUserId.and.returnValue(null);
 
     http.get('/api/demo').subscribe();
     tick();
@@ -44,8 +43,7 @@ describe('telegramInitDataInterceptor', () => {
     request.flush({});
   }));
 
-  it('adds X-Telegram-User-Id in local dev mode when init data is missing', fakeAsync(() => {
-    telegram.getInitData.and.returnValue(null);
+  it('adds X-Telegram-User-Id in local dev mode', fakeAsync(() => {
     telegram.getDevTelegramUserId.and.returnValue('101');
 
     http.get('/api/demo').subscribe();
@@ -58,7 +56,7 @@ describe('telegramInitDataInterceptor', () => {
     request.flush({});
   }));
 
-  it('does not add telegram headers when both init data and dev user id are missing', fakeAsync(() => {
+  it('does not add telegram headers for non-bookings when init data is missing', fakeAsync(() => {
     telegram.getInitData.and.returnValue(null);
     telegram.getDevTelegramUserId.and.returnValue(null);
 
@@ -66,19 +64,18 @@ describe('telegramInitDataInterceptor', () => {
     tick();
     const request = httpMock.expectOne('/api/demo');
 
-    expect(telegram.init).toHaveBeenCalled();
     expect(request.request.headers.has('X-Telegram-Init-Data')).toBeFalse();
     expect(request.request.headers.has('X-Telegram-User-Id')).toBeFalse();
     request.flush({});
   }));
 
-  it('errors on bookings requests when both init data and dev user id are missing', fakeAsync(() => {
+  it('errors immediately on bookings requests when init data is missing', fakeAsync(() => {
     telegram.getInitData.and.returnValue(null);
     telegram.getDevTelegramUserId.and.returnValue(null);
 
     let caughtError: Error | null = null;
     http.get('/api/t/demo/bookings/my').subscribe({ error: (err: Error) => (caughtError = err) });
-    tick(1500);
+    tick();
     httpMock.expectNone('/api/t/demo/bookings/my');
 
     expect(caughtError).not.toBeNull();

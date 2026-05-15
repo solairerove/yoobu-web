@@ -106,21 +106,25 @@ export class TelegramService {
       return;
     }
 
-    if (webApp.initData?.trim()) {
+    if (this.hasLiveInitData()) {
       this.initDataAvailable.set(true);
       return;
     }
 
-    this.pollInitData(webApp, Date.now());
+    this.pollInitData(Date.now());
   }
 
-  private pollInitData(webApp: TelegramWebApp, startedAt: number): void {
+  private hasLiveInitData(): boolean {
+    return !!(this.resolveWebApp()?.initData?.trim() || this.getInitDataFromLaunchParams());
+  }
+
+  private pollInitData(startedAt: number): void {
     if (this.destroyed) return;
 
     setTimeout(() => {
       if (this.destroyed) return;
 
-      if (webApp.initData?.trim()) {
+      if (this.hasLiveInitData()) {
         this.initDataAvailable.set(true);
         return;
       }
@@ -130,7 +134,7 @@ export class TelegramService {
         return;
       }
 
-      this.pollInitData(webApp, startedAt);
+      this.pollInitData(startedAt);
     }, TelegramService.INIT_POLL_INTERVAL_MS);
   }
 
