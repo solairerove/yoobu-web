@@ -77,7 +77,7 @@ import { FoodOrderStore } from './food-order.store';
           [selectedCount]="store.selectedCount()"
           [selectedTotal]="store.selectedTotal()"
           [currencyCode]="currencyCode()"
-          [showNativeButtons]="showNativeCheckoutButtons"
+          [showNativeButtons]="showNativeCheckoutButtons()"
           (backRequested)="closeCart()"
           (checkoutRequested)="openCheckout()"
           (increaseRequested)="increase($event)"
@@ -151,7 +151,7 @@ import { FoodOrderStore } from './food-order.store';
       <!-- Checkout full-page view -->
       @if (activeView() === 'checkout') {
         <app-food-order-checkout
-          [showNativeButtons]="showNativeCheckoutButtons"
+          [showNativeButtons]="showNativeCheckoutButtons()"
           [submitting]="submitting()"
           [submitError]="submitError()"
           [repeatOrderBanner]="repeatOrderBanner()"
@@ -177,7 +177,7 @@ import { FoodOrderStore } from './food-order.store';
           [booking]="submittedBooking()!"
           [paymentQrUrl]="config().paymentQrUrl || null"
           [currencyCodeFallback]="currencyCode()"
-          [showNativeButtons]="showNativeCheckoutButtons"
+          [showNativeButtons]="showNativeCheckoutButtons()"
           [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
           [paymentError]="paymentError()"
           (backToShopRequested)="startNewOrder()"
@@ -186,7 +186,7 @@ import { FoodOrderStore } from './food-order.store';
       }
 
       <!-- Cart bar (menu view only, when native buttons are enabled) -->
-      @if (showNativeCheckoutButtons && activeView() === 'menu' && store.selectedCount() > 0) {
+      @if (showNativeCheckoutButtons() && activeView() === 'menu' && store.selectedCount() > 0) {
         <app-food-order-cart-bar
           [selectedCount]="store.selectedCount()"
           [selectedTotal]="store.selectedTotal()"
