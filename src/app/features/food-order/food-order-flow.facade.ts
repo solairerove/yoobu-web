@@ -70,6 +70,7 @@ export class FoodOrderFlowFacade {
     customerPhone: '',
     deliveryAddress: ''
   });
+  private readonly formLoadedFromRepeat = signal(false);
   private readonly configSignal = signal<TenantConfig | null>(null);
   private readonly vmSignal = signal<FoodOrderVm>({
     services: [],
@@ -120,6 +121,24 @@ export class FoodOrderFlowFacade {
               this.submittedBooking.set(latestActiveBooking);
             } else if (!this.isActiveBooking(currentSubmittedBooking)) {
               this.submittedBooking.set(null);
+            }
+
+            // Prefill customer details from the latest delivered order when the
+            // draft is still empty (e.g. on a fresh session load).
+            const draft = this.customerDetailsDraft();
+            if (!draft.customerName && !draft.customerPhone) {
+              const latestDone = this.findLatestDoneBooking(bookings);
+              if (latestDone) {
+                const prefill: CustomerDetailsDraft = {
+                  customerName: latestDone.customerName.trim(),
+                  customerPhone: latestDone.customerPhone.trim(),
+                  deliveryAddress: latestDone.deliveryAddress?.trim() ?? ''
+                };
+                this.customerDetailsDraft.set(prefill);
+                if (this.checkoutForm.pristine) {
+                  this.checkoutForm.patchValue(prefill);
+                }
+              }
             }
           }),
           map((bookings) => ({
@@ -245,6 +264,11 @@ export class FoodOrderFlowFacade {
 
   openCheckout(): void {
     this.submitError.set(null);
+    if (this.formLoadedFromRepeat()) {
+      this.formLoadedFromRepeat.set(false);
+      this.repeatOrderBanner.set(null);
+      this.resetCheckoutForm();
+    }
     this.activeView.set('checkout');
   }
 
@@ -257,6 +281,7 @@ export class FoodOrderFlowFacade {
     this.submittedBooking.set(null);
     this.submitError.set(null);
     this.repeatOrderBanner.set(null);
+    this.formLoadedFromRepeat.set(false);
     this.store.clearCart();
     this.checkoutForm.patchValue({
       deliveryAddress: this.customerDetailsDraft().deliveryAddress,
@@ -424,6 +449,7 @@ export class FoodOrderFlowFacade {
       deliveryDate: this.defaultDeliveryDate(),
       note: sourceBooking.note?.trim() ?? ''
     });
+    this.formLoadedFromRepeat.set(true);
     this.repeatOrderBanner.set(`Cart prefilled from order #${sourceBooking.id}. Review details before placing.`);
 
     if (missingItemsCount > 0) {
@@ -485,6 +511,7 @@ export class FoodOrderFlowFacade {
       this.selectedBooking.set(booking);
       this.store.clearCart();
       this.repeatOrderBanner.set(null);
+      this.formLoadedFromRepeat.set(false);
       this.resetCheckoutForm();
       this.activeView.set('orders');
       this.refreshBookings();
@@ -512,6 +539,7 @@ export class FoodOrderFlowFacade {
     this.submitting.set(false);
     this.submitError.set(null);
     this.repeatOrderBanner.set(null);
+    this.formLoadedFromRepeat.set(false);
     this.submittedBooking.set(null);
     this.confirmingPaymentBookingId.set(null);
     this.paymentError.set(null);
@@ -627,6 +655,11 @@ export class FoodOrderFlowFacade {
     return bookings.reduce((latest, booking) =>
       new Date(booking.createdAt).getTime() > new Date(latest.createdAt).getTime() ? booking : latest
     );
+  }
+
+  private findLatestDoneBooking(bookings: BookingResponse[]): BookingResponse | null {
+    const done = bookings.filter((b) => normalizeBookingStatus(b.status) === 'DONE');
+    return this.findLatestBooking(done);
   }
 
   private findLatestActiveBooking(bookings: BookingResponse[]): BookingResponse | null {

@@ -17,10 +17,7 @@ interface CartEntry {
 
       <header class="cart-header">
         <button type="button" class="head-action cart-back" (click)="backRequested.emit()">← Menu</button>
-        <div class="cart-title-group">
-          <h2 class="cart-title">Your cart</h2>
-          <span class="cart-subtitle">{{ selectedCount() }} {{ selectedCount() === 1 ? 'item' : 'items' }}</span>
-        </div>
+        <p class="eyebrow">Cart</p>
       </header>
 
       <div class="cart-items">
@@ -121,35 +118,12 @@ interface CartEntry {
     /* ── Header ── */
     .cart-header {
       background: #fff;
-      padding: 14px 16px 14px;
+      padding: 10px 14px;
       border-bottom: 1px solid oklch(90% 0.010 28);
       display: flex;
-      align-items: flex-start;
+      align-items: center;
+      justify-content: space-between;
       gap: 12px;
-    }
-
-    .cart-back {
-      margin-top: 3px;
-    }
-
-    .cart-title-group {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .cart-title {
-      font-size: 24px;
-      font-weight: 800;
-      color: #1a1a1a;
-      letter-spacing: -0.3px;
-      margin: 0;
-      line-height: 1.1;
-    }
-
-    .cart-subtitle {
-      font-size: 13px;
-      color: oklch(50% 0.01 30);
     }
 
     /* ── Items ── */
