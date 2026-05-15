@@ -190,7 +190,6 @@ export class FoodOrderFlowFacade {
 
     effect(() => {
       const isInsideTelegram = this.telegram.isInsideTelegram();
-      const booking = this.submittedBooking();
       const itemCount = this.store.selectedCount();
       const total = this.store.selectedTotal();
       const activeView = this.activeView();
@@ -206,7 +205,7 @@ export class FoodOrderFlowFacade {
         return;
       }
 
-      if (booking || itemCount === 0) {
+      if (itemCount === 0) {
         this.telegram.setMainButton(null);
         this.telegram.onMainButtonClick(null);
         return;

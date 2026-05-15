@@ -12,18 +12,32 @@ import { TelegramService } from '../core/telegram/telegram.service';
   template: `
     <ng-container *ngIf="vm$ | async as vm">
       <main class="shell" [style.--yoobu-primary]="vm.config?.primaryColor || '#ff6b35'">
-        <section class="status-card" *ngIf="!vm.config && vm.error">
-          <h1>Tenant unavailable</h1>
-          <p>{{ vm.error }}</p>
+        <section class="status-card" *ngIf="telegramInitError()">
+          <h1>Connection failed</h1>
+          <p>Could not connect to Telegram. Please close and reopen the app.</p>
         </section>
 
-        <section class="status-card" *ngIf="!vm.config && !vm.error">
-          <h1>Loading</h1>
-          <p>Please wait while the page loads.</p>
-        </section>
+        <ng-container *ngIf="!telegramInitError()">
+          <section class="status-card" *ngIf="!telegramReady()">
+            <h1>Connecting</h1>
+            <p>Please wait while we connect to Telegram.</p>
+          </section>
 
-        <ng-container *ngIf="vm.config as config">
-          <ng-container *ngComponentOutlet="vm.component; inputs: { config }" />
+          <ng-container *ngIf="telegramReady()">
+            <section class="status-card" *ngIf="!vm.config && vm.error">
+              <h1>Tenant unavailable</h1>
+              <p>{{ vm.error }}</p>
+            </section>
+
+            <section class="status-card" *ngIf="!vm.config && !vm.error">
+              <h1>Loading</h1>
+              <p>Please wait while the page loads.</p>
+            </section>
+
+            <ng-container *ngIf="vm.config as config">
+              <ng-container *ngComponentOutlet="vm.component; inputs: { config }" />
+            </ng-container>
+          </ng-container>
         </ng-container>
       </main>
     </ng-container>
@@ -68,6 +82,9 @@ export class TenantShellComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly tenantApi = inject(TenantApiService);
   private readonly telegram = inject(TelegramService);
+
+  protected readonly telegramReady = this.telegram.ready;
+  protected readonly telegramInitError = this.telegram.initError;
 
   protected readonly vm$ = this.route.paramMap.pipe(
     map((params) => params.get('slug')?.trim() ?? ''),

@@ -33,12 +33,28 @@ interface TelegramWindow extends Window {
 @Injectable({ providedIn: 'root' })
 export class TelegramService {
   private static readonly POPUP_API_MIN_VERSION = '6.2';
+  private static readonly INIT_POLL_INTERVAL_MS = 100;
+  private static readonly INIT_POLL_TIMEOUT_MS = 15_000;
+
   private readonly INIT_DATA_SESSION_KEY = 'tg_init_data_cache';
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly webAppSignal = signal<TelegramWebApp | null>(null);
   private readonly mainButtonHandler = signal<(() => void) | null>(null);
   private readonly initDataAvailable = signal(false);
+  private readonly initialized = signal(false);
+  private readonly initErrorSignal = signal(false);
+  private destroyed = false;
+
+  readonly ready = computed(() => {
+    if (!this.initialized()) return false;
+    if (this.isLocalhost()) return true;
+    const webApp = this.webAppSignal();
+    if (!webApp) return true;
+    return this.initDataAvailable();
+  });
+
+  readonly initError = this.initErrorSignal.asReadonly();
 
   readonly isInsideTelegram = computed(
     () => this.initDataAvailable() && !!(this.webAppSignal()?.MainButton)
@@ -72,6 +88,7 @@ export class TelegramService {
     });
 
     this.destroyRef.onDestroy(() => {
+      this.destroyed = true;
       const webApp = this.webAppSignal();
       const handler = this.mainButtonHandler();
       if (webApp?.MainButton && handler) {
@@ -83,15 +100,38 @@ export class TelegramService {
   init(): void {
     const webApp = this.resolveWebApp();
     this.webAppSignal.set(webApp);
-    this.initDataAvailable.set(!!(webApp?.initData?.trim()));
+    this.initialized.set(true);
 
-    if (webApp && !webApp.initData?.trim()) {
-      setTimeout(() => {
-        if (webApp.initData?.trim()) {
-          this.initDataAvailable.set(true);
-        }
-      }, 500);
+    if (this.isLocalhost() || !webApp) {
+      return;
     }
+
+    if (webApp.initData?.trim()) {
+      this.initDataAvailable.set(true);
+      return;
+    }
+
+    this.pollInitData(webApp, Date.now());
+  }
+
+  private pollInitData(webApp: TelegramWebApp, startedAt: number): void {
+    if (this.destroyed) return;
+
+    setTimeout(() => {
+      if (this.destroyed) return;
+
+      if (webApp.initData?.trim()) {
+        this.initDataAvailable.set(true);
+        return;
+      }
+
+      if (Date.now() - startedAt >= TelegramService.INIT_POLL_TIMEOUT_MS) {
+        this.initErrorSignal.set(true);
+        return;
+      }
+
+      this.pollInitData(webApp, startedAt);
+    }, TelegramService.INIT_POLL_INTERVAL_MS);
   }
 
   getInitData(): string | null {
