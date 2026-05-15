@@ -54,7 +54,7 @@ export class FoodOrderFlowFacade {
   readonly bookingsReloadKey = signal(0);
   readonly selectedBookingId = signal<number | null>(null);
   readonly selectedBooking = signal<BookingResponse | null>(null);
-  readonly activeView = signal<'menu' | 'orders' | 'cart' | 'checkout'>('menu');
+  readonly activeView = signal<'menu' | 'orders' | 'cart' | 'checkout' | 'confirmation'>('menu');
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
   readonly repeatOrderBanner = signal<string | null>(null);
@@ -194,6 +194,12 @@ export class FoodOrderFlowFacade {
       const total = this.store.selectedTotal();
       const activeView = this.activeView();
       const submitting = this.submitting();
+
+      if (activeView === 'confirmation') {
+        this.telegram.setMainButton('Back to shop');
+        this.telegram.onMainButtonClick(this.mainButtonAction);
+        return;
+      }
 
       if (booking || itemCount === 0) {
         this.telegram.setMainButton(null);
@@ -513,7 +519,7 @@ export class FoodOrderFlowFacade {
       this.repeatOrderBanner.set(null);
       this.formLoadedFromRepeat.set(false);
       this.resetCheckoutForm();
-      this.activeView.set('orders');
+      this.activeView.set('confirmation');
       this.refreshBookings();
     } catch {
       this.activeView.set('checkout');
@@ -596,6 +602,11 @@ export class FoodOrderFlowFacade {
   }
 
   private async handlePrimaryAction(): Promise<void> {
+    if (this.activeView() === 'confirmation') {
+      this.startNewOrder();
+      return;
+    }
+
     if (this.activeView() === 'menu') {
       this.openCart();
       return;

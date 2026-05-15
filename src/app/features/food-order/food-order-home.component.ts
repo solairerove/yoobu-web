@@ -5,6 +5,7 @@ import { FoodOrderBookingsComponent } from './food-order-bookings.component';
 import { FoodOrderCartBarComponent } from './food-order-cart-bar.component';
 import { FoodOrderCartComponent } from './food-order-cart.component';
 import { FoodOrderCheckoutComponent } from './food-order-checkout.component';
+import { FoodOrderConfirmationComponent } from './food-order-confirmation.component';
 import { FoodOrderFlowFacade } from './food-order-flow.facade';
 import { FoodOrderMenuComponent } from './food-order-menu.component';
 import { FoodOrderStore } from './food-order.store';
@@ -16,6 +17,7 @@ import { FoodOrderStore } from './food-order.store';
     FoodOrderCartBarComponent,
     FoodOrderCartComponent,
     FoodOrderCheckoutComponent,
+    FoodOrderConfirmationComponent,
     FoodOrderMenuComponent
   ],
   providers: [FoodOrderFlowFacade],
@@ -23,8 +25,8 @@ import { FoodOrderStore } from './food-order.store';
   template: `
     <div class="page">
 
-      <!-- MiniHero: banner + tab bar (hidden when in cart or checkout view) -->
-      @if (activeView() !== 'cart' && activeView() !== 'checkout') {
+      <!-- MiniHero: banner + tab bar (hidden when in cart, checkout, or confirmation view) -->
+      @if (activeView() !== 'cart' && activeView() !== 'checkout' && activeView() !== 'confirmation') {
         <div class="mini-hero">
           <div class="banner">
             <div class="banner-grad"></div>
@@ -81,7 +83,7 @@ import { FoodOrderStore } from './food-order.store';
       }
 
       <!-- Menu / orders content -->
-      @if (activeView() !== 'cart' && activeView() !== 'checkout') {
+      @if (activeView() !== 'cart' && activeView() !== 'checkout' && activeView() !== 'confirmation') {
         <div class="content" [class.has-cart]="store.selectedCount() > 0 && activeView() === 'menu'">
 
           @if (vm().loading) {
@@ -163,6 +165,20 @@ import { FoodOrderStore } from './food-order.store';
           (closeRequested)="closeCheckout()"
           (repeatOrderBannerDismissed)="dismissRepeatOrderBanner()"
           (submitRequested)="submitOrder()"
+        />
+      }
+
+      <!-- Order confirmation view -->
+      @if (activeView() === 'confirmation' && submittedBooking()) {
+        <app-food-order-confirmation
+          [booking]="submittedBooking()!"
+          [paymentQrUrl]="config().paymentQrUrl || null"
+          [currencyCodeFallback]="currencyCode()"
+          [localMode]="showLocalCheckoutButtons"
+          [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
+          [paymentError]="paymentError()"
+          (backToShopRequested)="startNewOrder()"
+          (paymentConfirmRequested)="confirmPayment($event)"
         />
       }
 
@@ -355,6 +371,7 @@ export class FoodOrderHomeComponent {
   protected readonly paymentError = this.facade.paymentError;
   protected readonly cancellingBookingId = this.facade.cancellingBookingId;
   protected readonly cancelError = this.facade.cancelError;
+  protected readonly submittedBooking = this.facade.submittedBooking;
   protected readonly vm = this.facade.vm;
   protected readonly bookingsVm = this.facade.bookingsVm;
   protected readonly isFirstOrder = this.facade.isFirstOrder;

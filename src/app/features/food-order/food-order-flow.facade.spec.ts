@@ -302,7 +302,7 @@ describe('FoodOrderFlowFacade', () => {
     expect(facade.submittedBooking()?.id).toBe(createdBooking.id);
     expect(facade.selectedBookingId()).toBe(createdBooking.id);
     expect(facade.store.selectedCount()).toBe(0);
-    expect(facade.activeView()).toBe('orders');
+    expect(facade.activeView()).toBe('confirmation');
     expect(facade.submitting()).toBeFalse();
     expect(facade.bookingsReloadKey()).toBe(reloadKeyBefore + 1);
     expect(facade.checkoutForm.getRawValue().customerName).toBe('Alice');
