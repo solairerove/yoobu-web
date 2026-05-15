@@ -45,6 +45,7 @@ export class TelegramService {
   private readonly initialized = signal(false);
   private readonly initErrorSignal = signal(false);
   private destroyed = false;
+  private pollingStarted = false;
 
   readonly ready = computed(() => {
     if (!this.initialized()) return false;
@@ -99,10 +100,16 @@ export class TelegramService {
 
   init(): void {
     const webApp = this.resolveWebApp();
-    this.webAppSignal.set(webApp);
+    if (webApp) {
+      this.webAppSignal.set(webApp);
+    }
     this.initialized.set(true);
 
     if (this.isLocalhost() || !webApp) {
+      return;
+    }
+
+    if (this.initDataAvailable()) {
       return;
     }
 
@@ -111,7 +118,10 @@ export class TelegramService {
       return;
     }
 
-    this.pollInitData(Date.now());
+    if (!this.pollingStarted) {
+      this.pollingStarted = true;
+      this.pollInitData(Date.now());
+    }
   }
 
   private hasLiveInitData(): boolean {
