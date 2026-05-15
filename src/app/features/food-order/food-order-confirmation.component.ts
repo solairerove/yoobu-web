@@ -321,16 +321,15 @@ import { normalizeCurrencyCode } from '../../core/utils/currency.util';
     /* ── Back to shop (local mode) ── */
     .back-btn {
       width: 100%;
-      padding: 14px 24px;
-      background: #2481cc;
-      color: #fff;
-      border: none;
+      padding: 11px 20px;
+      background: #fff;
+      border: 1px solid oklch(90% 0.010 28);
       border-radius: 999px;
       font-weight: 700;
-      font-size: 16px;
+      font-size: 14px;
+      color: #1a1a1a;
       cursor: pointer;
       font-family: inherit;
-      box-shadow: 0 4px 16px rgba(36, 129, 204, 0.3);
     }
 
     /* ── Error ── */

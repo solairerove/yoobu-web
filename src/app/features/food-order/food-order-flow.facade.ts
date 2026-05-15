@@ -285,6 +285,8 @@ export class FoodOrderFlowFacade {
   startNewOrder(): void {
     this.activeView.set('menu');
     this.submittedBooking.set(null);
+    this.selectedBookingId.set(null);
+    this.selectedBooking.set(null);
     this.submitError.set(null);
     this.repeatOrderBanner.set(null);
     this.formLoadedFromRepeat.set(false);

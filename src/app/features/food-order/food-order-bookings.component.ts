@@ -354,16 +354,15 @@ import { FoodOrderDetailSheetComponent } from './food-order-detail-sheet.compone
     /* ── New order button ── */
     .new-order-btn {
       width: 100%;
-      padding: 14px 20px;
-      background: #2481cc;
-      color: #fff;
-      border: none;
+      padding: 11px 20px;
+      background: #fff;
+      color: #1a1a1a;
+      border: 1px solid oklch(90% 0.010 28);
       border-radius: 999px;
       font-weight: 700;
-      font-size: 15px;
+      font-size: 14px;
       cursor: pointer;
       font-family: inherit;
-      box-shadow: 0 4px 16px rgba(36, 129, 204, 0.3);
       margin-bottom: 16px;
     }
 
