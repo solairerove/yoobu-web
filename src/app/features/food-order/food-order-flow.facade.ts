@@ -54,8 +54,7 @@ export class FoodOrderFlowFacade {
   readonly bookingsReloadKey = signal(0);
   readonly selectedBookingId = signal<number | null>(null);
   readonly selectedBooking = signal<BookingResponse | null>(null);
-  readonly activeView = signal<'menu' | 'orders' | 'cart'>('menu');
-  readonly checkoutOpen = signal(false);
+  readonly activeView = signal<'menu' | 'orders' | 'cart' | 'checkout'>('menu');
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
   readonly repeatOrderBanner = signal<string | null>(null);
@@ -174,7 +173,6 @@ export class FoodOrderFlowFacade {
       const booking = this.submittedBooking();
       const itemCount = this.store.selectedCount();
       const total = this.store.selectedTotal();
-      const checkoutOpen = this.checkoutOpen();
       const activeView = this.activeView();
       const submitting = this.submitting();
 
@@ -190,17 +188,23 @@ export class FoodOrderFlowFacade {
         return;
       }
 
-      if (activeView === 'cart' && !checkoutOpen) {
+      if (activeView === 'cart') {
         this.telegram.setMainButton(`Checkout • ${this.formatCurrency(total)}`);
         this.telegram.onMainButtonClick(this.mainButtonAction);
         return;
       }
 
-      this.telegram.setMainButton(
-        submitting ? 'Submitting...' : `Place order • ${this.formatCurrency(total)}`,
-        !submitting
-      );
-      this.telegram.onMainButtonClick(this.mainButtonAction);
+      if (activeView === 'checkout') {
+        this.telegram.setMainButton(
+          submitting ? 'Submitting...' : `Place order • ${this.formatCurrency(total)}`,
+          !submitting
+        );
+        this.telegram.onMainButtonClick(this.mainButtonAction);
+        return;
+      }
+
+      this.telegram.setMainButton(null);
+      this.telegram.onMainButtonClick(null);
     });
   }
 
@@ -227,10 +231,7 @@ export class FoodOrderFlowFacade {
     this.store.decrease(serviceId);
     this.telegram.hapticLight();
     if (this.store.selectedCount() === 0) {
-      this.checkoutOpen.set(false);
-      if (this.activeView() === 'cart') {
-        this.activeView.set('menu');
-      }
+      this.activeView.set('menu');
     }
   }
 
@@ -239,18 +240,16 @@ export class FoodOrderFlowFacade {
   }
 
   closeCart(): void {
-    this.checkoutOpen.set(false);
     this.activeView.set('menu');
   }
 
   openCheckout(): void {
     this.submitError.set(null);
-    this.checkoutOpen.set(true);
+    this.activeView.set('checkout');
   }
 
   closeCheckout(): void {
-    this.submitError.set(null);
-    this.checkoutOpen.set(false);
+    this.activeView.set('cart');
   }
 
   startNewOrder(): void {
@@ -258,7 +257,6 @@ export class FoodOrderFlowFacade {
     this.submittedBooking.set(null);
     this.submitError.set(null);
     this.repeatOrderBanner.set(null);
-    this.checkoutOpen.set(false);
     this.store.clearCart();
     this.checkoutForm.patchValue({
       deliveryAddress: this.customerDetailsDraft().deliveryAddress,
@@ -416,9 +414,8 @@ export class FoodOrderFlowFacade {
     }
 
     this.submittedBooking.set(null);
-    this.activeView.set('cart');
+    this.activeView.set('checkout');
     this.submitError.set(null);
-    this.checkoutOpen.set(true);
     this.store.setQuantities(nextQuantities);
     this.checkoutForm.patchValue({
       customerName: sourceBooking.customerName.trim(),
@@ -446,12 +443,12 @@ export class FoodOrderFlowFacade {
     }
 
     if (this.store.selectedCount() === 0) {
-      this.checkoutOpen.set(false);
+      this.activeView.set('menu');
       return;
     }
 
     if (this.checkoutForm.invalid) {
-      this.checkoutOpen.set(true);
+      this.activeView.set('checkout');
       this.checkoutForm.markAllAsTouched();
       this.submitError.set('Enter your name, phone number, and delivery date before placing the order.');
       await this.telegram.alert('Enter your name, phone number, and delivery date before placing the order.');
@@ -461,7 +458,7 @@ export class FoodOrderFlowFacade {
     const formValue = this.checkoutForm.getRawValue();
     const earliest = this.earliestDeliveryDate();
     if (formValue.deliveryDate < earliest) {
-      this.checkoutOpen.set(true);
+      this.activeView.set('checkout');
       this.checkoutForm.markAllAsTouched();
       this.submitError.set(`Earliest delivery is ${earliest}. Please select a valid date.`);
       await this.telegram.alert(`Please choose ${earliest} or a later date for delivery.`);
@@ -487,13 +484,12 @@ export class FoodOrderFlowFacade {
       this.selectedBookingId.set(booking.id);
       this.selectedBooking.set(booking);
       this.store.clearCart();
-      this.checkoutOpen.set(false);
       this.repeatOrderBanner.set(null);
       this.resetCheckoutForm();
       this.activeView.set('orders');
       this.refreshBookings();
     } catch {
-      this.checkoutOpen.set(true);
+      this.activeView.set('checkout');
       this.submitError.set('Could not place your order. Please try again.');
       await this.telegram.alert('Could not place your order. Please try again.');
     } finally {
@@ -507,14 +503,12 @@ export class FoodOrderFlowFacade {
   }
 
   setActiveView(view: 'menu' | 'orders'): void {
-    this.checkoutOpen.set(false);
     this.activeView.set(view);
     this.refreshBookings();
   }
 
   private resetForTenant(slug: string): void {
     this.store.setTenant(slug);
-    this.checkoutOpen.set(false);
     this.submitting.set(false);
     this.submitError.set(null);
     this.repeatOrderBanner.set(null);
@@ -579,7 +573,7 @@ export class FoodOrderFlowFacade {
       return;
     }
 
-    if (!this.checkoutOpen()) {
+    if (this.activeView() === 'cart') {
       this.openCheckout();
       return;
     }

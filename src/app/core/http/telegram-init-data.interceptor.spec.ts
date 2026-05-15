@@ -32,7 +32,7 @@ describe('telegramInitDataInterceptor', () => {
 
   it('adds X-Telegram-Init-Data when init data is available', fakeAsync(() => {
     telegram.getInitData.and.returnValue('init-data-value');
-    telegram.getDevTelegramUserId.and.returnValue('101');
+    telegram.getDevTelegramUserId.and.returnValue(null);
 
     http.get('/api/demo').subscribe();
     tick();

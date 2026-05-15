@@ -16,23 +16,22 @@ describe('FoodOrderCheckoutComponent', () => {
     component = fixture.componentInstance;
   });
 
-  function createForm() {
+  function createForm(deliveryDate = '2026-03-19') {
     const fb = new FormBuilder();
     return fb.nonNullable.group({
       customerName: ['Alice'],
       customerPhone: ['0123456789'],
       deliveryAddress: ['123 Main St'],
-      deliveryDate: ['2026-03-19'],
+      deliveryDate: [deliveryDate],
       note: ['']
     });
   }
 
-  function setRequiredInputs(localMode: boolean): void {
-    fixture.componentRef.setInput('open', true);
+  function setRequiredInputs(localMode: boolean, deliveryDate = '2026-03-19'): void {
     fixture.componentRef.setInput('localMode', localMode);
     fixture.componentRef.setInput('submitting', false);
     fixture.componentRef.setInput('submitError', null);
-    fixture.componentRef.setInput('form', createForm());
+    fixture.componentRef.setInput('form', createForm(deliveryDate));
     fixture.componentRef.setInput('selectedItems', [
       {
         quantity: 1,
@@ -66,23 +65,12 @@ describe('FoodOrderCheckoutComponent', () => {
     expect(submitSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('emits closeRequested when scrim is clicked in telegram mode', () => {
-    setRequiredInputs(false);
-    const closeSpy = jasmine.createSpy('closeSpy');
-    component.closeRequested.subscribe(closeSpy);
-
-    const scrim = fixture.debugElement.query(By.css('.checkout-scrim'));
-    scrim.nativeElement.click();
-
-    expect(closeSpy).toHaveBeenCalledTimes(1);
-  });
-
   it('disables back button while submitting', () => {
     setRequiredInputs(true);
     fixture.componentRef.setInput('submitting', true);
     fixture.detectChanges();
 
-    const backButton = fixture.debugElement.query(By.css('.checkout-head .head-action')).nativeElement as HTMLButtonElement;
+    const backButton = fixture.debugElement.query(By.css('.checkout-header .head-action')).nativeElement as HTMLButtonElement;
 
     expect(backButton.disabled).toBeTrue();
   });
@@ -95,12 +83,17 @@ describe('FoodOrderCheckoutComponent', () => {
     fixture.componentRef.setInput('customerNoteHint', 'No onion');
     fixture.detectChanges();
 
+    // name, phone, address hints are shown as .field-hint elements
+    // customerNoteHint is used as textarea placeholder, not a .field-hint
     const fieldHints = fixture.debugElement.queryAll(By.css('.field-hint'));
-    expect(fieldHints.length).toBe(4);
+    expect(fieldHints.length).toBe(3);
     expect(fieldHints[0].nativeElement.textContent).toContain('Use full name');
     expect(fieldHints[1].nativeElement.textContent).toContain('+84...');
     expect(fieldHints[2].nativeElement.textContent).toContain('Street, house');
-    expect(fieldHints[3].nativeElement.textContent).toContain('No onion');
+
+    // Note hint is the textarea placeholder
+    const textarea = fixture.debugElement.query(By.css('textarea')).nativeElement as HTMLTextAreaElement;
+    expect(textarea.placeholder).toBe('No onion');
   });
 
   it('does not show tenant hints when not provided', () => {
@@ -108,31 +101,44 @@ describe('FoodOrderCheckoutComponent', () => {
     expect(fixture.debugElement.queryAll(By.css('.field-hint')).length).toBe(0);
   });
 
-  it('sets min attribute on date input from earliestDeliveryDate', () => {
+  it('renders 7 day chips starting from earliestDeliveryDate', () => {
     setRequiredInputs(true);
-    fixture.componentRef.setInput('earliestDeliveryDate', '2026-03-25');
+    fixture.componentRef.setInput('earliestDeliveryDate', '2026-05-01');
     fixture.detectChanges();
 
-    const dateInput = fixture.debugElement.query(By.css('input[type="date"]')).nativeElement as HTMLInputElement;
-    expect(dateInput.min).toBe('2026-03-25');
+    const chips = fixture.debugElement.queryAll(By.css('.day-chip'));
+    expect(chips.length).toBe(7);
+
+    // First chip should start from earliestDeliveryDate
+    const firstChipSub = chips[0].query(By.css('.day-chip-sub'));
+    expect(firstChipSub.nativeElement.textContent.trim()).toBe('May 1');
   });
 
-  it('shows cutoff hint when earliestDeliveryDate is in the future', () => {
-    setRequiredInputs(true);
-    fixture.componentRef.setInput('earliestDeliveryDate', '9999-12-31');
+  it('marks correct chip as active based on form deliveryDate', () => {
+    setRequiredInputs(true, '2026-05-03');
+    fixture.componentRef.setInput('earliestDeliveryDate', '2026-05-01');
     fixture.detectChanges();
 
-    const hint = fixture.debugElement.query(By.css('.cutoff-hint'));
-    expect(hint).not.toBeNull();
-    expect(hint.nativeElement.textContent).toContain('9999-12-31');
+    const activeChips = fixture.debugElement.queryAll(By.css('.day-chip.active'));
+    expect(activeChips.length).toBe(1);
+
+    const activeSub = activeChips[0].query(By.css('.day-chip-sub'));
+    expect(activeSub.nativeElement.textContent.trim()).toBe('May 3');
   });
 
-  it('does not show cutoff hint when earliestDeliveryDate is null', () => {
+  it('updates form deliveryDate when chip is clicked', () => {
     setRequiredInputs(true);
-    fixture.componentRef.setInput('earliestDeliveryDate', null);
+    fixture.componentRef.setInput('earliestDeliveryDate', '2026-05-10');
     fixture.detectChanges();
 
-    expect(fixture.debugElement.query(By.css('.cutoff-hint'))).toBeNull();
+    const chips = fixture.debugElement.queryAll(By.css('.day-chip'));
+    const secondChip = chips[1]; // second day
+    secondChip.nativeElement.click();
+    fixture.detectChanges();
+
+    const form = fixture.componentRef.instance['form']();
+    const deliveryDateValue = form.get('deliveryDate')?.value as string;
+    expect(deliveryDateValue).toBe('2026-05-11');
   });
 
   it('renders and dismisses repeat-order banner', () => {

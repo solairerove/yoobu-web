@@ -23,8 +23,8 @@ import { FoodOrderStore } from './food-order.store';
   template: `
     <div class="page">
 
-      <!-- MiniHero: banner + tab bar (hidden when in cart view) -->
-      @if (activeView() !== 'cart') {
+      <!-- MiniHero: banner + tab bar (hidden when in cart or checkout view) -->
+      @if (activeView() !== 'cart' && activeView() !== 'checkout') {
         <div class="mini-hero">
           <div class="banner">
             <div class="banner-grad"></div>
@@ -81,7 +81,7 @@ import { FoodOrderStore } from './food-order.store';
       }
 
       <!-- Menu / orders content -->
-      @if (activeView() !== 'cart') {
+      @if (activeView() !== 'cart' && activeView() !== 'checkout') {
         <div class="content" [class.has-cart]="store.selectedCount() > 0 && activeView() === 'menu'">
 
           @if (vm().loading) {
@@ -143,10 +143,9 @@ import { FoodOrderStore } from './food-order.store';
         </div>
       }
 
-      <!-- Checkout sheet (opens from cart view) -->
-      @if (activeView() === 'cart' && checkoutOpen()) {
+      <!-- Checkout full-page view -->
+      @if (activeView() === 'checkout') {
         <app-food-order-checkout
-          [open]="checkoutOpen()"
           [localMode]="showLocalCheckoutButtons"
           [submitting]="submitting()"
           [submitError]="submitError()"
@@ -349,7 +348,6 @@ export class FoodOrderHomeComponent {
   protected readonly selectedBookingId = this.facade.selectedBookingId;
   protected readonly selectedBooking = this.facade.selectedBooking;
   protected readonly activeView = this.facade.activeView;
-  protected readonly checkoutOpen = this.facade.checkoutOpen;
   protected readonly submitting = this.facade.submitting;
   protected readonly submitError = this.facade.submitError;
   protected readonly repeatOrderBanner = this.facade.repeatOrderBanner;

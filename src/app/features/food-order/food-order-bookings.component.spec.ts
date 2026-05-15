@@ -52,7 +52,7 @@ describe('FoodOrderBookingsComponent', () => {
     const refreshSpy = jasmine.createSpy('refreshSpy');
     component.refreshRequested.subscribe(refreshSpy);
 
-    const refreshButton = fixture.debugElement.query(By.css('.bookings-head .head-action'));
+    const refreshButton = fixture.debugElement.query(By.css('.refresh-btn'));
     refreshButton.nativeElement.click();
 
     expect(refreshSpy).toHaveBeenCalledTimes(1);
@@ -63,7 +63,7 @@ describe('FoodOrderBookingsComponent', () => {
     const selectSpy = jasmine.createSpy('selectSpy');
     component.bookingSelected.subscribe(selectSpy);
 
-    const bookingButton = fixture.debugElement.query(By.css('.booking-item'));
+    const bookingButton = fixture.debugElement.query(By.css('.history-summary'));
     bookingButton.nativeElement.click();
 
     expect(selectSpy).toHaveBeenCalledWith(booking.id);
@@ -86,8 +86,8 @@ describe('FoodOrderBookingsComponent', () => {
     component.cancelRequested.subscribe(cancelSpy);
 
     const cancelButton = fixture.debugElement
-      .queryAll(By.css('.booking-actions .ghost-button'))
-      .find((button) => button.nativeElement.textContent.includes('Cancel order'));
+      .queryAll(By.css('.btn-ghost'))
+      .find((button) => button.nativeElement.textContent.trim() === 'Cancel order');
     if (!cancelButton) {
       fail('Expected cancel button to be present');
       return;
@@ -103,8 +103,8 @@ describe('FoodOrderBookingsComponent', () => {
     component.repeatRequested.subscribe(repeatSpy);
 
     const repeatButton = fixture.debugElement
-      .queryAll(By.css('.booking-actions .ghost-button'))
-      .find((button) => button.nativeElement.textContent.includes('Repeat order'));
+      .queryAll(By.css('.btn-ghost'))
+      .find((button) => button.nativeElement.textContent.trim() === 'Repeat order');
     if (!repeatButton) {
       fail('Expected repeat order button to be present');
       return;
@@ -130,9 +130,7 @@ describe('FoodOrderBookingsComponent', () => {
     const confirmSpy = jasmine.createSpy('confirmSpy');
     component.paymentConfirmRequested.subscribe(confirmSpy);
 
-    const paymentButton = fixture.debugElement
-      .queryAll(By.css('.booking-actions .ghost-button'))
-      .find((button) => button.nativeElement.textContent.includes('I paid'));
+    const paymentButton = fixture.debugElement.query(By.css('.i-paid-btn'));
     if (!paymentButton) {
       fail('Expected payment confirmation button to be present');
       return;
@@ -142,7 +140,7 @@ describe('FoodOrderBookingsComponent', () => {
     expect(confirmSpy).toHaveBeenCalledWith(activeBooking.id);
   });
 
-  it('renders delivery address and falls back to N/A when missing', () => {
+  it('hides delivery address row when address is missing', () => {
     const bookingWithoutAddress: BookingResponse = { ...booking, deliveryAddress: null };
     fixture.componentRef.setInput('bookings', [bookingWithoutAddress]);
     fixture.componentRef.setInput('loading', false);
@@ -156,10 +154,11 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    expect(fixture.debugElement.query(By.css('.booking-address')).nativeElement.textContent).toContain('N/A');
     const allMetaRows = fixture.debugElement.queryAll(By.css('.receipt-row'));
-    expect(allMetaRows.map((row) => row.nativeElement.textContent).join(' ')).toContain('Delivery address');
-    expect(allMetaRows.map((row) => row.nativeElement.textContent).join(' ')).toContain('N/A');
+    const rowText = allMetaRows.map((row) => row.nativeElement.textContent).join(' ');
+    expect(rowText).not.toContain('Address');
+    expect(rowText).toContain('Delivery date');
+    expect(rowText).toContain('Contact');
   });
 
   it('renders active bookings before historical ones in a flat list', () => {
@@ -188,13 +187,15 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const items = fixture.debugElement.queryAll(By.css('.booking-list .booking-item'));
-    expect(items.length).toBe(2);
-    expect(items[0].nativeElement.textContent).toContain('#3');
-    expect(items[1].nativeElement.textContent).toContain('#2');
+    const activeCards = fixture.debugElement.queryAll(By.css('.active-card'));
+    const historyCards = fixture.debugElement.queryAll(By.css('.history-card'));
+    expect(activeCards.length).toBe(1);
+    expect(historyCards.length).toBe(1);
+    expect(activeCards[0].nativeElement.textContent).toContain('#3');
+    expect(historyCards[0].nativeElement.textContent).toContain('#2');
 
-    const detailId = fixture.debugElement.query(By.css('.booking-summary .booking-id-row .eyebrow'));
-    expect(detailId.nativeElement.textContent).toContain('#3');
+    const detailLabel = fixture.debugElement.query(By.css('.order-label'));
+    expect(detailLabel.nativeElement.textContent).toContain('#3');
   });
 
   it('treats PAYMENT_PENDING status as an active booking', () => {
@@ -217,12 +218,12 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const items = fixture.debugElement.queryAll(By.css('.booking-list .booking-item'));
-    expect(items.length).toBe(1);
-    expect(items[0].nativeElement.textContent).toContain('#5');
+    const activeCards = fixture.debugElement.queryAll(By.css('.active-card'));
+    expect(activeCards.length).toBe(1);
+    expect(activeCards[0].nativeElement.textContent).toContain('#5');
 
-    const detailId = fixture.debugElement.query(By.css('.booking-summary .booking-id-row .eyebrow'));
-    expect(detailId.nativeElement.textContent).toContain('#5');
+    const detailLabel = fixture.debugElement.query(By.css('.order-label'));
+    expect(detailLabel.nativeElement.textContent).toContain('#5');
   });
 
   it('sorts active bookings before done ones in the flat list', () => {
@@ -257,11 +258,13 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const items = fixture.debugElement.queryAll(By.css('.booking-list .booking-item'));
-    expect(items.length).toBe(3);
-    expect(items[0].nativeElement.textContent).toContain('#6');
-    expect(items[1].nativeElement.textContent).toContain('#7');
-    expect(items[2].nativeElement.textContent).toContain('#8');
+    const activeCards = fixture.debugElement.queryAll(By.css('.active-card'));
+    const historyCards = fixture.debugElement.queryAll(By.css('.history-card'));
+    expect(activeCards.length).toBe(2);
+    expect(historyCards.length).toBe(1);
+    expect(activeCards[0].nativeElement.textContent).toContain('#6');
+    expect(activeCards[1].nativeElement.textContent).toContain('#7');
+    expect(historyCards[0].nativeElement.textContent).toContain('#8');
   });
 
   it('treats delivering status as active booking', () => {
@@ -284,9 +287,9 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const items = fixture.debugElement.queryAll(By.css('.booking-list .booking-item'));
-    expect(items.length).toBe(1);
-    expect(items[0].nativeElement.textContent).toContain('#9');
+    const activeCards = fixture.debugElement.queryAll(By.css('.active-card'));
+    expect(activeCards.length).toBe(1);
+    expect(activeCards[0].nativeElement.textContent).toContain('#9');
   });
 
   it('shows QR from booking.paymentQrUrl when present, ignoring the fallback input', () => {
@@ -309,7 +312,7 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const qrImg = fixture.debugElement.query(By.css('.payment-qr-card img'));
+    const qrImg = fixture.debugElement.query(By.css('.qr-thumb-img'));
     expect(qrImg).not.toBeNull();
     expect(qrImg.nativeElement.getAttribute('src')).toBe('https://dynamic.example.com/qr.png');
   });
@@ -329,7 +332,7 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const qrImg = fixture.debugElement.query(By.css('.payment-qr-card img'));
+    const qrImg = fixture.debugElement.query(By.css('.qr-thumb-img'));
     expect(qrImg).not.toBeNull();
     expect(qrImg.nativeElement.getAttribute('src')).toBe('https://static.example.com/fallback-qr.png');
   });
@@ -349,7 +352,7 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    expect(fixture.debugElement.query(By.css('.payment-qr-card'))).toBeNull();
+    expect(fixture.debugElement.query(By.css('.qr-thumb-img'))).toBeNull();
   });
 
   it('hides QR for non-payable status even when booking.paymentQrUrl is set', () => {
@@ -372,7 +375,7 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    expect(fixture.debugElement.query(By.css('.payment-qr-card'))).toBeNull();
+    expect(fixture.debugElement.query(By.css('.qr-thumb-img'))).toBeNull();
   });
 
   it('shows tracking link when trackingUrl is present', () => {
@@ -395,7 +398,7 @@ describe('FoodOrderBookingsComponent', () => {
     fixture.componentRef.setInput('cancelError', null);
     fixture.detectChanges();
 
-    const trackingLink = fixture.debugElement.query(By.css('.booking-actions .tracking-link'));
+    const trackingLink = fixture.debugElement.query(By.css('.track-btn'));
     expect(trackingLink).not.toBeNull();
     expect(trackingLink.nativeElement.getAttribute('href')).toBe('https://tracking.example.com/123');
     expect(trackingLink.nativeElement.textContent).toContain('Track delivery');

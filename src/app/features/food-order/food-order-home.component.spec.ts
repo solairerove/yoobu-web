@@ -34,8 +34,7 @@ describe('FoodOrderHomeComponent', () => {
     checkoutForm: unknown;
     selectedBookingId: ReturnType<typeof signal<number | null>>;
     selectedBooking: ReturnType<typeof signal<BookingResponse | null>>;
-    activeView: ReturnType<typeof signal<'menu' | 'orders' | 'cart'>>;
-    checkoutOpen: ReturnType<typeof signal<boolean>>;
+    activeView: ReturnType<typeof signal<'menu' | 'orders' | 'cart' | 'checkout'>>;
     submitting: ReturnType<typeof signal<boolean>>;
     submitError: ReturnType<typeof signal<string | null>>;
     repeatOrderBanner: ReturnType<typeof signal<string | null>>;
@@ -45,6 +44,7 @@ describe('FoodOrderHomeComponent', () => {
     cancellingBookingId: ReturnType<typeof signal<number | null>>;
     cancelError: ReturnType<typeof signal<string | null>>;
     isFirstOrder: ReturnType<typeof signal<boolean>>;
+    earliestDeliveryDate: ReturnType<typeof signal<string>>;
     vm: ReturnType<typeof signal<{ services: ServiceItem[]; loading: boolean; error: string | null }>>;
     bookingsVm: ReturnType<typeof signal<{ bookings: BookingResponse[]; loading: boolean; error: string | null }>>;
   };
@@ -104,8 +104,7 @@ describe('FoodOrderHomeComponent', () => {
       }),
       selectedBookingId: signal<number | null>(null),
       selectedBooking: signal<BookingResponse | null>(null),
-      activeView: signal<'menu' | 'orders' | 'cart'>('menu'),
-      checkoutOpen: signal(false),
+      activeView: signal<'menu' | 'orders' | 'cart' | 'checkout'>('menu'),
       submitting: signal(false),
       submitError: signal<string | null>(null),
       repeatOrderBanner: signal<string | null>(null),
@@ -115,6 +114,7 @@ describe('FoodOrderHomeComponent', () => {
       cancellingBookingId: signal<number | null>(null),
       cancelError: signal<string | null>(null),
       isFirstOrder: signal(true),
+      earliestDeliveryDate: signal('2026-05-15'),
       vm: signal({
         services: [service],
         loading: false,
@@ -156,12 +156,12 @@ describe('FoodOrderHomeComponent', () => {
   });
 
   it('routes quantity controls to facade methods', () => {
-    const increaseButton = fixture.debugElement.query(By.css('.quantity-button-increase')).nativeElement as HTMLButtonElement;
+    const increaseButton = fixture.debugElement.query(By.css('[aria-label="Add Coffee"]')).nativeElement as HTMLButtonElement;
 
     increaseButton.click();
     fixture.detectChanges();
 
-    const decreaseButton = fixture.debugElement.query(By.css('.quantity-button-decrease')).nativeElement as HTMLButtonElement;
+    const decreaseButton = fixture.debugElement.query(By.css('[aria-label="Decrease Coffee"]')).nativeElement as HTMLButtonElement;
     decreaseButton.click();
 
     expect(facade.increase).toHaveBeenCalledWith(service.id);
@@ -226,8 +226,8 @@ describe('FoodOrderHomeComponent', () => {
     fixture.detectChanges();
 
     const repeatButton = fixture.debugElement
-      .queryAll(By.css('.booking-actions .ghost-button'))
-      .find((button) => button.nativeElement.textContent.includes('Repeat order'));
+      .queryAll(By.css('.btn-ghost'))
+      .find((button) => button.nativeElement.textContent.trim() === 'Repeat order');
     if (!repeatButton) {
       fail('Expected repeat order button to be present');
       return;
