@@ -10,7 +10,7 @@ describe('telegramInitDataInterceptor', () => {
   let telegram: jasmine.SpyObj<TelegramService>;
 
   beforeEach(() => {
-    telegram = jasmine.createSpyObj<TelegramService>('TelegramService', ['init', 'getInitData', 'getDevTelegramUserId']);
+    telegram = jasmine.createSpyObj<TelegramService>('TelegramService', ['init', 'getInitData', 'getDevTelegramUserId', 'clearCachedInitData']);
     telegram.getInitData.and.returnValue(null);
     telegram.getDevTelegramUserId.and.returnValue(null);
 
@@ -80,5 +80,46 @@ describe('telegramInitDataInterceptor', () => {
 
     expect(caughtError).not.toBeNull();
     expect(caughtError!.message).toBe('Telegram session unavailable. Please reopen the app.');
+  }));
+
+  it('clears cached init data when server returns 401', fakeAsync(() => {
+    telegram.getInitData.and.returnValue('init-data-value');
+
+    let caughtError: unknown = null;
+    http.get('/api/t/demo/bookings/my').subscribe({ error: (err: unknown) => (caughtError = err) });
+    tick();
+
+    const request = httpMock.expectOne('/api/t/demo/bookings/my');
+    request.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+    tick();
+
+    expect(telegram.clearCachedInitData).toHaveBeenCalled();
+    expect(caughtError).not.toBeNull();
+  }));
+
+  it('clears cached init data when server returns 403', fakeAsync(() => {
+    telegram.getInitData.and.returnValue('init-data-value');
+
+    http.get('/api/demo').subscribe({ error: () => {} });
+    tick();
+
+    const request = httpMock.expectOne('/api/demo');
+    request.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
+    tick();
+
+    expect(telegram.clearCachedInitData).toHaveBeenCalled();
+  }));
+
+  it('does not clear cache on non-auth errors', fakeAsync(() => {
+    telegram.getInitData.and.returnValue('init-data-value');
+
+    http.get('/api/demo').subscribe({ error: () => {} });
+    tick();
+
+    const request = httpMock.expectOne('/api/demo');
+    request.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
+    tick();
+
+    expect(telegram.clearCachedInitData).not.toHaveBeenCalled();
   }));
 });

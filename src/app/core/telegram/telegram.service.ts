@@ -287,6 +287,14 @@ export class TelegramService {
       .filter((part) => Number.isFinite(part));
   }
 
+  clearCachedInitData(): void {
+    try {
+      this.document.defaultView?.localStorage?.removeItem(this.INIT_DATA_SESSION_KEY);
+    } catch {
+      // ignore
+    }
+  }
+
   private cacheInitData(initData: string): void {
     try {
       this.document.defaultView?.localStorage?.setItem(this.INIT_DATA_SESSION_KEY, initData);
