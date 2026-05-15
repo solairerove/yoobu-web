@@ -30,7 +30,7 @@ describe('FoodOrderHomeComponent', () => {
     setActiveView: jasmine.Spy;
     deselectBooking: jasmine.Spy;
     store: FoodOrderStore;
-    showLocalCheckoutButtons: boolean;
+    showNativeCheckoutButtons: boolean;
     checkoutForm: unknown;
     selectedBookingId: ReturnType<typeof signal<number | null>>;
     selectedBooking: ReturnType<typeof signal<BookingResponse | null>>;
@@ -94,7 +94,7 @@ describe('FoodOrderHomeComponent', () => {
       setActiveView: jasmine.createSpy('setActiveView'),
       deselectBooking: jasmine.createSpy('deselectBooking'),
       store,
-      showLocalCheckoutButtons: true,
+      showNativeCheckoutButtons: true,
       checkoutForm: fb.nonNullable.group({
         customerName: [''],
         customerPhone: [''],
@@ -237,9 +237,16 @@ describe('FoodOrderHomeComponent', () => {
     expect(facade.repeatBooking).toHaveBeenCalledWith(booking.id);
   });
 
-  it('hides local cart bar when local checkout buttons are disabled', () => {
+  it('shows cart bar when native buttons enabled and items in cart', () => {
+    facade.store.increase(service.id);
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('app-food-order-cart-bar'))).not.toBeNull();
+  });
+
+  it('hides cart bar when native buttons disabled (Telegram MainButton available)', () => {
     fixture.destroy();
-    facade.showLocalCheckoutButtons = false;
+    facade.showNativeCheckoutButtons = false;
     facade.store.increase(service.id);
 
     fixture = TestBed.createComponent(FoodOrderHomeComponent);

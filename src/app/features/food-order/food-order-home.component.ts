@@ -77,7 +77,7 @@ import { FoodOrderStore } from './food-order.store';
           [selectedCount]="store.selectedCount()"
           [selectedTotal]="store.selectedTotal()"
           [currencyCode]="currencyCode()"
-          [localMode]="showLocalCheckoutButtons"
+          [showNativeButtons]="showNativeCheckoutButtons"
           (backRequested)="closeCart()"
           (checkoutRequested)="openCheckout()"
           (increaseRequested)="increase($event)"
@@ -151,7 +151,7 @@ import { FoodOrderStore } from './food-order.store';
       <!-- Checkout full-page view -->
       @if (activeView() === 'checkout') {
         <app-food-order-checkout
-          [localMode]="showLocalCheckoutButtons"
+          [showNativeButtons]="showNativeCheckoutButtons"
           [submitting]="submitting()"
           [submitError]="submitError()"
           [repeatOrderBanner]="repeatOrderBanner()"
@@ -177,7 +177,7 @@ import { FoodOrderStore } from './food-order.store';
           [booking]="submittedBooking()!"
           [paymentQrUrl]="config().paymentQrUrl || null"
           [currencyCodeFallback]="currencyCode()"
-          [localMode]="showLocalCheckoutButtons"
+          [showNativeButtons]="showNativeCheckoutButtons"
           [confirmingPaymentBookingId]="confirmingPaymentBookingId()"
           [paymentError]="paymentError()"
           (backToShopRequested)="startNewOrder()"
@@ -185,8 +185,8 @@ import { FoodOrderStore } from './food-order.store';
         />
       }
 
-      <!-- Cart bar (menu view only, local mode) -->
-      @if (showLocalCheckoutButtons && activeView() === 'menu' && store.selectedCount() > 0) {
+      <!-- Cart bar (menu view only, when native buttons are enabled) -->
+      @if (showNativeCheckoutButtons && activeView() === 'menu' && store.selectedCount() > 0) {
         <app-food-order-cart-bar
           [selectedCount]="store.selectedCount()"
           [selectedTotal]="store.selectedTotal()"
@@ -371,7 +371,7 @@ export class FoodOrderHomeComponent {
   readonly config = input.required<TenantConfig>();
   private readonly facade = inject(FoodOrderFlowFacade);
   readonly store: FoodOrderStore = this.facade.store;
-  protected readonly showLocalCheckoutButtons = this.facade.showLocalCheckoutButtons;
+  protected readonly showNativeCheckoutButtons = this.facade.showNativeCheckoutButtons;
   protected readonly checkoutForm = this.facade.checkoutForm;
   protected readonly selectedBookingId = this.facade.selectedBookingId;
   protected readonly selectedBooking = this.facade.selectedBooking;

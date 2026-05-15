@@ -108,6 +108,11 @@ export class TelegramService {
     return hostname === 'localhost' || hostname === '127.0.0.1';
   }
 
+  usesTelegramMainButton(): boolean {
+    const webApp = this.resolveWebApp();
+    return !!(webApp?.initData?.trim() && webApp.MainButton);
+  }
+
   setMainButton(text: string | null, enabled = true): void {
     const mainButton = this.resolveWebApp()?.MainButton;
 

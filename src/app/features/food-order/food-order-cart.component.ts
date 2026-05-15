@@ -95,7 +95,7 @@ interface CartEntry {
         </div>
       </div>
 
-      @if (localMode()) {
+      @if (showNativeButtons()) {
         <div class="checkout-bar">
           <button type="button" class="checkout-btn" (click)="checkoutRequested.emit()">
             Checkout →
@@ -373,10 +373,11 @@ export class FoodOrderCartComponent {
   readonly selectedCount = input.required<number>();
   readonly selectedTotal = input.required<number>();
   readonly currencyCode = input.required<string>();
-  readonly localMode = input.required<boolean>();
+  readonly showNativeButtons = input.required<boolean>();
 
   readonly backRequested = output<void>();
   readonly checkoutRequested = output<void>();
   readonly increaseRequested = output<number>();
   readonly decreaseRequested = output<number>();
 }
+
