@@ -22,7 +22,7 @@ export class FoodOrderStore {
     this.selectedItems().reduce((sum, entry) => sum + entry.quantity, 0)
   );
   readonly selectedTotal = computed(() =>
-    this.selectedItems().reduce((sum, entry) => sum + entry.service.price * entry.quantity, 0)
+    this.selectedItems().reduce((sum, entry) => sum + (entry.service.price ?? 0) * entry.quantity, 0)
   );
 
   setTenant(slug: string): void {

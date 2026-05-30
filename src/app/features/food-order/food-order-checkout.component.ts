@@ -101,7 +101,7 @@ interface DeliveryDay {
                     <strong>{{ entry.service.name }}</strong>
                     <p>{{ entry.quantity }} × {{ entry.service.price | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</p>
                   </div>
-                  <span>{{ entry.service.price * entry.quantity | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
+                  <span>{{ (entry.service.price ?? 0) * entry.quantity | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</span>
                 </div>
               }
             </div>

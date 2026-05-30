@@ -20,7 +20,7 @@ describe('FoodOrderSuccessCardComponent', () => {
     note: null,
     trackingUrl: null,
     paymentQrUrl: null,
-    items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000 }],
+    items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000, variantSize: null, variantColor: null }],
     createdAt: '2026-03-19T10:00:00.000Z'
   };
 

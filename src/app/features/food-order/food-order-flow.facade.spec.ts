@@ -25,7 +25,8 @@ describe('FoodOrderFlowFacade', () => {
     unit: 'cup',
     durationMinutes: null,
     sortOrder: 1,
-    status: 'ACTIVE'
+    status: 'ACTIVE',
+    variants: []
   };
   const teaService: ServiceItem = {
     id: 2,
@@ -36,7 +37,8 @@ describe('FoodOrderFlowFacade', () => {
     unit: 'cup',
     durationMinutes: null,
     sortOrder: 2,
-    status: 'ACTIVE'
+    status: 'ACTIVE',
+    variants: []
   };
 
   const tenantConfig: TenantConfig = {
@@ -164,8 +166,8 @@ describe('FoodOrderFlowFacade', () => {
       deliveryAddress: ' 456 Side St ',
       note: ' ring bell ',
       items: [
-        { serviceName: 'Coffee', quantity: 2, unitPrice: 30000 },
-        { serviceName: 'Tea', quantity: 1, unitPrice: 20000 }
+        { serviceName: 'Coffee', quantity: 2, unitPrice: 30000, variantSize: null, variantColor: null },
+        { serviceName: 'Tea', quantity: 1, unitPrice: 20000, variantSize: null, variantColor: null }
       ]
     };
     api.getServices.and.returnValue(of([service, teaService]));
@@ -188,7 +190,7 @@ describe('FoodOrderFlowFacade', () => {
     const legacyBooking: BookingResponse = {
       ...createBookingResponse(9),
       status: 'DONE',
-      items: [{ serviceName: 'Old item', quantity: 1, unitPrice: 15000 }]
+      items: [{ serviceName: 'Old item', quantity: 1, unitPrice: 15000, variantSize: null, variantColor: null }]
     };
     api.getServices.and.returnValue(of([service]));
     facade.setConfig(tenantConfig);
@@ -206,7 +208,7 @@ describe('FoodOrderFlowFacade', () => {
     const repeated: BookingResponse = {
       ...createBookingResponse(15),
       status: 'DONE',
-      items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000 }]
+      items: [{ serviceName: 'Coffee', quantity: 1, unitPrice: 30000, variantSize: null, variantColor: null }]
     };
     api.getServices.and.returnValue(of([service]));
     facade.setConfig(tenantConfig);
@@ -225,7 +227,7 @@ describe('FoodOrderFlowFacade', () => {
       ...createBookingResponse(11),
       status: 'DONE',
       customerName: 'Repeat User',
-      items: [{ serviceName: 'Coffee', quantity: 3, unitPrice: 30000 }]
+      items: [{ serviceName: 'Coffee', quantity: 3, unitPrice: 30000, variantSize: null, variantColor: null }]
     };
     api.getServices.and.returnValue(of([service]));
     facade.setConfig(tenantConfig);
@@ -545,7 +547,9 @@ function createBookingResponse(id: number): BookingResponse {
       {
         serviceName: 'Coffee',
         quantity: 1,
-        unitPrice: 30000
+        unitPrice: 30000,
+        variantSize: null,
+        variantColor: null
       }
     ],
     createdAt: '2026-03-18T10:00:00.000Z'

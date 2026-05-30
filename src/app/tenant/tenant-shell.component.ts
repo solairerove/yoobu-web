@@ -121,6 +121,11 @@ export class TenantShellComponent {
         (m) => m.FoodOrderHomeComponent
       );
     }
+    if (type === 'ECOMMERCE') {
+      return import('../features/ecommerce/ecommerce-home.component').then(
+        (m) => m.EcommerceHomeComponent
+      );
+    }
     return import('../features/unsupported/unsupported-flow.component').then(
       (m) => m.UnsupportedFlowComponent
     );

@@ -58,7 +58,8 @@ describe('FoodOrderHomeComponent', () => {
     unit: 'cup',
     durationMinutes: null,
     sortOrder: 1,
-    status: 'ACTIVE'
+    status: 'ACTIVE',
+    variants: []
   };
 
   const config: TenantConfig = {
@@ -212,7 +213,7 @@ describe('FoodOrderHomeComponent', () => {
       note: null,
       trackingUrl: null,
       paymentQrUrl: null,
-      items: [{ serviceName: service.name, quantity: 1, unitPrice: service.price }],
+      items: [{ serviceName: service.name, quantity: 1, unitPrice: service.price ?? 0, variantSize: null, variantColor: null }],
       createdAt: '2026-03-19T10:00:00.000Z'
     };
     facade.bookingsVm.set({
