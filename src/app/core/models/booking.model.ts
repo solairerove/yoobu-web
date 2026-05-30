@@ -16,6 +16,22 @@ export interface BookingItem {
   serviceName: string;
   quantity: number;
   unitPrice: number;
+  variantSize: string | null;
+  variantColor: string | null;
+}
+
+export interface EcommerceBookingItemRequest {
+  variantId: number;
+  quantity: number;
+}
+
+export interface CreateEcommerceOrderRequest {
+  customerName: string;
+  customerPhone: string;
+  deliveryAddress: string;
+  deliveryDate: string | null;
+  note: string | null;
+  items: EcommerceBookingItemRequest[];
 }
 
 export interface BookingResponse {
@@ -27,7 +43,7 @@ export interface BookingResponse {
   deliveryAddress: string | null;
   totalPrice: number;
   currency: string;
-  deliveryDate: string;
+  deliveryDate: string | null;
   note: string | null;
   trackingUrl: string | null;
   paymentQrUrl: string | null;

@@ -17,7 +17,8 @@ describe('FoodOrderMenuComponent', () => {
       unit: 'cup',
       durationMinutes: null,
       sortOrder: 1,
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      variants: []
     },
     {
       id: 20,
@@ -28,7 +29,8 @@ describe('FoodOrderMenuComponent', () => {
       unit: 'glass',
       durationMinutes: null,
       sortOrder: 2,
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      variants: []
     }
   ];
 

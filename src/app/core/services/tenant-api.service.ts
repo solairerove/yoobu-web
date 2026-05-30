@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, retry, TimeoutError, timeout, timer } from 'rxjs';
-import { BookingResponse, CreateBookingRequest } from '../models/booking.model';
+import { BookingResponse, CreateBookingRequest, CreateEcommerceOrderRequest } from '../models/booking.model';
 import { ServiceItem } from '../models/service.model';
 import { TenantConfig } from '../models/tenant-config.model';
 
@@ -23,6 +23,10 @@ export class TenantApiService {
 
   createBooking(slug: string, request: CreateBookingRequest): Observable<BookingResponse> {
     return this.http.post<BookingResponse>(`${this.baseUrl}/${slug}/bookings`, request);
+  }
+
+  createOrder(slug: string, request: CreateEcommerceOrderRequest): Observable<BookingResponse> {
+    return this.http.post<BookingResponse>(`${this.baseUrl}/${slug}/orders`, request);
   }
 
   getMyBookings(slug: string): Observable<BookingResponse[]> {

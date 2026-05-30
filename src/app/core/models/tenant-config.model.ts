@@ -1,4 +1,4 @@
-export type TenantType = 'FOOD_ORDER' | 'APPOINTMENT' | 'CATALOG_REQUEST';
+export type TenantType = 'FOOD_ORDER' | 'APPOINTMENT' | 'CATALOG_REQUEST' | 'ECOMMERCE';
 
 export interface TenantConfig {
   slug: string;

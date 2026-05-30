@@ -13,7 +13,8 @@ describe('FoodOrderStore', () => {
     unit: 'cup',
     durationMinutes: null,
     sortOrder: 1,
-    status: 'ACTIVE'
+    status: 'ACTIVE',
+    variants: []
   };
 
   const serviceB: ServiceItem = {
@@ -25,7 +26,8 @@ describe('FoodOrderStore', () => {
     unit: 'cup',
     durationMinutes: null,
     sortOrder: 2,
-    status: 'ACTIVE'
+    status: 'ACTIVE',
+    variants: []
   };
 
   beforeEach(() => {
